@@ -25,7 +25,7 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
                 carModeHour = 7,
                 isAutoModeEnabled = true,
                 isCarModeEnabled = true,
-                isDarkThemeEnabled = false
+                theme = 2
             )
         )
 
@@ -77,9 +77,9 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
         }
     }
 
-    fun updateDarkThemeEnabled(isEnabled: Boolean) {
+    fun updateTheme(value: Int) {
         viewModelScope.launch {
-            settingsRepository.updateDarkThemeEnabled(isEnabled)
+            settingsRepository.updateTheme(value)
         }
     }
 }

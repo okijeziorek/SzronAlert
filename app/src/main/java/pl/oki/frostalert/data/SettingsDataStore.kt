@@ -24,7 +24,7 @@ data class UserPreferences(
     val carModeHour: Int,
     val isCarModeEnabled: Boolean,
     val isAutoModeEnabled: Boolean,
-    val isDarkThemeEnabled: Boolean
+    val theme: Int
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -39,7 +39,7 @@ class SettingsDataStore(private val context: Context) {
         val CAR_MODE_HOUR = intPreferencesKey("car_mode_hour")
         val IS_CAR_MODE_ENABLED = booleanPreferencesKey("is_car_mode_enabled")
         val IS_AUTO_MODE_ENABLED = booleanPreferencesKey("is_auto_mode_enabled")
-        val IS_DARK_THEME_ENABLED = booleanPreferencesKey("is_dark_theme_enabled")
+        val THEME = intPreferencesKey("theme")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -54,7 +54,7 @@ class SettingsDataStore(private val context: Context) {
                 carModeHour = preferences[Keys.CAR_MODE_HOUR] ?: 7,
                 isCarModeEnabled = preferences[Keys.IS_CAR_MODE_ENABLED] ?: false,
                 isAutoModeEnabled = preferences[Keys.IS_AUTO_MODE_ENABLED] ?: true,
-                isDarkThemeEnabled = preferences[Keys.IS_DARK_THEME_ENABLED] ?: false
+                theme = preferences[Keys.THEME] ?: 2
             )
         }
 
@@ -112,9 +112,9 @@ class SettingsDataStore(private val context: Context) {
         }
     }
 
-    suspend fun updateDarkThemeEnabled(isEnabled: Boolean) {
+    suspend fun updateTheme(value: Int) {
         context.dataStore.edit { settings ->
-            settings[Keys.IS_DARK_THEME_ENABLED] = isEnabled
+            settings[Keys.THEME] = value
         }
     }
 }

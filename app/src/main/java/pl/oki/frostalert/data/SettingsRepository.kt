@@ -38,7 +38,7 @@ class SettingsRepository(private val settingsDataStore: SettingsDataStore) {
         settingsDataStore.updateCarModeHour(hour)
     }
 
-    suspend fun updateDarkThemeEnabled(isEnabled: Boolean) {
-        settingsDataStore.updateDarkThemeEnabled(isEnabled)
+    suspend fun updateTheme(value: Int) {
+        settingsDataStore.updateTheme(value)
     }
 }

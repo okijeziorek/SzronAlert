@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
@@ -43,10 +44,16 @@ class MainActivity : ComponentActivity() {
                     carModeHour = 7,
                     isAutoModeEnabled = true,
                     isCarModeEnabled = true,
-                    isDarkThemeEnabled = false
+                    theme = 2
                 )
             )
-            FrostAlertTheme(darkTheme = userPreferences.isDarkThemeEnabled) {
+            FrostAlertTheme(
+                darkTheme = when (userPreferences.theme) {
+                    0 -> false
+                    1 -> true
+                    else -> isSystemInDarkTheme()
+                }
+            ) {
                 MainScreen()
             }
         }
