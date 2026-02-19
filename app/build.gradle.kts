@@ -53,7 +53,7 @@ dependencies {
     implementation("androidx.glance:glance-material3:1.1.1")
 
     // Wykresy
-    implementation("co.yml:ycharts:2.0.0")
+    implementation("co.yml:ycharts:2.1.0")
 
     // Location, Ktor, Serialization, WorkManager
     implementation("com.google.android.gms:play-services-location:21.2.0")

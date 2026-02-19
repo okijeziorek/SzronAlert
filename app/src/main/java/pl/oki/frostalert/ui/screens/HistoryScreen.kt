@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -32,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.room.*
 import co.yml.charts.axis.AxisData
 import co.yml.charts.common.model.Point
 import co.yml.charts.ui.barchart.BarChart
@@ -99,59 +99,72 @@ fun HistoryScreen() {
             Spacer(Modifier.height(24.dp))
 
             if (records.isNotEmpty()) {
-                val maxRange = records.maxOfOrNull { it.minTemp }?.toFloat() ?: 0f
-                val minRange = records.minOfOrNull { it.minTemp }?.toFloat() ?: 0f
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(350.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 16.dp, horizontal = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Historia temperatur", style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(8.dp))
 
-                val yAxisData = AxisData.Builder()
-                    .steps(5)
-                    .backgroundColor(Color.Transparent)
-                    .axisLabelColor(MaterialTheme.colorScheme.onBackground)
-                    .axisLineColor(MaterialTheme.colorScheme.onBackground)
-                    .labelData { i: Int ->
-                        val value = minRange + (i * (maxRange - minRange) / 5)
-                        String.format(Locale.US, "%.1f", value)
-                    }
-                    .build()
+                        val maxRange = (records.maxOfOrNull { it.minTemp }?.toInt() ?: 0) + 1
+                        val minRange = (records.minOfOrNull { it.minTemp }?.toInt() ?: 0) - 1
 
-                val xAxisData = AxisData.Builder()
-                    .axisStepSize(30.dp)
-                    .backgroundColor(Color.Transparent)
-                    .axisLabelColor(MaterialTheme.colorScheme.onBackground)
-                    .axisLineColor(MaterialTheme.colorScheme.onBackground)
-                    .labelData { index: Int ->
-                        if (index < records.size) {
-                            val record = records[index]
-                            val sdf = SimpleDateFormat("d/M", Locale.getDefault())
-                            sdf.format(Date(record.timestamp))
-                        } else {
-                            ""
+                        val yAxisData = AxisData.Builder()
+                            .steps(4)
+                            .backgroundColor(Color.Transparent)
+                            .axisLabelColor(MaterialTheme.colorScheme.onSurface)
+                            .axisLineColor(MaterialTheme.colorScheme.outline)
+                            .labelData { i ->
+                                val value = minRange + (i * (maxRange - minRange) / 4.0)
+                                String.format(Locale.US, "%.1f°", value)
+                            }
+                            .build()
+
+                        val xAxisData = AxisData.Builder()
+                            .axisStepSize(30.dp)
+                            .backgroundColor(Color.Transparent)
+                            .axisLabelColor(MaterialTheme.colorScheme.onSurface)
+                            .axisLineColor(MaterialTheme.colorScheme.outline)
+                            .labelData { index ->
+                                records.getOrNull(index)?.let {
+                                    SimpleDateFormat("d/M", Locale.getDefault()).format(Date(it.timestamp))
+                                } ?: ""
+                            }
+                            .build()
+
+                        val barData = records.mapIndexed { index, record ->
+                            val color = if (record.hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                            BarData(
+                                point = Point(index.toFloat(), record.minTemp.toFloat()),
+                                label = SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(record.timestamp)),
+                                color = color,
+                                gradientColorList = listOf(color.copy(alpha = 0.6f), color.copy(alpha = 0.1f))
+                            )
                         }
+
+                        val barChartData = BarChartData(
+                            chartData = barData,
+                            xAxisData = xAxisData,
+                            yAxisData = yAxisData,
+                            backgroundColor = Color.Transparent,
+                            barStyle = BarStyle(
+                                barWidth = 20.dp
+                            )
+                        )
+                        BarChart(modifier = Modifier.fillMaxSize(), barChartData = barChartData)
                     }
-                    .build()
-
-                val barData = records.mapIndexed { index, record ->
-                    BarData(
-                        point = Point(index.toFloat(), record.minTemp.toFloat()),
-                        label = SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(record.timestamp)),
-                        color = if (record.hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                    )
                 }
-
-                val barChartData = BarChartData(
-                    chartData = barData,
-                    xAxisData = xAxisData,
-                    yAxisData = yAxisData,
-                    barStyle = BarStyle(
-                        barWidth = 20.dp
-                    )
-                )
-                BarChart(modifier = Modifier.height(300.dp), barChartData = barChartData)
             } else {
                 Text("Brak danych w historii")
             }
-            
+
             Spacer(Modifier.weight(1f))
-            
+
             if (!isPro) {
                 AndroidView(
                     modifier = Modifier.fillMaxWidth(),
