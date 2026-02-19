@@ -18,5 +18,5 @@ interface TemperatureDao {
     suspend fun getRiskCount(): Int
 
     @Query("SELECT AVG(minTemp) FROM temperature_records")
-    suspend fun getAverageMinTemp(): Double
+    suspend fun getAverageMinTemp(): Double?
 }

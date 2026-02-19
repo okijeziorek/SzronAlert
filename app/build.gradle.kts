@@ -41,7 +41,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3:1.3.0")
+    implementation("androidx.compose.material3:material3:1.2.0")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.room:room-runtime:2.6.1")
@@ -53,21 +53,19 @@ dependencies {
     implementation("androidx.glance:glance-material3:1.1.1")
 
     // Wykresy
-    implementation("co.yml:ycharts:2.1.0")
+    implementation("co.yml:ycharts:2.0.0")
 
     // Location, Ktor, Serialization, WorkManager
-    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
     implementation("io.ktor:ktor-client-android:2.3.12")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
-    // AdMob
-    implementation("com.google.android.gms:play-services-ads:23.1.0")
-
-    // Billing
-    implementation("com.android.billingclient:billing-ktx:6.2.1")
+    // AdMob & Billing
+    implementation("com.google.android.gms:play-services-ads:23.0.0")
+    implementation("com.android.billingclient:billing-ktx:6.1.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

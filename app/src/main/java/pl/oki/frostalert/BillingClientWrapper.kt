@@ -45,12 +45,6 @@ class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
     }
 
     fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails) {
-        if (productDetails.productId == "android.test.item_unavailable") {
-            // Simulate a successful purchase for the test product ID
-            _isPro.value = true
-            return
-        }
-        
         val productDetailsParamsList = listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder()
                 .setProductDetails(productDetails)
@@ -65,7 +59,7 @@ class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
     fun queryProductDetails(onDetailsReady: (ProductDetails?) -> Unit) {
         val productList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
-                .setProductId("android.test.item_unavailable") // Using Google's test product ID
+                .setProductId("android.test.purchased") // Correct test product ID
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         )

@@ -7,8 +7,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.room.*
 import co.yml.charts.axis.AxisData
 import co.yml.charts.common.model.Point
 import co.yml.charts.ui.barchart.BarChart
@@ -58,16 +63,26 @@ fun HistoryScreen() {
     var riskCount by remember { mutableStateOf(0) }
     var avgMinTemp by remember { mutableStateOf(0.0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(records) {
         scope.launch {
             riskCount = dao.getRiskCount()
-            avgMinTemp = dao.getAverageMinTemp()
+            avgMinTemp = dao.getAverageMinTemp() ?: 0.0
         }
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(title = { Text("Historia") })
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                scope.launch {
+                    riskCount = dao.getRiskCount()
+                    avgMinTemp = dao.getAverageMinTemp() ?: 0.0
+                }
+            }) {
+                Icon(Icons.Default.Refresh, contentDescription = "Odśwież")
+            }
         }
     ) { padding ->
         Column(
