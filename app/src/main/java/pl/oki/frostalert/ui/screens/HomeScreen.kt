@@ -43,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -153,7 +152,7 @@ fun FrostWarningCard(hasRisk: Boolean, warningMessage: String) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (hasRisk) Color(0xFFFFE0B2) else Color(0xFFC8E6C9)
+            containerColor = if (hasRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Column(
@@ -164,7 +163,7 @@ fun FrostWarningCard(hasRisk: Boolean, warningMessage: String) {
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = "Warning Icon",
-                tint = if (hasRisk) Color.Red else Color.Green,
+                tint = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(48.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -172,7 +171,8 @@ fun FrostWarningCard(hasRisk: Boolean, warningMessage: String) {
                 text = warningMessage,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = if (hasRisk) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     }
