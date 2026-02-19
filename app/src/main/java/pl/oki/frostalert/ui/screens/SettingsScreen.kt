@@ -1,11 +1,6 @@
 package pl.oki.frostalert.ui.screens
 
 import android.app.Activity
-import android.view.LayoutInflater
-import android.view.View
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.TextView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,28 +20,18 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.android.billingclient.api.ProductDetails
-import com.google.android.gms.ads.AdLoader
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.nativead.NativeAd
-import com.google.android.gms.ads.nativead.NativeAdView
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.BillingClientWrapper
 import pl.oki.frostalert.CarModeReceiver
-import pl.oki.frostalert.R
 import pl.oki.frostalert.data.SettingsDataStore
 import pl.oki.frostalert.data.UserPreferences
 
@@ -66,33 +51,12 @@ fun SettingsScreen() {
             ignoreUntil = 0L,
             carModeHour = 7,
             isAutoModeEnabled = true,
-            isCarModeEnabled = true
+            isCarModeEnabled = true,
+            isDarkThemeEnabled = false
         )
     )
     val isPro by billingClient.isPro.collectAsState()
     val scope = rememberCoroutineScope()
-    var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
-
-    if (!isPro) {
-        val adLoader = remember(context) {
-            AdLoader.Builder(context, "ca-app-pub-3940256099942544/2247696110") // Test Ad ID
-                .forNativeAd { ad: NativeAd ->
-                    nativeAd?.destroy()
-                    nativeAd = ad
-                }
-                .build()
-        }
-
-        LaunchedEffect(adLoader) {
-            adLoader.loadAd(AdRequest.Builder().build())
-        }
-
-        DisposableEffect(Unit) {
-            onDispose {
-                nativeAd?.destroy()
-            }
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -118,6 +82,19 @@ fun SettingsScreen() {
                 }
                 Spacer(Modifier.height(16.dp))
             }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Tryb ciemny", style = MaterialTheme.typography.bodyLarge)
+                Switch(
+                    checked = userPreferences.isDarkThemeEnabled,
+                    onCheckedChange = { scope.launch { dataStore.updateDarkThemeEnabled(it) } }
+                )
+            }
+            Spacer(Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -160,23 +137,6 @@ fun SettingsScreen() {
                 format = "%.1f mm",
                 enabled = !userPreferences.isAutoModeEnabled
             )
-            Spacer(Modifier.height(16.dp))
-
-            if (!isPro) {
-                val ad = nativeAd
-                if (ad != null) {
-                    AndroidView(
-                        modifier = Modifier.fillMaxWidth(),
-                        factory = { ctx ->
-                            LayoutInflater.from(ctx).inflate(R.layout.native_ad_layout, FrameLayout(ctx), false) as NativeAdView
-                        },
-                        update = { adView ->
-                            populateNativeAdView(ad, adView)
-                        }
-                    )
-                }
-            }
-
             Spacer(Modifier.height(16.dp))
             SettingSlider(
                 label = "Godzina rozpoczęcia alertów",
@@ -232,27 +192,11 @@ fun SettingsScreen() {
                 },
                 range = 0f..23f,
                 steps = 23,
-                format = "%.0f:00"
+                format = "%.0f:00",
+                enabled = userPreferences.isCarModeEnabled
             )
         }
     }
-}
-
-private fun populateNativeAdView(nativeAd: NativeAd, adView: NativeAdView) {
-    adView.headlineView = adView.findViewById(R.id.ad_headline)
-    adView.bodyView = adView.findViewById(R.id.ad_body)
-    adView.callToActionView = adView.findViewById(R.id.ad_call_to_action)
-
-    (adView.headlineView as? TextView)?.text = nativeAd.headline
-    adView.headlineView?.visibility = if (nativeAd.headline == null) View.INVISIBLE else View.VISIBLE
-
-    (adView.bodyView as? TextView)?.text = nativeAd.body
-    adView.bodyView?.visibility = if (nativeAd.body == null) View.INVISIBLE else View.VISIBLE
-
-    (adView.callToActionView as? Button)?.text = nativeAd.callToAction
-    adView.callToActionView?.visibility = if (nativeAd.callToAction == null) View.INVISIBLE else View.VISIBLE
-
-    adView.setNativeAd(nativeAd)
 }
 
 @Composable
