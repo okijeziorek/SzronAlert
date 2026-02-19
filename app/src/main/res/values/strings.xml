@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">FrostAlert</string>
+    <string name="widget_description">Ostrzeżenia Szron – min. temperatura w nocy</string>
+</resources>
