@@ -1,4 +1,4 @@
-package pl.oki.frostalert.data
+package pl.oki.frostalert.data.local
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -24,7 +25,11 @@ data class UserPreferences(
     val carModeHour: Int,
     val isCarModeEnabled: Boolean,
     val isAutoModeEnabled: Boolean,
-    val theme: Int
+    val theme: Int,
+    val isManualLocationEnabled: Boolean,
+    val manualLatitude: Double,
+    val manualLongitude: Double,
+    val manualLocationName: String
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -40,21 +45,29 @@ class SettingsDataStore(private val context: Context) {
         val IS_CAR_MODE_ENABLED = booleanPreferencesKey("is_car_mode_enabled")
         val IS_AUTO_MODE_ENABLED = booleanPreferencesKey("is_auto_mode_enabled")
         val THEME = intPreferencesKey("theme")
+        val IS_MANUAL_LOCATION_ENABLED = booleanPreferencesKey("is_manual_location_enabled")
+        val MANUAL_LATITUDE = doublePreferencesKey("manual_latitude")
+        val MANUAL_LONGITUDE = doublePreferencesKey("manual_longitude")
+        val MANUAL_LOCATION_NAME = stringPreferencesKey("manual_location_name")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
         .map { preferences ->
             UserPreferences(
-                tempThreshold = preferences[Keys.TEMP_THRESHOLD] ?: 2.0,
-                humidityThreshold = preferences[Keys.HUMIDITY_THRESHOLD] ?: 80,
-                precipitationThreshold = preferences[Keys.PRECIPITATION_THRESHOLD] ?: 0.1,
-                alertStartHour = preferences[Keys.ALERT_START_HOUR] ?: 18,
+                tempThreshold = preferences[Keys.TEMP_THRESHOLD] ?: 1.0, // Zmiana na 1.0 (bardziej restrykcyjne dla powierzchni)
+                humidityThreshold = preferences[Keys.HUMIDITY_THRESHOLD] ?: 75, // Zmiana na 75%
+                precipitationThreshold = preferences[Keys.PRECIPITATION_THRESHOLD] ?: 0.2,
+                alertStartHour = preferences[Keys.ALERT_START_HOUR] ?: 19,
                 alertEndHour = preferences[Keys.ALERT_END_HOUR] ?: 8,
                 ignoreUntil = preferences[Keys.IGNORE_UNTIL] ?: 0L,
                 carModeHour = preferences[Keys.CAR_MODE_HOUR] ?: 7,
-                isCarModeEnabled = preferences[Keys.IS_CAR_MODE_ENABLED] ?: false,
+                isCarModeEnabled = preferences[Keys.IS_CAR_MODE_ENABLED] ?: true,
                 isAutoModeEnabled = preferences[Keys.IS_AUTO_MODE_ENABLED] ?: true,
-                theme = preferences[Keys.THEME] ?: 2
+                theme = preferences[Keys.THEME] ?: 2,
+                isManualLocationEnabled = preferences[Keys.IS_MANUAL_LOCATION_ENABLED] ?: false,
+                manualLatitude = preferences[Keys.MANUAL_LATITUDE] ?: 52.2297,
+                manualLongitude = preferences[Keys.MANUAL_LONGITUDE] ?: 21.0122,
+                manualLocationName = preferences[Keys.MANUAL_LOCATION_NAME] ?: "Warszawa"
             )
         }
 
@@ -115,6 +128,15 @@ class SettingsDataStore(private val context: Context) {
     suspend fun updateTheme(value: Int) {
         context.dataStore.edit { settings ->
             settings[Keys.THEME] = value
+        }
+    }
+
+    suspend fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
+        context.dataStore.edit { settings ->
+            settings[Keys.IS_MANUAL_LOCATION_ENABLED] = isEnabled
+            settings[Keys.MANUAL_LATITUDE] = lat
+            settings[Keys.MANUAL_LONGITUDE] = lon
+            settings[Keys.MANUAL_LOCATION_NAME] = name
         }
     }
 }

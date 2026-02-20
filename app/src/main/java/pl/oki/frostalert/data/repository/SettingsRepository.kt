@@ -1,6 +1,8 @@
-package pl.oki.frostalert.data
+package pl.oki.frostalert.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import pl.oki.frostalert.data.local.SettingsDataStore
+import pl.oki.frostalert.data.local.UserPreferences
 
 class SettingsRepository(private val settingsDataStore: SettingsDataStore) {
 

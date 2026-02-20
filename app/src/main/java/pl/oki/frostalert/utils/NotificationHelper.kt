@@ -7,8 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import pl.oki.frostalert.NotificationActionReceiver
 import pl.oki.frostalert.R
+import pl.oki.frostalert.receiver.NotificationActionReceiver
 
 object NotificationHelper {
 

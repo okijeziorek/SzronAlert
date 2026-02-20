@@ -1,4 +1,4 @@
-package pl.oki.frostalert
+package pl.oki.frostalert.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -12,8 +12,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
-import pl.oki.frostalert.data.SettingsDataStore
-import pl.oki.frostalert.ui.MainScreen
+import pl.oki.frostalert.data.local.SettingsDataStore
+import pl.oki.frostalert.data.local.UserPreferences
+import pl.oki.frostalert.ui.screens.MainScreen
 import pl.oki.frostalert.ui.theme.FrostAlertTheme
 import pl.oki.frostalert.utils.NotificationHelper
 
@@ -34,17 +35,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settingsDataStore = SettingsDataStore(this)
             val userPreferences by settingsDataStore.userPreferencesFlow.collectAsState(
-                initial = pl.oki.frostalert.data.UserPreferences(
-                    tempThreshold = 2.0,
-                    humidityThreshold = 80,
-                    precipitationThreshold = 0.1,
-                    alertStartHour = 18,
+                initial = UserPreferences(
+                    tempThreshold = 1.0,
+                    humidityThreshold = 75,
+                    precipitationThreshold = 0.2,
+                    alertStartHour = 19,
                     alertEndHour = 8,
                     ignoreUntil = 0L,
                     carModeHour = 7,
                     isAutoModeEnabled = true,
                     isCarModeEnabled = true,
-                    theme = 2
+                    theme = 2,
+                    isManualLocationEnabled = false,
+                    manualLatitude = 52.2297,
+                    manualLongitude = 21.0122,
+                    manualLocationName = "Warszawa"
                 )
             )
             FrostAlertTheme(

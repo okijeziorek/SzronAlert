@@ -1,4 +1,4 @@
-package pl.oki.frostalert.data
+package pl.oki.frostalert.data.remote
 
 data class Weather(
     val current: CurrentWeather,

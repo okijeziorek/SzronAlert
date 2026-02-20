@@ -1,4 +1,4 @@
-package pl.oki.frostalert.ui
+package pl.oki.frostalert.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -19,10 +19,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import pl.oki.frostalert.ui.screens.DebugScreen
-import pl.oki.frostalert.ui.screens.HistoryScreen
-import pl.oki.frostalert.ui.screens.HomeScreen
-import pl.oki.frostalert.ui.screens.SettingsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -16,10 +16,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -38,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.android.billingclient.api.ProductDetails
@@ -46,11 +52,11 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import kotlinx.coroutines.launch
-import pl.oki.frostalert.BillingClientWrapper
-import pl.oki.frostalert.CarModeReceiver
 import pl.oki.frostalert.R
-import pl.oki.frostalert.data.SettingsDataStore
-import pl.oki.frostalert.data.UserPreferences
+import pl.oki.frostalert.billing.BillingClientWrapper
+import pl.oki.frostalert.data.local.SettingsDataStore
+import pl.oki.frostalert.data.local.UserPreferences
+import pl.oki.frostalert.receiver.CarModeReceiver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,12 +75,21 @@ fun SettingsScreen() {
             carModeHour = 7,
             isAutoModeEnabled = true,
             isCarModeEnabled = true,
-            theme = 2
+            theme = 2,
+            isManualLocationEnabled = false,
+            manualLatitude = 52.2297,
+            manualLongitude = 21.0122,
+            manualLocationName = "Warszawa"
         )
     )
     val isPro by billingClient.isPro.collectAsState()
     val scope = rememberCoroutineScope()
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+
+    // Stan dla pól tekstowych lokalizacji
+    var latText by remember(userPreferences.manualLatitude) { mutableStateOf(userPreferences.manualLatitude.toString()) }
+    var lonText by remember(userPreferences.manualLongitude) { mutableStateOf(userPreferences.manualLongitude.toString()) }
+    var nameText by remember(userPreferences.manualLocationName) { mutableStateOf(userPreferences.manualLocationName) }
 
     if (!isPro) {
         val adLoader = remember(context) {
@@ -116,13 +131,76 @@ fun SettingsScreen() {
                             billingClient.launchPurchaseFlow(context as Activity, it)
                         }
                     }
-                }) {
+                }, modifier = Modifier.fillMaxWidth()) {
                     Text("Kup Pro (9,99 zł) i usuń reklamy")
                 }
                 Spacer(Modifier.height(16.dp))
             }
 
-            Text("Motyw", style = MaterialTheme.typography.bodyLarge)
+            SectionTitle("Lokalizacja")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Ustaw lokalizację ręcznie", style = MaterialTheme.typography.bodyLarge)
+                Switch(
+                    checked = userPreferences.isManualLocationEnabled,
+                    onCheckedChange = { scope.launch { dataStore.updateManualLocation(it, userPreferences.manualLatitude, userPreferences.manualLongitude, userPreferences.manualLocationName) } }
+                )
+            }
+            
+            if (userPreferences.isManualLocationEnabled) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = nameText,
+                    onValueChange = { nameText = it },
+                    label = { Text("Nazwa miejscowości") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = latText,
+                        onValueChange = { latText = it },
+                        label = { Text("Szerokość (Lat)") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = lonText,
+                        onValueChange = { lonText = it },
+                        label = { Text("Długość (Lon)") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        val lat = latText.toDoubleOrNull() ?: 52.2297
+                        val lon = lonText.toDoubleOrNull() ?: 21.0122
+                        scope.launch {
+                            dataStore.updateManualLocation(true, lat, lon, nameText)
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Zapisz lokalizację")
+                }
+            } else {
+                Text(
+                    "Używam GPS (automatycznie)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(16.dp))
+
+            SectionTitle("Wygląd")
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -148,8 +226,9 @@ fun SettingsScreen() {
                     Text("Auto")
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
 
+            SectionTitle("Algorytm Szronu")
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -191,24 +270,12 @@ fun SettingsScreen() {
                 format = "%.1f mm",
                 enabled = !userPreferences.isAutoModeEnabled
             )
+            
+            Spacer(Modifier.height(24.dp))
+            HorizontalDivider()
             Spacer(Modifier.height(16.dp))
 
-            if (!isPro) {
-                val ad = nativeAd
-                if (ad != null) {
-                    AndroidView(
-                        modifier = Modifier.fillMaxWidth(),
-                        factory = { ctx ->
-                            LayoutInflater.from(ctx).inflate(R.layout.native_ad_layout, FrameLayout(ctx), false) as NativeAdView
-                        },
-                        update = { adView ->
-                            populateNativeAdView(ad, adView)
-                        }
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
+            SectionTitle("Powiadomienia")
             SettingSlider(
                 label = "Godzina rozpoczęcia alertów",
                 value = userPreferences.alertStartHour.toFloat(),
@@ -226,13 +293,15 @@ fun SettingsScreen() {
                 steps = 23,
                 format = "%.0f:00"
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
+
+            SectionTitle("Tryb Samochód (Lód na szybach)")
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Włącz tryb samochód", style = MaterialTheme.typography.bodyLarge)
+                Text("Włącz przypomnienia", style = MaterialTheme.typography.bodyLarge)
                 Switch(
                     checked = userPreferences.isCarModeEnabled,
                     onCheckedChange = {
@@ -250,7 +319,7 @@ fun SettingsScreen() {
             }
             Spacer(Modifier.height(16.dp))
             SettingSlider(
-                label = "Godzina przypomnienia (samochód)",
+                label = "Godzina porannego sprawdzenia",
                 value = userPreferences.carModeHour.toFloat(),
                 onValueChange = {
                     scope.launch {
@@ -266,8 +335,35 @@ fun SettingsScreen() {
                 format = "%.0f:00",
                 enabled = userPreferences.isCarModeEnabled
             )
+
+            if (!isPro) {
+                Spacer(Modifier.height(24.dp))
+                val ad = nativeAd
+                if (ad != null) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxWidth(),
+                        factory = { ctx ->
+                            LayoutInflater.from(ctx).inflate(R.layout.native_ad_layout, FrameLayout(ctx), false) as NativeAdView
+                        },
+                        update = { adView ->
+                            populateNativeAdView(ad, adView)
+                        }
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun SectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
 }
 
 private fun populateNativeAdView(nativeAd: NativeAd, adView: NativeAdView) {

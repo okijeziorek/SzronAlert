@@ -1,4 +1,4 @@
-package pl.oki.frostalert
+package pl.oki.frostalert.widget
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -8,7 +8,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import pl.oki.frostalert.FrostDatabase
+import pl.oki.frostalert.R
+import pl.oki.frostalert.data.local.FrostDatabase
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

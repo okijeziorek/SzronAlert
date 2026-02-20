@@ -1,4 +1,4 @@
-package pl.oki.frostalert.data
+package pl.oki.frostalert.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

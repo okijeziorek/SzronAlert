@@ -1,4 +1,4 @@
-package pl.oki.frostalert
+package pl.oki.frostalert.receiver
 
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -9,7 +9,8 @@ import androidx.work.WorkManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import pl.oki.frostalert.data.SettingsDataStore
+import pl.oki.frostalert.data.local.SettingsDataStore
+import pl.oki.frostalert.worker.FrostCheckWorker
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 

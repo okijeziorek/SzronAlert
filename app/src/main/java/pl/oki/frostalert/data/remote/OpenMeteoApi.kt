@@ -1,4 +1,4 @@
-package pl.oki.frostalert.data
+package pl.oki.frostalert.data.remote
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -19,7 +19,7 @@ object OpenMeteoApi {
     }
 
     suspend fun getWeather(latitude: Double, longitude: Double): WeatherResponse {
-        val url = "https://api.open-meteo.com/v1/forecast?latitude=$latitude&longitude=$longitude&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&hourly=temperature_2m,weather_code"
+        val url = "https://api.open-meteo.com/v1/forecast?latitude=$latitude&longitude=$longitude&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&hourly=temperature_2m,relative_humidity_2m,precipitation,weather_code"
         return client.get(url).body()
     }
 }
@@ -46,6 +46,9 @@ data class HourlyForecast(
     val time: List<String>,
     @SerialName("temperature_2m")
     val temperature: List<Double>,
+    @SerialName("relative_humidity_2m")
+    val humidity: List<Double>,
+    val precipitation: List<Double>,
     @SerialName("weather_code")
-    val weather_code: List<Int>
+    val weatherCode: List<Int>
 )

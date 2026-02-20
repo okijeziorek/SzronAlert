@@ -7,6 +7,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.android.gms.ads.MobileAds
+import pl.oki.frostalert.worker.FrostCheckWorker
 import java.util.concurrent.TimeUnit
 
 class FrostApplication : Application() {

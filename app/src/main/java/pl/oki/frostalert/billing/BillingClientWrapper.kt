@@ -1,4 +1,4 @@
-package pl.oki.frostalert
+package pl.oki.frostalert.billing
 
 import android.app.Activity
 import android.content.Context
@@ -92,7 +92,7 @@ class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
         }
     }
 
-    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
+    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
             for (purchase in purchases) {
                 if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {

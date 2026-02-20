@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import pl.oki.frostalert.data.SettingsRepository
-import pl.oki.frostalert.data.UserPreferences
+import pl.oki.frostalert.data.local.UserPreferences
+import pl.oki.frostalert.data.repository.SettingsRepository
 
 class SettingsViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {
 
@@ -25,7 +25,11 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
                 carModeHour = 7,
                 isAutoModeEnabled = true,
                 isCarModeEnabled = true,
-                theme = 2
+                theme = 2,
+                isManualLocationEnabled = false,
+                manualLatitude = 52.2297,
+                manualLongitude = 21.0122,
+                manualLocationName = "Warszawa"
             )
         )
 

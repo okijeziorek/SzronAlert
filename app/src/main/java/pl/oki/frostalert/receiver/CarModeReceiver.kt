@@ -1,4 +1,4 @@
-package pl.oki.frostalert
+package pl.oki.frostalert.receiver
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -8,6 +8,7 @@ import android.content.Intent
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import pl.oki.frostalert.worker.FrostCheckWorker
 import java.util.Calendar
 
 class CarModeReceiver : BroadcastReceiver() {
