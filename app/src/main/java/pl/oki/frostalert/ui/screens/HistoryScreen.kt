@@ -1,15 +1,23 @@
 package pl.oki.frostalert.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -59,7 +67,6 @@ fun HistoryScreen() {
     val scope = rememberCoroutineScope()
     val billingClient = remember { BillingClientWrapper(context) }
     val isPro by billingClient.isPro.collectAsState()
-
     var riskCount by remember { mutableStateOf(0) }
     var avgMinTemp by remember { mutableStateOf(0.0) }
 
@@ -71,9 +78,7 @@ fun HistoryScreen() {
     }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(title = { Text("Historia") })
-        },
+        topBar = { CenterAlignedTopAppBar(title = { Text("Historia") }) },
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 scope.launch {
@@ -89,78 +94,138 @@ fun HistoryScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Statystyki sezonu", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("Liczba ryzyk: $riskCount")
-            Text("Średnia min temp: ${String.format(Locale.US, "%.1f", avgMinTemp)} °C")
+            Text(
+                text = "Statystyki sezonu",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                StatCard("Liczba ryzyk", riskCount.toString())
+                StatCard("Średnia min. temp", String.format(Locale.US, "%.1f °C", avgMinTemp))
+            }
 
             Spacer(Modifier.height(24.dp))
 
-            if (records.isNotEmpty()) {
+            if (records.isEmpty()) {
+                Text(
+                    "Brak danych w historii",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            } else {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(350.dp)
+                        .heightIn(max = 420.dp),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                    )
                 ) {
                     Column(
-                        modifier = Modifier.padding(vertical = 16.dp, horizontal = 8.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Historia temperatur", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Minimalne temperatury w nocy",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
 
-                        val maxRange = (records.maxOfOrNull { it.minTemp }?.toInt() ?: 0) + 1
-                        val minRange = (records.minOfOrNull { it.minTemp }?.toInt() ?: 0) - 1
+                        Spacer(Modifier.height(12.dp))
+
+                        val yMin = (records.minOfOrNull { it.minTemp } ?: -5.0) - 2.0
+                        val yMax = (records.maxOfOrNull { it.minTemp } ?: 5.0) + 2.0
+                        val range = yMax - yMin
 
                         val yAxisData = AxisData.Builder()
-                            .steps(4)
+                            .axisOffset(10.dp)
+                            .steps(6)
+                            .labelAndAxisLinePadding(12.dp)
+                            .axisLabelColor(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                            .axisLineColor(Color.Transparent)
                             .backgroundColor(Color.Transparent)
-                            .axisLabelColor(MaterialTheme.colorScheme.onSurface)
-                            .axisLineColor(MaterialTheme.colorScheme.outline)
                             .labelData { i ->
-                                val value = minRange + (i * (maxRange - minRange) / 4.0)
-                                String.format(Locale.US, "%.1f°", value)
+                                val value = yMin + (i * range / 6.0)
+                                if (value >= -0.1 && value <= 0.1) "0°" else String.format("%.0f°", value)
                             }
                             .build()
 
                         val xAxisData = AxisData.Builder()
-                            .axisStepSize(30.dp)
-                            .backgroundColor(Color.Transparent)
-                            .axisLabelColor(MaterialTheme.colorScheme.onSurface)
-                            .axisLineColor(MaterialTheme.colorScheme.outline)
+                            .axisOffset(10.dp)
+                            .labelAndAxisLinePadding(14.dp)
+                            .axisStepSize(38.dp)
+                            .axisLabelColor(MaterialTheme.colorScheme.onSurfaceVariant)
+                            .axisLineColor(Color.Transparent)
                             .labelData { index ->
                                 records.getOrNull(index)?.let {
-                                    SimpleDateFormat("d/M", Locale.getDefault()).format(Date(it.timestamp))
+                                    SimpleDateFormat("d MMM", Locale("pl", "PL")).format(Date(it.timestamp))
                                 } ?: ""
                             }
                             .build()
 
+                        val primary = MaterialTheme.colorScheme.primary
+                        val error = MaterialTheme.colorScheme.error
+
                         val barData = records.mapIndexed { index, record ->
-                            val color = if (record.hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                            val baseColor = if (record.hasRisk) error else primary
+                            val gradientColors = listOf(
+                                baseColor.copy(alpha = 0.95f),
+                                baseColor.copy(alpha = 0.65f),
+                                baseColor.copy(alpha = 0.25f)
+                            )
+
                             BarData(
                                 point = Point(index.toFloat(), record.minTemp.toFloat()),
-                                label = SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(record.timestamp)),
-                                color = color,
-                                gradientColorList = listOf(color.copy(alpha = 0.6f), color.copy(alpha = 0.1f))
+                                label = "",
+                                color = baseColor,
+                                gradientColorList = gradientColors,
+                                description = record.minTemp.toString() + "°"
                             )
                         }
 
-                        val barChartData = BarChartData(
-                            chartData = barData,
-                            xAxisData = xAxisData,
-                            yAxisData = yAxisData,
-                            backgroundColor = Color.Transparent,
-                            barStyle = BarStyle(
-                                barWidth = 20.dp
+                        BarChart(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            barChartData = BarChartData(
+                                chartData = barData,
+                                xAxisData = xAxisData,
+                                yAxisData = yAxisData,
+                                backgroundColor = Color.Transparent,
+                                paddingEnd = 16.dp,
+                                paddingTop = 8.dp,
+                                barStyle = BarStyle(
+                                    isGradientEnabled = true,
+                                    selectionHighlightData = null
+                                ),
+                                showYAxis = true,
+                                showXAxis = true,
+                                horizontalExtraSpace = 12.dp
                             )
                         )
-                        BarChart(modifier = Modifier.fillMaxSize(), barChartData = barChartData)
+
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            LegendItem(primary, "Bezpieczna noc")
+                            Spacer(Modifier.width(24.dp))
+                            LegendItem(error, "Ryzyko przymrozku")
+                        }
                     }
                 }
-            } else {
-                Text("Brak danych w historii")
             }
 
             Spacer(Modifier.weight(1f))
@@ -178,5 +243,44 @@ fun HistoryScreen() {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun StatCard(title: String, value: String) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        )
+    ) {
+        Column(
+            Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(title, style = MaterialTheme.typography.labelMedium)
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+private fun LegendItem(color: Color, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .background(color, CircleShape)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
