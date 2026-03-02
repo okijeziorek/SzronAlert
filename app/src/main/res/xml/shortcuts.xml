@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="history"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:shortcutShortLabel="@string/tab_history"
+        android:shortcutLongLabel="@string/history_title">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="pl.oki.frostalert"
+            android:targetClass="pl.oki.frostalert.ui.MainActivity">
+            <extra android:name="shortcut_target" android:value="history" />
+        </intent>
+    </shortcut>
+</shortcuts>

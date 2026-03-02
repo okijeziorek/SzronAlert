@@ -1,22 +1,26 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.FileProvider
 import co.yml.charts.axis.AxisData
 import co.yml.charts.common.model.Point
 import co.yml.charts.ui.linechart.LineChart
@@ -24,9 +28,14 @@ import co.yml.charts.ui.linechart.model.*
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import pl.oki.frostalert.R
 import pl.oki.frostalert.billing.BillingClientWrapper
 import pl.oki.frostalert.data.local.FrostDatabase
+import pl.oki.frostalert.data.local.TemperatureRecord
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -52,7 +61,7 @@ fun HistoryScreen() {
     }
 
     Scaffold(
-        topBar = { CenterAlignedTopAppBar(title = { Text("Historia Szronu") }) },
+        topBar = { CenterAlignedTopAppBar(title = { Text(stringResource(R.string.history_title)) }) },
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 scope.launch {
@@ -72,50 +81,70 @@ fun HistoryScreen() {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Statystyki Ostatnich Dni",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Start)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.stats_season),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                if (records.isNotEmpty()) {
+                    TextButton(onClick = { exportToCsv(context, records) }) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.export_csv))
+                    }
+                }
+            }
+            
             Spacer(Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatCard(Modifier.weight(1f), "Dni z ryzykiem", riskCount.toString(), MaterialTheme.colorScheme.error)
-                StatCard(Modifier.weight(1f), "Średnia temp.", String.format(Locale.US, "%.1f°C", avgMinTemp), MaterialTheme.colorScheme.primary)
+                StatCard(Modifier.weight(1f), stringResource(R.string.stat_risk_days), riskCount.toString(), MaterialTheme.colorScheme.error)
+                StatCard(Modifier.weight(1f), stringResource(R.string.stat_avg_temp), String.format(Locale.US, "%.1f°C", avgMinTemp), MaterialTheme.colorScheme.primary)
             }
 
             Spacer(Modifier.height(32.dp))
 
-            if (records.isEmpty()) {
-                Text("Brak danych do wyświetlenia", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (records.size < 2) {
+                Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (records.isEmpty()) stringResource(R.string.history_empty) else stringResource(R.string.history_hint),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             } else {
                 Text(
-                    text = "Trend temperatury (od lewej: najnowsze)",
+                    text = "Trend temperatury (najnowsze po lewej)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
                 )
 
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(320.dp)
-                        .clip(RoundedCornerShape(24.dp)), // Wymuszone przycinanie zawartości
+                    modifier = Modifier.fillMaxWidth().height(320.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
                 ) {
                     val points = records.mapIndexed { index, record ->
                         Point(index.toFloat(), record.minTemp.toFloat())
                     }
 
-                    val yMin = (records.minOfOrNull { it.minTemp } ?: -5.0).let { if (it > 0) -2.0 else it - 2.0 }.toFloat()
-                    val yMax = (maxOf(records.maxOfOrNull { it.minTemp } ?: 5.0, 2.0) + 2.0).toFloat()
+                    val minVal = records.minOf { it.minTemp }
+                    val maxVal = records.maxOf { it.minTemp }
+                    val yMin = (if (minVal > 0) -2.0 else minVal - 2.0).toFloat()
+                    val yMax = (if (maxVal < 2) 4.0 else maxVal + 2.0).toFloat()
 
                     val xAxisData = AxisData.Builder()
-                        .axisStepSize(80.dp) // Większy krok dla czytelności
+                        .axisStepSize(80.dp)
                         .steps(points.size - 1)
                         .labelData { index -> 
                             records.getOrNull(index)?.let {
@@ -148,9 +177,9 @@ fun HistoryScreen() {
                                         width = 4f,
                                         lineType = LineType.SmoothCurve(isDotted = false)
                                     ),
-                                    IntersectionPoint(color = MaterialTheme.colorScheme.primary, radius = 3.dp),
+                                    IntersectionPoint(color = MaterialTheme.colorScheme.primary, radius = 4.dp),
                                     SelectionHighlightPoint(color = MaterialTheme.colorScheme.error),
-                                    null, 
+                                    null,
                                     SelectionHighlightPopUp()
                                 )
                             )
@@ -159,12 +188,11 @@ fun HistoryScreen() {
                         yAxisData = yAxisData,
                         backgroundColor = Color.Transparent,
                         paddingTop = 20.dp,
-                        bottomPadding = 40.dp, // Miejsce na daty
-                        containerPaddingEnd = 24.dp 
+                        bottomPadding = 40.dp,
+                        containerPaddingEnd = 40.dp
                     )
 
-                    // Box z clipToBounds zapobiega wychodzeniu linii poza obszar karty
-                    Box(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
+                    Box(modifier = Modifier.padding(8.dp)) {
                         LineChart(
                             modifier = Modifier.fillMaxSize(),
                             lineChartData = lineChartData
@@ -188,6 +216,33 @@ fun HistoryScreen() {
                 )
             }
         }
+    }
+}
+
+private fun exportToCsv(context: Context, records: List<TemperatureRecord>) {
+    val csvHeader = "Data,Min Temp (C),Ryzyko Szronu\n"
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    
+    val csvBody = records.joinToString("\n") { 
+        "${sdf.format(Date(it.timestamp))},${String.format(Locale.US, "%.1f", it.minTemp)},${if (it.hasRisk) "TAK" else "NIE"}"
+    }
+
+    try {
+        val fileName = "frost_alert_history_${System.currentTimeMillis()}.csv"
+        val file = File(context.cacheDir, fileName)
+        file.writeText(csvHeader + csvBody)
+
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_SUBJECT, "Historia Szron Alert")
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Eksportuj historię"))
+    } catch (e: Exception) {
+        // Log error
     }
 }
 

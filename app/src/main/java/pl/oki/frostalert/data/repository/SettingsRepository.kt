@@ -43,4 +43,16 @@ class SettingsRepository(private val settingsDataStore: SettingsDataStore) {
     suspend fun updateTheme(value: Int) {
         settingsDataStore.updateTheme(value)
     }
+
+    suspend fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
+        settingsDataStore.updateManualLocation(isEnabled, lat, lon, name)
+    }
+
+    suspend fun setOnboardingCompleted(isCompleted: Boolean) {
+        settingsDataStore.setOnboardingCompleted(isCompleted)
+    }
+
+    suspend fun updateUseFahrenheit(useFahrenheit: Boolean) {
+        settingsDataStore.updateUseFahrenheit(useFahrenheit)
+    }
 }

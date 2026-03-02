@@ -1,10 +1,10 @@
 package pl.oki.frostalert.ui.screens
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
+import android.app.Application
 import android.content.Context
 import android.location.Location
-import androidx.lifecycle.ViewModel
+import androidx.glance.appwidget.updateAll
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.Dispatchers
@@ -20,8 +20,7 @@ import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.remote.WeatherResponse
 import pl.oki.frostalert.utils.WeatherCalculations
-import pl.oki.frostalert.widget.FrostWidgetProvider
-import pl.oki.frostalert.widget.updateAppWidget
+import pl.oki.frostalert.widget.FrostGlanceWidget
 import kotlin.coroutines.resume
 
 sealed class HomeUiState {
@@ -30,13 +29,15 @@ sealed class HomeUiState {
         val weather: WeatherResponse,
         val minTemp: Double,
         val hasFrostRisk: Boolean,
-        val warningMessage: String
+        val warningMessage: String,
+        val useFahrenheit: Boolean
     ) : HomeUiState()
     data class Error(val message: String) : HomeUiState()
 }
 
-class HomeViewModel(private val context: Context) : ViewModel() {
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val context = application.applicationContext
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -101,21 +102,24 @@ class HomeViewModel(private val context: Context) : ViewModel() {
                     hasRisk = hasRisk
                 ))
 
-                // Aktualizacja widgetu
-                val appWidgetManager = AppWidgetManager.getInstance(context)
-                val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, FrostWidgetProvider::class.java))
-                for (appWidgetId in appWidgetIds) {
-                    updateAppWidget(context, appWidgetManager, appWidgetId)
-                }
+                // NAPRAWIONO: Prawidłowe odświeżanie widgetu Glance
+                FrostGlanceWidget().updateAll(context)
 
                 val warningMessage = WeatherCalculations.getWarningMessage(
                     minTemp, weather.current.humidity, weather.current.precipitation, 
-                    weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold
+                    weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold,
+                    useFahrenheit = userPreferences.useFahrenheit
                 )
 
-                _uiState.value = HomeUiState.Success(weather, minTemp, hasRisk, warningMessage)
+                _uiState.value = HomeUiState.Success(
+                    weather, 
+                    minTemp, 
+                    hasRisk, 
+                    warningMessage, 
+                    userPreferences.useFahrenheit
+                )
             } catch (e: Exception) {
-                _uiState.value = HomeUiState.Error("Błąd sieci. Sprawdź internet.")
+                _uiState.value = HomeUiState.Error("Błąd połączenia.")
             } finally {
                 _isRefreshing.value = false
             }

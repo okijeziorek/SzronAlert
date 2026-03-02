@@ -1,4 +1,60 @@
 <resources>
     <string name="app_name">Szron Alert</string>
     <string name="widget_description">Ostrzeżenia Szron – min. temperatura w nocy</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Główna</string>
+    <string name="tab_settings">Ustawienia</string>
+    <string name="tab_history">Historia</string>
+    <string name="tab_debug">Debug</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Pobieranie danych pogodowych…</string>
+    <string name="risk_high">Wysokie ryzyko szronu!</string>
+    <string name="risk_none">Bezpiecznie – brak ryzyka</string>
+    <string name="night_min_temp">Prognoza na noc (min)</string>
+    <string name="hourly_forecast">Najbliższe 24 godziny</string>
+    <string name="refresh_success">Dane zaktualizowane</string>
+    <string name="battery_warning_title">Niezawodne alerty</string>
+    <string name="battery_warning_desc">Wyłącz optymalizację baterii, aby otrzymywać powiadomienia w nocy.</string>
+    <string name="battery_fix_btn">USTAW</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Ustawienia</string>
+    <string name="section_location">Lokalizacja</string>
+    <string name="manual_location_toggle">Ustaw lokalizację ręcznie</string>
+    <string name="location_gps_auto">Używam GPS (automatycznie)</string>
+    <string name="save_location">Zapisz lokalizację</string>
+    <string name="section_appearance">Wygląd</string>
+    <string name="theme_light">Jasny</string>
+    <string name="theme_dark">Ciemny</string>
+    <string name="theme_auto">System</string>
+    <string name="section_algorithm">Algorytm Szronu</string>
+    <string name="auto_mode">Tryb automatyczny</string>
+    <string name="temp_threshold">Próg temperatury</string>
+    <string name="humidity_threshold">Próg wilgotności</string>
+    <string name="section_notifications">Powiadomienia</string>
+    <string name="alert_start">Alert start hour</string>
+    <string name="alert_end">Alert end hour</string>
+    <string name="car_mode_title">Tryb Samochód (Lód na szybach)</string>
+    <string name="car_mode_desc">Włącz przypomnienia rano</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Historia Szronu</string>
+    <string name="stats_season">Statystyki sezonu</string>
+    <string name="stat_risk_days">Dni z ryzykiem</string>
+    <string name="stat_avg_temp">Średnia temp.</string>
+    <string name="history_empty">Brak danych w historii</string>
+    <string name="history_hint">Zbierz dane z 2 nocy, by zobaczyć wykres</string>
+    <string name="export_csv">Eksportuj do CSV</string>
+    <string name="export_error">Błąd eksportu danych</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Witaj we FrostAlert</string>
+    <string name="welcome_desc">Twój inteligentny asystent, który przewidzi szron na szybach Twojego auta.</string>
+    <string name="feature_1_title">Precyzyjny algorytm</string>
+    <string name="feature_1_desc">Analizujemy temperaturę punktu rosy i wychłodzenie radiacyjne szyb.</string>
+    <string name="feature_2_title">Alerty w tle</string>
+    <string name="feature_2_desc">Powiadomimy Cię wieczorem, jeśli rano czeka Cię skrobanie szyb.</string>
+    <string name="onboarding_finish">ZACZYNAMY</string>
 </resources>

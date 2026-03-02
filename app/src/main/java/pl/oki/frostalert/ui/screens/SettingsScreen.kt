@@ -6,40 +6,13 @@ import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -66,10 +39,10 @@ fun SettingsScreen() {
     val billingClient = remember { BillingClientWrapper(context) }
     val userPreferences by dataStore.userPreferencesFlow.collectAsState(
         initial = UserPreferences(
-            tempThreshold = 2.0,
-            humidityThreshold = 80,
-            precipitationThreshold = 0.1,
-            alertStartHour = 18,
+            tempThreshold = 1.0,
+            humidityThreshold = 75,
+            precipitationThreshold = 0.2,
+            alertStartHour = 19,
             alertEndHour = 8,
             ignoreUntil = 0L,
             carModeHour = 7,
@@ -79,7 +52,9 @@ fun SettingsScreen() {
             isManualLocationEnabled = false,
             manualLatitude = 52.2297,
             manualLongitude = 21.0122,
-            manualLocationName = "Warszawa"
+            manualLocationName = "Warszawa",
+            isOnboardingCompleted = true,
+            useFahrenheit = false
         )
     )
     val isPro by billingClient.isPro.collectAsState()
@@ -200,6 +175,23 @@ fun SettingsScreen() {
             HorizontalDivider()
             Spacer(Modifier.height(16.dp))
 
+            SectionTitle("Jednostki")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Używaj stopni Fahrenheita (°F)", style = MaterialTheme.typography.bodyLarge)
+                Switch(
+                    checked = userPreferences.useFahrenheit,
+                    onCheckedChange = { scope.launch { dataStore.updateUseFahrenheit(it) } }
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(16.dp))
+
             SectionTitle("Wygląd")
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -247,7 +239,7 @@ fun SettingsScreen() {
                 onValueChange = { scope.launch { dataStore.updateTempThreshold(it.toDouble()) } },
                 range = -10f..10f,
                 steps = 19,
-                format = "%.1f °C",
+                format = if (userPreferences.useFahrenheit) "%.1f °F" else "%.1f °C",
                 enabled = !userPreferences.isAutoModeEnabled
             )
             Spacer(Modifier.height(16.dp))

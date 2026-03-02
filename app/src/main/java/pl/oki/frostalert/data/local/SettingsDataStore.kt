@@ -2,13 +2,7 @@ package pl.oki.frostalert.data.local
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.doublePreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -29,7 +23,9 @@ data class UserPreferences(
     val isManualLocationEnabled: Boolean,
     val manualLatitude: Double,
     val manualLongitude: Double,
-    val manualLocationName: String
+    val manualLocationName: String,
+    val isOnboardingCompleted: Boolean,
+    val useFahrenheit: Boolean
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -49,13 +45,15 @@ class SettingsDataStore(private val context: Context) {
         val MANUAL_LATITUDE = doublePreferencesKey("manual_latitude")
         val MANUAL_LONGITUDE = doublePreferencesKey("manual_longitude")
         val MANUAL_LOCATION_NAME = stringPreferencesKey("manual_location_name")
+        val IS_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
+        val USE_FAHRENHEIT = booleanPreferencesKey("use_fahrenheit")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
         .map { preferences ->
             UserPreferences(
-                tempThreshold = preferences[Keys.TEMP_THRESHOLD] ?: 1.0, // Zmiana na 1.0 (bardziej restrykcyjne dla powierzchni)
-                humidityThreshold = preferences[Keys.HUMIDITY_THRESHOLD] ?: 75, // Zmiana na 75%
+                tempThreshold = preferences[Keys.TEMP_THRESHOLD] ?: 1.0,
+                humidityThreshold = preferences[Keys.HUMIDITY_THRESHOLD] ?: 75,
                 precipitationThreshold = preferences[Keys.PRECIPITATION_THRESHOLD] ?: 0.2,
                 alertStartHour = preferences[Keys.ALERT_START_HOUR] ?: 19,
                 alertEndHour = preferences[Keys.ALERT_END_HOUR] ?: 8,
@@ -67,68 +65,50 @@ class SettingsDataStore(private val context: Context) {
                 isManualLocationEnabled = preferences[Keys.IS_MANUAL_LOCATION_ENABLED] ?: false,
                 manualLatitude = preferences[Keys.MANUAL_LATITUDE] ?: 52.2297,
                 manualLongitude = preferences[Keys.MANUAL_LONGITUDE] ?: 21.0122,
-                manualLocationName = preferences[Keys.MANUAL_LOCATION_NAME] ?: "Warszawa"
+                manualLocationName = preferences[Keys.MANUAL_LOCATION_NAME] ?: "Warszawa",
+                isOnboardingCompleted = preferences[Keys.IS_ONBOARDING_COMPLETED] ?: false,
+                useFahrenheit = preferences[Keys.USE_FAHRENHEIT] ?: false
             )
         }
 
     suspend fun updateAutoModeEnabled(isEnabled: Boolean) {
-        context.dataStore.edit { settings ->
-            settings[Keys.IS_AUTO_MODE_ENABLED] = isEnabled
-        }
+        context.dataStore.edit { it[Keys.IS_AUTO_MODE_ENABLED] = isEnabled }
     }
 
     suspend fun updateCarModeEnabled(isEnabled: Boolean) {
-        context.dataStore.edit { settings ->
-            settings[Keys.IS_CAR_MODE_ENABLED] = isEnabled
-        }
+        context.dataStore.edit { it[Keys.IS_CAR_MODE_ENABLED] = isEnabled }
     }
 
     suspend fun updateTempThreshold(value: Double) {
-        context.dataStore.edit { settings ->
-            settings[Keys.TEMP_THRESHOLD] = value
-        }
+        context.dataStore.edit { it[Keys.TEMP_THRESHOLD] = value }
     }
 
     suspend fun updateHumidityThreshold(value: Int) {
-        context.dataStore.edit { settings ->
-            settings[Keys.HUMIDITY_THRESHOLD] = value
-        }
+        context.dataStore.edit { it[Keys.HUMIDITY_THRESHOLD] = value }
     }
 
     suspend fun updatePrecipitationThreshold(value: Double) {
-        context.dataStore.edit { settings ->
-            settings[Keys.PRECIPITATION_THRESHOLD] = value
-        }
+        context.dataStore.edit { it[Keys.PRECIPITATION_THRESHOLD] = value }
     }
 
     suspend fun updateAlertStartHour(value: Int) {
-        context.dataStore.edit { settings ->
-            settings[Keys.ALERT_START_HOUR] = value
-        }
+        context.dataStore.edit { it[Keys.ALERT_START_HOUR] = value }
     }
 
     suspend fun updateAlertEndHour(value: Int) {
-        context.dataStore.edit { settings ->
-            settings[Keys.ALERT_END_HOUR] = value
-        }
+        context.dataStore.edit { it[Keys.ALERT_END_HOUR] = value }
     }
 
     suspend fun updateIgnoreUntil(timestamp: Long) {
-        context.dataStore.edit { settings ->
-            settings[Keys.IGNORE_UNTIL] = timestamp
-        }
+        context.dataStore.edit { it[Keys.IGNORE_UNTIL] = timestamp }
     }
 
     suspend fun updateCarModeHour(value: Int) {
-        context.dataStore.edit { settings ->
-            settings[Keys.CAR_MODE_HOUR] = value
-        }
+        context.dataStore.edit { it[Keys.CAR_MODE_HOUR] = value }
     }
 
     suspend fun updateTheme(value: Int) {
-        context.dataStore.edit { settings ->
-            settings[Keys.THEME] = value
-        }
+        context.dataStore.edit { it[Keys.THEME] = value }
     }
 
     suspend fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
@@ -138,5 +118,13 @@ class SettingsDataStore(private val context: Context) {
             settings[Keys.MANUAL_LONGITUDE] = lon
             settings[Keys.MANUAL_LOCATION_NAME] = name
         }
+    }
+
+    suspend fun setOnboardingCompleted(isCompleted: Boolean) {
+        context.dataStore.edit { it[Keys.IS_ONBOARDING_COMPLETED] = isCompleted }
+    }
+
+    suspend fun updateUseFahrenheit(useFahrenheit: Boolean) {
+        context.dataStore.edit { it[Keys.USE_FAHRENHEIT] = useFahrenheit }
     }
 }

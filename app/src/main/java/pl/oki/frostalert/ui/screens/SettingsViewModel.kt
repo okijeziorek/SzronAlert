@@ -16,10 +16,10 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = UserPreferences(
-                tempThreshold = 2.0,
-                humidityThreshold = 80,
-                precipitationThreshold = 0.1,
-                alertStartHour = 18,
+                tempThreshold = 1.0,
+                humidityThreshold = 75,
+                precipitationThreshold = 0.2,
+                alertStartHour = 19,
                 alertEndHour = 8,
                 ignoreUntil = 0L,
                 carModeHour = 7,
@@ -29,7 +29,9 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
                 isManualLocationEnabled = false,
                 manualLatitude = 52.2297,
                 manualLongitude = 21.0122,
-                manualLocationName = "Warszawa"
+                manualLocationName = "Warszawa",
+                isOnboardingCompleted = false,
+                useFahrenheit = false
             )
         )
 
@@ -84,6 +86,24 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
     fun updateTheme(value: Int) {
         viewModelScope.launch {
             settingsRepository.updateTheme(value)
+        }
+    }
+
+    fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
+        viewModelScope.launch {
+            settingsRepository.updateManualLocation(isEnabled, lat, lon, name)
+        }
+    }
+
+    fun setOnboardingCompleted(isCompleted: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setOnboardingCompleted(isCompleted)
+        }
+    }
+
+    fun updateUseFahrenheit(useFahrenheit: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateUseFahrenheit(useFahrenheit)
         }
     }
 }

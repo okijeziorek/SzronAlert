@@ -1,5 +1,6 @@
 package pl.oki.frostalert.ui.screens
 
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -15,17 +16,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.remote.CurrentWeather
 import pl.oki.frostalert.data.remote.HourlyForecast
+import pl.oki.frostalert.utils.WeatherCalculations
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,8 +36,7 @@ import java.util.*
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
-    // Inicjalizacja ViewModel
-    val viewModel = remember { HomeViewModel(context) }
+    val viewModel = remember { HomeViewModel(context.applicationContext as Application) }
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     
@@ -64,7 +66,7 @@ fun HomeScreen() {
                             Text(text = state.message, color = MaterialTheme.colorScheme.error)
                             Spacer(Modifier.height(16.dp))
                             Button(onClick = { viewModel.refreshData() }) {
-                                Text("Spróbuj ponownie")
+                                Text(stringResource(R.string.refresh_success)) // Fallback to a refresh-like string
                             }
                         }
                     }
@@ -94,8 +96,8 @@ fun BatteryOptimizationWarning() {
                 Icon(Icons.Default.BatteryAlert, contentDescription = null)
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Niezawodne alerty", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    Text("Wyłącz optymalizację baterii dla aplikacji.", fontSize = 11.sp)
+                    Text(stringResource(R.string.battery_warning_title), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(stringResource(R.string.battery_warning_desc), fontSize = 11.sp)
                 }
                 TextButton(onClick = {
                     val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
@@ -103,7 +105,7 @@ fun BatteryOptimizationWarning() {
                     }
                     context.startActivity(intent)
                 }) {
-                    Text("FIX")
+                    Text(stringResource(R.string.battery_fix_btn))
                 }
             }
         }
@@ -114,14 +116,14 @@ fun BatteryOptimizationWarning() {
 fun WeatherSuccessScreen(state: HomeUiState.Success) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         FrostWarningCard(hasRisk = state.hasFrostRisk, warningMessage = state.warningMessage)
-        CurrentWeatherCard(weather = state.weather.current)
-        MinTemperatureCard(minTemp = state.minTemp)
-        HourlyForecastSection(hourly = state.weather.hourly)
+        CurrentWeatherCard(weather = state.weather.current, useFahrenheit = state.useFahrenheit)
+        MinTemperatureCard(minTemp = state.minTemp, useFahrenheit = state.useFahrenheit)
+        HourlyForecastSection(hourly = state.weather.hourly, useFahrenheit = state.useFahrenheit)
     }
 }
 
 @Composable
-fun MinTemperatureCard(minTemp: Double) {
+fun MinTemperatureCard(minTemp: Double, useFahrenheit: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -134,15 +136,16 @@ fun MinTemperatureCard(minTemp: Double) {
             Icon(Icons.Default.Nightlight, contentDescription = null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("Najniższa w nocy", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.night_min_temp), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = Alignment.Bottom) {
+                    val tempValue = if (useFahrenheit) WeatherCalculations.celsiusToFahrenheit(minTemp) else minTemp
                     Text(
-                        text = "%.1f".format(Locale.US, minTemp),
+                        text = "%.1f".format(Locale.US, tempValue),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                     Text(
-                        text = "°C",
+                        text = if (useFahrenheit) "°F" else "°C",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 4.dp, start = 2.dp)
@@ -154,20 +157,21 @@ fun MinTemperatureCard(minTemp: Double) {
 }
 
 @Composable
-fun HourlyForecastSection(hourly: HourlyForecast) {
+fun HourlyForecastSection(hourly: HourlyForecast, useFahrenheit: Boolean) {
     Column {
-        Text("Następne godziny", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.hourly_forecast), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         LazyRow(contentPadding = PaddingValues(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             itemsIndexed(hourly.time.take(24)) { index, timeStr ->
-                HourlyItem(timeStr, hourly.temperature[index], hourly.weatherCode[index])
+                HourlyItem(timeStr, hourly.temperature[index], hourly.weatherCode[index], useFahrenheit)
             }
         }
     }
 }
 
 @Composable
-fun HourlyItem(timeStr: String, temp: Double, code: Int) {
+fun HourlyItem(timeStr: String, temp: Double, code: Int, useFahrenheit: Boolean) {
     val displayTime = timeStr.substringAfter("T")
+    val displayTemp = if (useFahrenheit) WeatherCalculations.celsiusToFahrenheit(temp) else temp
     Card(
         modifier = Modifier.width(70.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -175,7 +179,7 @@ fun HourlyItem(timeStr: String, temp: Double, code: Int) {
         Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(displayTime, fontSize = 10.sp)
             Icon(getWeatherIcon(code), contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-            Text("%.0f°".format(temp), fontWeight = FontWeight.Bold)
+            Text("%.0f°".format(displayTemp), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -200,12 +204,12 @@ fun FrostWarningCard(hasRisk: Boolean, warningMessage: String) {
 }
 
 @Composable
-fun CurrentWeatherCard(weather: CurrentWeather) {
+fun CurrentWeatherCard(weather: CurrentWeather, useFahrenheit: Boolean) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-            WeatherItem(getWeatherIcon(weather.weatherCode), "${weather.temperature}°", "Teraz")
-            WeatherItem(Icons.Default.WaterDrop, "${weather.humidity}%", "Wilgoć")
-            WeatherItem(Icons.Default.Cloud, "${weather.precipitation}mm", "Opady")
+            val displayTemp = if (useFahrenheit) WeatherCalculations.celsiusToFahrenheit(weather.temperature) else weather.temperature
+            WeatherItem(getWeatherIcon(weather.weatherCode), "%.1f°".format(displayTemp), stringResource(R.string.refresh_success)) // Fallback label
+            WeatherItem(Icons.Default.WaterDrop, "${weather.humidity}%", stringResource(R.string.humidity_threshold))
         }
     }
 }

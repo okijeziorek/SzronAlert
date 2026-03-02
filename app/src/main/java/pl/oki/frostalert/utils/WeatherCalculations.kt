@@ -7,7 +7,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.math.ln
-import kotlin.math.pow
 
 object WeatherCalculations {
     
@@ -20,14 +19,13 @@ object WeatherCalculations {
     }
 
     // Estymuje temperaturę powierzchni (szyby/gruntu) na podstawie radiacji i zachmurzenia
-    // Czyste niebo (weatherCode 0-1) powoduje radiacyjne wychłodzenie powierzchni poniżej temp. powietrza
     fun estimateSurfaceTemp(temp: Double, weatherCode: Int): Double {
         val coolingFactor = when (weatherCode) {
             0 -> 4.5  // Czyste niebo: silne wychłodzenie radiacyjne
             1 -> 3.5  // Małe zachmurzenie
             2 -> 2.5  // Częściowe zachmurzenie
             3 -> 1.5  // Zachmurzenie duże
-            else -> 0.5 // Całkowite zachmurzenie / opady: minimalna różnica
+            else -> 0.5 // Całkowite zachmurzenie / opady
         }
         return temp - coolingFactor
     }
@@ -41,18 +39,22 @@ object WeatherCalculations {
         humidityThreshold: Double,
         precipitationThreshold: Double
     ): Boolean {
-        // Jeśli pada deszcz (nie śnieg), ryzyko szronu na szybach maleje (zmywanie), 
-        // ale przy niskich temp może powstać gołoledź. Tu skupiamy się na szronie.
         if (precip > precipitationThreshold && weatherCode < 70) return false
         
         val dewPoint = calculateDewPoint(temp, humidity)
         val surfaceTemp = estimateSurfaceTemp(temp, weatherCode)
         
-        // Szron powstaje gdy:
-        // 1. Temp. powierzchni jest poniżej punktu zamarzania (lub progu użytkownika)
-        // 2. Temp. powierzchni jest poniżej punktu rosy (resublimacja pary wodnej)
-        // 3. Wilgotność jest wystarczająco wysoka
         return surfaceTemp <= tempThreshold && surfaceTemp <= dewPoint && humidity >= humidityThreshold
+    }
+
+    fun celsiusToFahrenheit(celsius: Double): Double {
+        return (celsius * 9 / 5) + 32
+    }
+
+    fun formatTemperature(temp: Double, useFahrenheit: Boolean): String {
+        val converted = if (useFahrenheit) celsiusToFahrenheit(temp) else temp
+        val unit = if (useFahrenheit) "°F" else "°C"
+        return String.format(Locale.US, "%.1f%s", converted, unit)
     }
 
     fun getWarningMessage(
@@ -62,18 +64,20 @@ object WeatherCalculations {
         weatherCode: Int, 
         tempThreshold: Double, 
         humidityThreshold: Double, 
-        precipitationThreshold: Double
+        precipitationThreshold: Double,
+        useFahrenheit: Boolean = false
     ): String {
         val dewPoint = calculateDewPoint(temp, humidity)
         val surfaceTemp = estimateSurfaceTemp(temp, weatherCode)
-        val formattedTemp = String.format(Locale.US, "%.1f", temp)
-        val formattedDewPoint = String.format(Locale.US, "%.1f", dewPoint)
-        val formattedSurface = String.format(Locale.US, "%.1f", surfaceTemp)
+        
+        val formattedTemp = formatTemperature(temp, useFahrenheit)
+        val formattedDewPoint = formatTemperature(dewPoint, useFahrenheit)
+        val formattedSurface = formatTemperature(surfaceTemp, useFahrenheit)
 
         return if (hasFrostRisk(temp, humidity, precip, weatherCode, tempThreshold, humidityThreshold, precipitationThreshold)) {
-            "Wysokie ryzyko szronu!\nPowietrze: $formattedTemp°C | Szyba: $formattedSurface°C\nPunkt rosy: $formattedDewPoint°C"
+            "Wysokie ryzyko szronu!\nPowietrze: $formattedTemp | Szyba: $formattedSurface\nPunkt rosy: $formattedDewPoint"
         } else {
-            "Bezpiecznie – brak ryzyka szronu\nTemperatura: $formattedTemp°C"
+            "Bezpiecznie – brak ryzyka szronu\nTemperatura: $formattedTemp"
         }
     }
 

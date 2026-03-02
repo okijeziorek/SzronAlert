@@ -1,0 +1,58 @@
+<resources>
+    <string name="app_name">FrostAlert</string>
+    <string name="widget_description">Frost warnings – night min temperature</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Home</string>
+    <string name="tab_settings">Settings</string>
+    <string name="tab_history">History</string>
+    <string name="tab_debug">Debug</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Fetching weather data…</string>
+    <string name="risk_high">High frost risk!</string>
+    <string name="risk_none">Safe – no frost risk</string>
+    <string name="night_min_temp">Night Forecast (min)</string>
+    <string name="hourly_forecast">Next 24 hours</string>
+    <string name="refresh_success">Data updated</string>
+    <string name="battery_warning_title">Reliable Alerts</string>
+    <string name="battery_warning_desc">Disable battery optimization to receive notifications at night.</string>
+    <string name="battery_fix_btn">SET</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="section_location">Location</string>
+    <string name="manual_location_toggle">Set location manually</string>
+    <string name="location_gps_auto">Using GPS (automatic)</string>
+    <string name="save_location">Save Location</string>
+    <string name="section_appearance">Appearance</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_auto">System</string>
+    <string name="section_algorithm">Frost Algorithm</string>
+    <string name="auto_mode">Automatic Mode</string>
+    <string name="temp_threshold">Temp Threshold</string>
+    <string name="humidity_threshold">Humidity Threshold</string>
+    <string name="section_notifications">Notifications</string>
+    <string name="alert_start">Alert start hour</string>
+    <string name="alert_end">Alert end hour</string>
+    <string name="car_mode_title">Car Mode (Ice on windows)</string>
+    <string name="car_mode_desc">Enable morning reminders</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Frost History</string>
+    <string name="stats_season">Season Stats</string>
+    <string name="stat_risk_days">Risk Days</string>
+    <string name="stat_avg_temp">Avg Min Temp</string>
+    <string name="history_empty">No data in history</string>
+    <string name="history_hint">Collect data from 2 nights to see the chart</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Welcome to FrostAlert</string>
+    <string name="welcome_desc">Your smart assistant that predicts frost on your car windows.</string>
+    <string name="feature_1_title">Precise Algorithm</string>
+    <string name="feature_1_desc">We analyze dew point and radiant cooling of car windows.</string>
+    <string name="feature_2_title">Background Alerts</string>
+    <string name="feature_2_desc">We will notify you in the evening if you need to scrape ice in the morning.</string>
+    <string name="onboarding_finish">GET STARTED</string>
+</resources>
