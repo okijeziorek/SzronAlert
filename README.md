@@ -52,7 +52,7 @@
 
 1.  **Klonowanie repozytorium**:
     ```bash
-    git clone https://github.com/twoj-profil/FrostAlert.git
+    git clone https://github.com/okijeziorek/FrostAlert.git
     ```
 2.  **Otwarcie w Android Studio**: Zalecana wersja Ladybug lub nowsza.
 3.  **Klucze API**: Aplikacja korzysta z darmowego API Open-Meteo (nie wymaga klucza).
