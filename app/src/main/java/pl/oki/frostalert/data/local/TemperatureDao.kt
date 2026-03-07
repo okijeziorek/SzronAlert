@@ -13,6 +13,9 @@ interface TemperatureDao {
     @Query("SELECT * FROM temperature_records ORDER BY timestamp DESC LIMIT 30")
     fun getRecentRecords(): Flow<List<TemperatureRecord>>
 
+    @Query("SELECT * FROM temperature_records ORDER BY timestamp DESC")
+    suspend fun getAllRecords(): List<TemperatureRecord>
+
     @Query("SELECT COUNT(*) FROM temperature_records WHERE hasRisk = 1")
     suspend fun getRiskCount(): Int
 

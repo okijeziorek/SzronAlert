@@ -49,6 +49,7 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
         val tempThreshold = if (userPreferences.isAutoModeEnabled) 2.0 else userPreferences.tempThreshold
         val humidityThreshold = if (userPreferences.isAutoModeEnabled) 80.0 else userPreferences.humidityThreshold.toDouble()
         val precipitationThreshold = if (userPreferences.isAutoModeEnabled) 0.1 else userPreferences.precipitationThreshold
+        val sensitivity = userPreferences.sensitivity
 
         return try {
             val location = if (userPreferences.isManualLocationEnabled) {
@@ -70,7 +71,8 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
                 weather.current.weatherCode, 
                 tempThreshold, 
                 humidityThreshold, 
-                precipitationThreshold
+                precipitationThreshold,
+                sensitivity = sensitivity
             )
 
             val record = TemperatureRecord(

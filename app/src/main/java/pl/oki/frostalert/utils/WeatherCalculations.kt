@@ -19,15 +19,15 @@ object WeatherCalculations {
     }
 
     // Estymuje temperaturę powierzchni (szyby/gruntu) na podstawie radiacji i zachmurzenia
-    fun estimateSurfaceTemp(temp: Double, weatherCode: Int): Double {
-        val coolingFactor = when (weatherCode) {
+    fun estimateSurfaceTemp(temp: Double, weatherCode: Int, sensitivity: Double = 1.0): Double {
+        val baseCoolingFactor = when (weatherCode) {
             0 -> 4.5  // Czyste niebo: silne wychłodzenie radiacyjne
             1 -> 3.5  // Małe zachmurzenie
             2 -> 2.5  // Częściowe zachmurzenie
             3 -> 1.5  // Zachmurzenie duże
             else -> 0.5 // Całkowite zachmurzenie / opady
         }
-        return temp - coolingFactor
+        return temp - (baseCoolingFactor * sensitivity)
     }
 
     fun hasFrostRisk(
@@ -37,12 +37,13 @@ object WeatherCalculations {
         weatherCode: Int,
         tempThreshold: Double,
         humidityThreshold: Double,
-        precipitationThreshold: Double
+        precipitationThreshold: Double,
+        sensitivity: Double = 1.0
     ): Boolean {
         if (precip > precipitationThreshold && weatherCode < 70) return false
         
         val dewPoint = calculateDewPoint(temp, humidity)
-        val surfaceTemp = estimateSurfaceTemp(temp, weatherCode)
+        val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity)
         
         return surfaceTemp <= tempThreshold && surfaceTemp <= dewPoint && humidity >= humidityThreshold
     }
@@ -65,16 +66,17 @@ object WeatherCalculations {
         tempThreshold: Double, 
         humidityThreshold: Double, 
         precipitationThreshold: Double,
+        sensitivity: Double = 1.0,
         useFahrenheit: Boolean = false
     ): String {
         val dewPoint = calculateDewPoint(temp, humidity)
-        val surfaceTemp = estimateSurfaceTemp(temp, weatherCode)
+        val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity)
         
         val formattedTemp = formatTemperature(temp, useFahrenheit)
         val formattedDewPoint = formatTemperature(dewPoint, useFahrenheit)
         val formattedSurface = formatTemperature(surfaceTemp, useFahrenheit)
 
-        return if (hasFrostRisk(temp, humidity, precip, weatherCode, tempThreshold, humidityThreshold, precipitationThreshold)) {
+        return if (hasFrostRisk(temp, humidity, precip, weatherCode, tempThreshold, humidityThreshold, precipitationThreshold, sensitivity)) {
             "Wysokie ryzyko szronu!\nPowietrze: $formattedTemp | Szyba: $formattedSurface\nPunkt rosy: $formattedDewPoint"
         } else {
             "Bezpiecznie – brak ryzyka szronu\nTemperatura: $formattedTemp"

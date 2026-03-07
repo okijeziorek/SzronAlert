@@ -19,6 +19,7 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
                 tempThreshold = 1.0,
                 humidityThreshold = 75,
                 precipitationThreshold = 0.2,
+                sensitivity = 1.0,
                 alertStartHour = 19,
                 alertEndHour = 8,
                 ignoreUntil = 0L,
@@ -56,6 +57,12 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
     fun updatePrecipitationThreshold(threshold: Double) {
         viewModelScope.launch {
             settingsRepository.updatePrecipitationThreshold(threshold)
+        }
+    }
+
+    fun updateSensitivity(value: Double) {
+        viewModelScope.launch {
+            settingsRepository.updateSensitivity(value)
         }
     }
 

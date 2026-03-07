@@ -13,6 +13,7 @@ data class UserPreferences(
     val tempThreshold: Double,
     val humidityThreshold: Int,
     val precipitationThreshold: Double,
+    val sensitivity: Double, // Nowy parametr: mnożnik wychłodzenia radiacyjnego
     val alertStartHour: Int,
     val alertEndHour: Int,
     val ignoreUntil: Long,
@@ -34,6 +35,7 @@ class SettingsDataStore(private val context: Context) {
         val TEMP_THRESHOLD = doublePreferencesKey("temp_threshold")
         val HUMIDITY_THRESHOLD = intPreferencesKey("humidity_threshold")
         val PRECIPITATION_THRESHOLD = doublePreferencesKey("precipitation_threshold")
+        val SENSITIVITY = doublePreferencesKey("sensitivity")
         val ALERT_START_HOUR = intPreferencesKey("alert_start_hour")
         val ALERT_END_HOUR = intPreferencesKey("alert_end_hour")
         val IGNORE_UNTIL = longPreferencesKey("ignore_until")
@@ -55,6 +57,7 @@ class SettingsDataStore(private val context: Context) {
                 tempThreshold = preferences[Keys.TEMP_THRESHOLD] ?: 1.0,
                 humidityThreshold = preferences[Keys.HUMIDITY_THRESHOLD] ?: 75,
                 precipitationThreshold = preferences[Keys.PRECIPITATION_THRESHOLD] ?: 0.2,
+                sensitivity = preferences[Keys.SENSITIVITY] ?: 1.0,
                 alertStartHour = preferences[Keys.ALERT_START_HOUR] ?: 19,
                 alertEndHour = preferences[Keys.ALERT_END_HOUR] ?: 8,
                 ignoreUntil = preferences[Keys.IGNORE_UNTIL] ?: 0L,
@@ -89,6 +92,10 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun updatePrecipitationThreshold(value: Double) {
         context.dataStore.edit { it[Keys.PRECIPITATION_THRESHOLD] = value }
+    }
+
+    suspend fun updateSensitivity(value: Double) {
+        context.dataStore.edit { it[Keys.SENSITIVITY] = value }
     }
 
     suspend fun updateAlertStartHour(value: Int) {

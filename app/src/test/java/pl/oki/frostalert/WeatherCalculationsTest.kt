@@ -9,7 +9,8 @@ class WeatherCalculationsTest {
     @Test
     fun `test frost risk with clear sky and freezing temperature`() {
         // Czyste niebo (0), temp 1.0C, wysoka wilgotność 85%, brak opadów
-        // Radiacyjne wychłodzenie szyb powinno spowodować ryzyko
+        // Radiacyjne wychłodzenie szyb powinno spowodować ryzyko (coolingFactor = 4.5)
+        // 1.0 - 4.5 = -3.5 (surface temp)
         val hasRisk = WeatherCalculations.hasFrostRisk(
             temp = 1.0,
             humidity = 85.0,
@@ -20,6 +21,36 @@ class WeatherCalculationsTest {
             precipitationThreshold = 0.2
         )
         assertTrue("Powinno być ryzyko przy czystym niebie i 1.0C", hasRisk)
+    }
+
+    @Test
+    fun `test sensitivity multiplier`() {
+        // Temp 5.0C, czyste niebo (0). Standardowo wychłodzenie -4.5 = 0.5C (brak ryzyka przy threshold 0.0)
+        // Przy sensitivity 2.0 wychłodzenie to -9.0 = -4.0C (ryzyko!)
+        
+        val noSensitivityRisk = WeatherCalculations.hasFrostRisk(
+            temp = 5.0,
+            humidity = 90.0,
+            precip = 0.0,
+            weatherCode = 0,
+            tempThreshold = 0.0,
+            humidityThreshold = 75.0,
+            precipitationThreshold = 0.2,
+            sensitivity = 1.0
+        )
+        assertFalse("Brak ryzyka przy standardowej czułości", noSensitivityRisk)
+
+        val highSensitivityRisk = WeatherCalculations.hasFrostRisk(
+            temp = 5.0,
+            humidity = 90.0,
+            precip = 0.0,
+            weatherCode = 0,
+            tempThreshold = 0.0,
+            humidityThreshold = 75.0,
+            precipitationThreshold = 0.2,
+            sensitivity = 2.0
+        )
+        assertTrue("Ryzyko przy podwojonej czułości", highSensitivityRisk)
     }
 
     @Test
@@ -49,6 +80,10 @@ class WeatherCalculationsTest {
         // Przy czystym niebie (0) wychłodzenie to 4.5 stopnia
         val surfaceTemp = WeatherCalculations.estimateSurfaceTemp(5.0, 0)
         assertEquals(0.5, surfaceTemp, 0.1)
+        
+        // Z czułością 0.5 (pół-wychłodzenie)
+        val surfaceTempLowSens = WeatherCalculations.estimateSurfaceTemp(5.0, 0, 0.5)
+        assertEquals(2.75, surfaceTempLowSens, 0.1)
     }
 
     @Test

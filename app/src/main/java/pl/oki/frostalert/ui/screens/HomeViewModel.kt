@@ -88,10 +88,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 val tempThreshold = if (userPreferences.isAutoModeEnabled) 1.0 else userPreferences.tempThreshold
                 val humidityThreshold = if (userPreferences.isAutoModeEnabled) 75.0 else userPreferences.humidityThreshold.toDouble()
                 val precipitationThreshold = if (userPreferences.isAutoModeEnabled) 0.2 else userPreferences.precipitationThreshold
+                val sensitivity = userPreferences.sensitivity
 
                 val hasRisk = WeatherCalculations.hasFrostRisk(
                     minTemp, weather.current.humidity, weather.current.precipitation, 
-                    weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold
+                    weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold,
+                    sensitivity = sensitivity
                 )
 
                 // Zapis do bazy
@@ -108,6 +110,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 val warningMessage = WeatherCalculations.getWarningMessage(
                     minTemp, weather.current.humidity, weather.current.precipitation, 
                     weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold,
+                    sensitivity = sensitivity,
                     useFahrenheit = userPreferences.useFahrenheit
                 )
 

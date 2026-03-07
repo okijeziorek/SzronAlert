@@ -42,6 +42,7 @@ fun SettingsScreen() {
             tempThreshold = 1.0,
             humidityThreshold = 75,
             precipitationThreshold = 0.2,
+            sensitivity = 1.0,
             alertStartHour = 19,
             alertEndHour = 8,
             ignoreUntil = 0L,
@@ -233,6 +234,21 @@ fun SettingsScreen() {
                 )
             }
             Spacer(Modifier.height(16.dp))
+            SettingSlider(
+                label = "Czułość algorytmu",
+                value = userPreferences.sensitivity.toFloat(),
+                onValueChange = { scope.launch { dataStore.updateSensitivity(it.toDouble()) } },
+                range = 0.5f..2.0f,
+                steps = 15,
+                format = "x %.1f",
+                enabled = true
+            )
+            Text(
+                "Zwiększ, jeśli Twoje auto zamarza szybciej niż inne (np. stoi w wietrznym miejscu).",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
             SettingSlider(
                 label = "Próg temperatury",
                 value = userPreferences.tempThreshold.toFloat(),

@@ -24,6 +24,10 @@ class SettingsRepository(private val settingsDataStore: SettingsDataStore) {
         settingsDataStore.updatePrecipitationThreshold(threshold)
     }
 
+    suspend fun updateSensitivity(value: Double) {
+        settingsDataStore.updateSensitivity(value)
+    }
+
     suspend fun updateAlertStartHour(hour: Int) {
         settingsDataStore.updateAlertStartHour(hour)
     }
