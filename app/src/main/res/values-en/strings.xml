@@ -31,13 +31,21 @@
     <string name="theme_auto">System</string>
     <string name="section_algorithm">Frost Algorithm</string>
     <string name="auto_mode">Automatic Mode</string>
+    <string name="sensitivity_label">Algorithm Sensitivity</string>
+    <string name="sensitivity_desc">Increase if your car freezes faster than others (e.g., parked in a windy spot).</string>
     <string name="temp_threshold">Temp Threshold</string>
     <string name="humidity_threshold">Humidity Threshold</string>
+    <string name="precipitation_threshold">Precipitation Threshold</string>
     <string name="section_notifications">Notifications</string>
     <string name="alert_start">Alert start hour</string>
     <string name="alert_end">Alert end hour</string>
-    <string name="car_mode_title">Car Mode (Ice on windows)</string>
+    <string name="car_mode_title">Car Mode (Ice on Windows)</string>
     <string name="car_mode_desc">Enable morning reminders</string>
+    <string name="car_mode_check_hour">Morning check hour</string>
+    <string name="export_csv">Export to CSV</string>
+    <string name="export_error">Export error</string>
+    <string name="buy_pro">Buy Pro and remove ads</string>
+    <string name="trend_title">Temperature Trend (newest on left)</string>
 
     <!-- History Screen -->
     <string name="history_title">Frost History</string>
@@ -55,4 +63,21 @@
     <string name="feature_2_title">Background Alerts</string>
     <string name="feature_2_desc">We will notify you in the evening if you need to scrape ice in the morning.</string>
     <string name="onboarding_finish">GET STARTED</string>
+
+    <!-- Feedback Section -->
+    <string name="feedback_question">Was the forecast accurate this morning?</string>
+    <string name="feedback_yes">YES</string>
+    <string name="feedback_no">NO</string>
+    <string name="feedback_calibration">Your answers calibrate the algorithm to your car.</string>
+
+    <!-- Accessibility & Icons -->
+    <string name="frost_risk_icon">Warning - frost risk</string>
+    <string name="no_frost_risk_icon">No frost risk</string>
+    <string name="wind_icon_description">Wind icon</string>
+    <string name="wind_speed_format">Wind: %s km/h (reduces risk)</string>
+    <string name="weather_icon_description">Weather icon</string>
+    <string name="night_icon_description">Night icon</string>
+    <string name="error_icon_description">Error icon</string>
+    <string name="retry_button">Try again</string>
+    <string name="no_forecast_data">No forecast data</string>
 </resources>

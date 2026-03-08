@@ -31,13 +31,17 @@
     <string name="theme_auto">System</string>
     <string name="section_algorithm">Algorytm Szronu</string>
     <string name="auto_mode">Tryb automatyczny</string>
+    <string name="sensitivity_label">Czułość algorytmu</string>
+    <string name="sensitivity_desc">Zwiększ, jeśli Twoje auto zamarza szybciej niż inne (np. stoi w wietrznym miejscu).</string>
     <string name="temp_threshold">Próg temperatury</string>
     <string name="humidity_threshold">Próg wilgotności</string>
+    <string name="precipitation_threshold">Próg opadów</string>
     <string name="section_notifications">Powiadomienia</string>
-    <string name="alert_start">Alert start hour</string>
-    <string name="alert_end">Alert end hour</string>
+    <string name="alert_start">Godzina rozpoczęcia alertów</string>
+    <string name="alert_end">Godzina zakończenia alertów</string>
     <string name="car_mode_title">Tryb Samochód (Lód na szybach)</string>
     <string name="car_mode_desc">Włącz przypomnienia rano</string>
+    <string name="car_mode_check_hour">Godzina porannego sprawdzenia</string>
 
     <!-- History Screen -->
     <string name="history_title">Historia Szronu</string>
@@ -46,8 +50,10 @@
     <string name="stat_avg_temp">Średnia temp.</string>
     <string name="history_empty">Brak danych w historii</string>
     <string name="history_hint">Zbierz dane z 2 nocy, by zobaczyć wykres</string>
+    <string name="trend_title">Trend temperatury (najnowsze po lewej)</string>
     <string name="export_csv">Eksportuj do CSV</string>
     <string name="export_error">Błąd eksportu danych</string>
+    <string name="buy_pro">Kup Pro i usuń reklamy</string>
 
     <!-- Onboarding -->
     <string name="welcome_title">Witaj we FrostAlert</string>
@@ -57,4 +63,21 @@
     <string name="feature_2_title">Alerty w tle</string>
     <string name="feature_2_desc">Powiadomimy Cię wieczorem, jeśli rano czeka Cię skrobanie szyb.</string>
     <string name="onboarding_finish">ZACZYNAMY</string>
+
+    <!-- Feedback Section -->
+    <string name="feedback_question">Czy prognoza rano była trafna?</string>
+    <string name="feedback_yes">TAK</string>
+    <string name="feedback_no">NIE</string>
+    <string name="feedback_calibration">Twoje odpowiedzi kalibrują algorytm pod Twój samochód.</string>
+
+    <!-- Accessibility & Icons -->
+    <string name="frost_risk_icon">Ostrzeżenie - ryzyko szronu</string>
+    <string name="no_frost_risk_icon">Brak ryzyka szronu</string>
+    <string name="wind_icon_description">Ikona wiatru</string>
+    <string name="wind_speed_format">Wiatr: %s km/h (zmniejsza ryzyko)</string>
+    <string name="weather_icon_description">Ikona pogody</string>
+    <string name="night_icon_description">Ikona nocy</string>
+    <string name="error_icon_description">Ikona błędu</string>
+    <string name="retry_button">Spróbuj ponownie</string>
+    <string name="no_forecast_data">Brak danych prognozy</string>
 </resources>

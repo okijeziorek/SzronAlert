@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.remote.OpenMeteoApi
+import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.R
 
@@ -33,23 +34,34 @@ class FrostTileService : TileService() {
                 val settingsDataStore = SettingsDataStore(applicationContext)
                 val prefs = settingsDataStore.userPreferencesFlow.first()
                 
-                // Pobieramy ostatnią znaną lokalizację (uproszczenie dla Tile)
-                // W wersji produkcyjnej można tu dodać pobieranie świeżego GPS
-                val weather = OpenMeteoApi.getWeather(prefs.manualLatitude, prefs.manualLongitude)
-                val minTemp = WeatherCalculations.getNightMinTemp(weather.hourly)
+                val weatherResult = OpenMeteoApi.getWeather(prefs.manualLatitude, prefs.manualLongitude)
                 
-                val hasRisk = WeatherCalculations.hasFrostRisk(
-                    minTemp, weather.current.humidity, weather.current.precipitation, 
-                    weather.current.weatherCode, 
-                    if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
-                    if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
-                    if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
-                    sensitivity = prefs.sensitivity
-                )
-
                 launch(Dispatchers.Main) {
-                    tile.label = if (hasRisk) "Ryzyko: TAK" else "Ryzyko: NIE"
-                    tile.state = if (hasRisk) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+                    when (weatherResult) {
+                        is AppResult.Success -> {
+                            val weather = weatherResult.data
+                            val minTemp = WeatherCalculations.getNightMinTemp(weather.hourly)
+                            
+                            val hasRisk = WeatherCalculations.hasFrostRisk(
+                                temp = minTemp, 
+                                humidity = weather.current.humidity, 
+                                precip = weather.current.precipitation, 
+                                weatherCode = weather.current.weatherCode, 
+                                tempThreshold = if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                                humidityThreshold = if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
+                                precipitationThreshold = if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                                sensitivity = prefs.sensitivity,
+                                windSpeed = weather.current.windSpeed
+                            )
+
+                            tile.label = if (hasRisk) "Ryzyko: TAK" else "Ryzyko: NIE"
+                            tile.state = if (hasRisk) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+                        }
+                        is AppResult.Error -> {
+                            tile.label = "Błąd sieci"
+                            tile.state = Tile.STATE_UNAVAILABLE
+                        }
+                    }
                     tile.updateTile()
                 }
             } catch (e: Exception) {

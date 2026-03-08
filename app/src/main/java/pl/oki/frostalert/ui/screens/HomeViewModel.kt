@@ -1,27 +1,24 @@
 package pl.oki.frostalert.ui.screens
 
 import android.app.Application
-import android.content.Context
-import android.location.Location
 import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.remote.WeatherResponse
+import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.widget.FrostGlanceWidget
-import kotlin.coroutines.resume
 
 sealed class HomeUiState {
     data object Loading : HomeUiState()
@@ -38,6 +35,10 @@ sealed class HomeUiState {
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val context = application.applicationContext
+    private val settingsDataStore = SettingsDataStore(context)
+    private val locationRepository = LocationRepository(context, settingsDataStore)
+    private val db = FrostDatabase.getDatabase(context)
+
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -52,77 +53,59 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             _isRefreshing.value = true
             try {
-                val settingsDataStore = SettingsDataStore(context)
                 val userPreferences = settingsDataStore.userPreferencesFlow.first()
+                val location = locationRepository.getEffectiveLocation()
                 
-                val lat: Double
-                val lon: Double
-                
-                if (userPreferences.isManualLocationEnabled) {
-                    lat = userPreferences.manualLatitude
-                    lon = userPreferences.manualLongitude
-                } else {
-                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                    val location = suspendCancellableCoroutine<Location?> { continuation ->
-                        try {
-                            fusedLocationClient.lastLocation.addOnSuccessListener { continuation.resume(it) }
-                                .addOnFailureListener { continuation.resume(null) }
-                        } catch (e: SecurityException) {
-                            continuation.resume(null)
-                        }
-                    }
-                    
-                    if (location != null) {
-                        lat = location.latitude
-                        lon = location.longitude
-                    } else {
-                        _uiState.value = HomeUiState.Error("Włącz GPS lub ustaw miasto ręcznie.")
-                        _isRefreshing.value = false
-                        return@launch
-                    }
+                if (location == null) {
+                    _uiState.value = HomeUiState.Error("Nie udało się pobrać lokalizacji. Sprawdź uprawnienia GPS.")
+                    return@launch
                 }
 
-                val weather = OpenMeteoApi.getWeather(lat, lon)
-                val minTemp = WeatherCalculations.getNightMinTemp(weather.hourly)
+                val weatherResult = OpenMeteoApi.getWeather(location.latitude, location.longitude)
                 
-                val tempThreshold = if (userPreferences.isAutoModeEnabled) 1.0 else userPreferences.tempThreshold
-                val humidityThreshold = if (userPreferences.isAutoModeEnabled) 75.0 else userPreferences.humidityThreshold.toDouble()
-                val precipitationThreshold = if (userPreferences.isAutoModeEnabled) 0.2 else userPreferences.precipitationThreshold
-                val sensitivity = userPreferences.sensitivity
+                when (weatherResult) {
+                    is AppResult.Error -> {
+                        _uiState.value = HomeUiState.Error(weatherResult.error.message)
+                    }
+                    is AppResult.Success -> {
+                        val weather = weatherResult.data
+                        val minTemp = WeatherCalculations.getNightMinTemp(weather.hourly)
+                        
+                        val tempThreshold = if (userPreferences.isAutoModeEnabled) 1.0 else userPreferences.tempThreshold
+                        val humidityThreshold = if (userPreferences.isAutoModeEnabled) 75.0 else userPreferences.humidityThreshold.toDouble()
+                        val precipitationThreshold = if (userPreferences.isAutoModeEnabled) 0.2 else userPreferences.precipitationThreshold
+                        val sensitivity = userPreferences.sensitivity
 
-                val hasRisk = WeatherCalculations.hasFrostRisk(
-                    minTemp, weather.current.humidity, weather.current.precipitation, 
-                    weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold,
-                    sensitivity = sensitivity
-                )
+                        val hasRisk = WeatherCalculations.hasFrostRisk(
+                            minTemp, weather.current.humidity, weather.current.precipitation, 
+                            weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold,
+                            sensitivity = sensitivity,
+                            windSpeed = weather.current.windSpeed
+                        )
 
-                // Zapis do bazy
-                val db = FrostDatabase.getDatabase(context)
-                db.temperatureDao().insert(TemperatureRecord(
-                    timestamp = System.currentTimeMillis(),
-                    minTemp = minTemp,
-                    hasRisk = hasRisk
-                ))
+                        db.temperatureDao().insert(TemperatureRecord(
+                            timestamp = System.currentTimeMillis(),
+                            minTemp = minTemp,
+                            hasRisk = hasRisk
+                        ))
 
-                // NAPRAWIONO: Prawidłowe odświeżanie widgetu Glance
-                FrostGlanceWidget().updateAll(context)
+                        FrostGlanceWidget().updateAll(context)
 
-                val warningMessage = WeatherCalculations.getWarningMessage(
-                    minTemp, weather.current.humidity, weather.current.precipitation, 
-                    weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold,
-                    sensitivity = sensitivity,
-                    useFahrenheit = userPreferences.useFahrenheit
-                )
+                        val warningMessage = WeatherCalculations.getWarningMessage(
+                            minTemp, weather.current.humidity, weather.current.precipitation, 
+                            weather.current.weatherCode, tempThreshold, humidityThreshold, precipitationThreshold,
+                            sensitivity = sensitivity,
+                            windSpeed = weather.current.windSpeed,
+                            useFahrenheit = userPreferences.useFahrenheit
+                        )
 
-                _uiState.value = HomeUiState.Success(
-                    weather, 
-                    minTemp, 
-                    hasRisk, 
-                    warningMessage, 
-                    userPreferences.useFahrenheit
-                )
+                        _uiState.value = HomeUiState.Success(
+                            weather, minTemp, hasRisk, warningMessage, userPreferences.useFahrenheit
+                        )
+                    }
+                }
             } catch (e: Exception) {
-                _uiState.value = HomeUiState.Error("Błąd połączenia.")
+                _uiState.value = HomeUiState.Error("Błąd połączenia z serwerem pogodowym.")
             } finally {
                 _isRefreshing.value = false
             }

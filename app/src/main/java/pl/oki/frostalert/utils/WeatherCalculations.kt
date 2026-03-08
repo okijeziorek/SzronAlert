@@ -38,14 +38,23 @@ object WeatherCalculations {
         tempThreshold: Double,
         humidityThreshold: Double,
         precipitationThreshold: Double,
-        sensitivity: Double = 1.0
+        sensitivity: Double = 1.0,
+        windSpeed: Double = 0.0
     ): Boolean {
+        // Nowa logika: silny wiatr (powyżej 15 km/h) drastycznie zmniejsza szansę na osiadanie szronu
+        if (windSpeed > 15.0) return false
+        
         if (precip > precipitationThreshold && weatherCode < 70) return false
         
         val dewPoint = calculateDewPoint(temp, humidity)
         val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity)
         
-        return surfaceTemp <= tempThreshold && surfaceTemp <= dewPoint && humidity >= humidityThreshold
+        // Wiatr lekki (5-15 km/h) lekko podnosi temperaturę powierzchniową (miesza powietrze)
+        val windAdjustment = if (windSpeed > 5.0) 0.5 else 0.0
+        
+        return (surfaceTemp + windAdjustment) <= tempThreshold && 
+               (surfaceTemp + windAdjustment) <= dewPoint && 
+               humidity >= humidityThreshold
     }
 
     fun celsiusToFahrenheit(celsius: Double): Double {
@@ -67,8 +76,11 @@ object WeatherCalculations {
         humidityThreshold: Double, 
         precipitationThreshold: Double,
         sensitivity: Double = 1.0,
+        windSpeed: Double = 0.0,
         useFahrenheit: Boolean = false
     ): String {
+        if (windSpeed > 15.0) return "Bezpiecznie – silny wiatr zapobiega osadzaniu szronu."
+        
         val dewPoint = calculateDewPoint(temp, humidity)
         val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity)
         
@@ -76,7 +88,7 @@ object WeatherCalculations {
         val formattedDewPoint = formatTemperature(dewPoint, useFahrenheit)
         val formattedSurface = formatTemperature(surfaceTemp, useFahrenheit)
 
-        return if (hasFrostRisk(temp, humidity, precip, weatherCode, tempThreshold, humidityThreshold, precipitationThreshold, sensitivity)) {
+        return if (hasFrostRisk(temp, humidity, precip, weatherCode, tempThreshold, humidityThreshold, precipitationThreshold, sensitivity, windSpeed)) {
             "Wysokie ryzyko szronu!\nPowietrze: $formattedTemp | Szyba: $formattedSurface\nPunkt rosy: $formattedDewPoint"
         } else {
             "Bezpiecznie – brak ryzyka szronu\nTemperatura: $formattedTemp"

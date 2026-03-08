@@ -8,6 +8,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import pl.oki.frostalert.utils.AppResult
+import pl.oki.frostalert.utils.AppError
 
 object OpenMeteoApi {
     private val client = HttpClient {
@@ -18,9 +20,14 @@ object OpenMeteoApi {
         }
     }
 
-    suspend fun getWeather(latitude: Double, longitude: Double): WeatherResponse {
-        val url = "https://api.open-meteo.com/v1/forecast?latitude=$latitude&longitude=$longitude&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&hourly=temperature_2m,relative_humidity_2m,precipitation,weather_code"
-        return client.get(url).body()
+    suspend fun getWeather(latitude: Double, longitude: Double): AppResult<WeatherResponse> {
+        return try {
+            val url = "https://api.open-meteo.com/v1/forecast?latitude=$latitude&longitude=$longitude&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m"
+            val response = client.get(url).body<WeatherResponse>()
+            AppResult.Success(response)
+        } catch (e: Exception) {
+            AppResult.Error(AppError.fromThrowable(e))
+        }
     }
 }
 
@@ -38,7 +45,9 @@ data class CurrentWeather(
     val humidity: Double,
     val precipitation: Double,
     @SerialName("weather_code")
-    val weatherCode: Int
+    val weatherCode: Int,
+    @SerialName("wind_speed_10m")
+    val windSpeed: Double
 )
 
 @Serializable
@@ -50,5 +59,7 @@ data class HourlyForecast(
     val humidity: List<Double>,
     val precipitation: List<Double>,
     @SerialName("weather_code")
-    val weatherCode: List<Int>
+    val weatherCode: List<Int>,
+    @SerialName("wind_speed_10m")
+    val windSpeed: List<Double>
 )
