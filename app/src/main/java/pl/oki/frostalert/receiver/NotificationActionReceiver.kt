@@ -20,8 +20,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
         val dataStore = SettingsDataStore(context)
 
         when (intent.action) {
-            "SNOOZE_15" -> snooze(context, 15)
-            "IGNORE_TODAY" -> {
+            "ACTION_IGNORE_TODAY" -> {
                 scope.launch {
                     val calendar = Calendar.getInstance()
                     calendar.set(Calendar.HOUR_OF_DAY, 23)
@@ -30,17 +29,27 @@ class NotificationActionReceiver : BroadcastReceiver() {
                     dataStore.updateIgnoreUntil(calendar.timeInMillis)
                 }
             }
+            "ACTION_MATA_APPLIED" -> {
+                scope.launch {
+                    val calendar = Calendar.getInstance()
+                    if (calendar.get(Calendar.HOUR_OF_DAY) >= 20) {
+                        calendar.add(Calendar.DAY_OF_YEAR, 1)
+                    }
+                    calendar.set(Calendar.HOUR_OF_DAY, 8)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.set(Calendar.SECOND, 0)
+                    dataStore.updateIgnoreUntil(calendar.timeInMillis)
+                }
+            }
+            "ACTION_SNOOZE_2H" -> {
+                val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>()
+                    .setInitialDelay(2, TimeUnit.HOURS)
+                    .build()
+                WorkManager.getInstance(context).enqueue(workRequest)
+            }
         }
 
-        // Close the notification
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancel(1)
-    }
-
-    private fun snooze(context: Context, minutes: Long) {
-        val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>()
-            .setInitialDelay(minutes, TimeUnit.MINUTES)
-            .build()
-        WorkManager.getInstance(context).enqueue(workRequest)
+        notificationManager.cancel(1001)
     }
 }

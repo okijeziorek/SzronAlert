@@ -5,14 +5,20 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -20,142 +26,174 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.oki.frostalert.data.local.FrostDatabase
-import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.TemperatureRecord
+import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.worker.FrostCheckWorker
 import java.util.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DebugScreen() {
+fun DebugScreen(
+    settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(LocalContext.current))
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val dataStore = SettingsDataStore(context)
     val db = FrostDatabase.getDatabase(context)
+    val userPrefs by settingsViewModel.userPreferences.collectAsState()
+
+    // Stan dla symulatora
+    var simTemp by remember { mutableStateOf(0.0f) }
+    var simHumidity by remember { mutableStateOf(80.0f) }
+    var simWind by remember { mutableStateOf(5.0f) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Menu Debugowania") }) }
+        topBar = { TopAppBar(title = { Text("Laboratorium Dewelopera") }) }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            DebugSection("Powiadomienia i WorkManager") {
-                Button(
-                    onClick = {
-                        val testData = Data.Builder().putBoolean("IS_TEST", true).build()
-                        val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>()
-                            .setInputData(testData)
-                            .build()
-                        WorkManager.getInstance(context).enqueue(workRequest)
-                        Toast.makeText(context, "Zlecono testowe powiadomienie", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Wyślij testowe powiadomienie")
-                }
-
-                Button(
-                    onClick = {
-                        val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>().build()
-                        WorkManager.getInstance(context).enqueue(workRequest)
-                        Toast.makeText(context, "Uruchomiono pełny proces sprawdzania", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Uruchom proces sprawdzania (Real)")
-                }
+        if (userPrefs == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
+        } else {
+            val prefs = userPrefs!!
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // SEKCJA 1: SYMULATOR ALGORYTMU
+                DebugSection("🧪 Symulator Algorytmu", Icons.Default.Science) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        DebugSlider("Temp: ${"%.1f".format(simTemp)}°C", simTemp, -10f..15f) { simTemp = it }
+                        DebugSlider("Wilgotność: ${simHumidity.toInt()}%", simHumidity, 0f..100f) { simHumidity = it }
+                        DebugSlider("Wiatr: ${simWind.toInt()} km/h", simWind, 0f..30f) { simWind = it }
+                        
+                        val hasRisk = WeatherCalculations.hasFrostRisk(
+                            temp = simTemp.toDouble(),
+                            humidity = simHumidity.toDouble(),
+                            precip = 0.0,
+                            weatherCode = 0,
+                            tempThreshold = prefs.tempThreshold,
+                            humidityThreshold = prefs.humidityThreshold.toDouble(),
+                            precipitationThreshold = prefs.precipitationThreshold,
+                            sensitivity = prefs.sensitivity,
+                            windSpeed = simWind.toDouble(),
+                            appMode = prefs.appMode
+                        )
 
-            DebugSection("Baza Danych i Historia") {
-                Button(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            val random = Random()
-                            val now = System.currentTimeMillis()
-                            for (i in 0 until 7) {
-                                val temp = -5.0 + random.nextDouble() * 15.0
-                                val record = TemperatureRecord(
-                                    timestamp = now - (i * 24 * 60 * 60 * 1000),
-                                    minTemp = temp,
-                                    hasRisk = temp < 2.0
-                                )
-                                db.temperatureDao().insert(record)
-                            }
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Dodano 7 rekordów", Toast.LENGTH_SHORT).show()
-                            }
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (hasRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
+                            )
+                        ) {
+                            Text(
+                                text = if (hasRisk) "WYNIK: RYZYKO SZRONU" else "WYNIK: BEZPIECZNIE",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .align(Alignment.CenterHorizontally)
+                            )
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Dodaj losowe dane do historii")
+                    }
                 }
 
-                Button(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            db.clearAllTables()
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Historia wyczyszczona", Toast.LENGTH_SHORT).show()
+                // SEKCJA 2: TRYB PRO & REKLAMY
+                DebugSection("💰 Funkcje Biznesowe", Icons.Default.BugReport) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Wymuś status PRO (Debug)", style = MaterialTheme.typography.bodyLarge)
+                        Switch(
+                            checked = prefs.isProForced,
+                            onCheckedChange = { settingsViewModel.updateIsProForced(it) }
+                        )
+                    }
+                    Text(
+                        "Odblokowuje eksport CSV i usuwa reklamy bez płacenia.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // SEKCJA 3: WORKER & POWIADOMIENIA
+                DebugSection("🔔 System & Tło", Icons.Default.Info) {
+                    Button(
+                        onClick = {
+                            val testData = Data.Builder().putBoolean("IS_TEST", true).build()
+                            val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>()
+                                .setInputData(testData)
+                                .build()
+                            WorkManager.getInstance(context).enqueue(workRequest)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Testowe powiadomienie")
+                    }
+
+                    Button(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                val random = Random()
+                                val now = System.currentTimeMillis()
+                                for (i in 0 until 14) {
+                                    val temp = -8.0 + random.nextDouble() * 15.0
+                                    db.temperatureDao().insert(TemperatureRecord(
+                                        timestamp = now - (i * 24 * 60 * 60 * 1000L),
+                                        minTemp = temp,
+                                        hasRisk = temp < 1.0
+                                    ))
+                                }
                             }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Wyczyść całą historię")
+                            Toast.makeText(context, "Dodano 14 dni historii", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Generuj 2 tygodnie historii")
+                    }
+
+                    Button(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) { db.clearAllTables() }
+                            Toast.makeText(context, "Baza wyczyszczona", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Wyczyść wszystko")
+                    }
                 }
-            }
-
-            DebugSection("Ustawienia") {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            dataStore.updateIgnoreUntil(0L)
-                            Toast.makeText(context, "Zresetowano ignorowanie", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Resetuj \"Ignoruj do rana\"")
-                }
-            }
-
-            DebugSection("Informacje o Systemie") {
-                val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-                val isIgnoring = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    powerManager.isIgnoringBatteryOptimizations(context.packageName)
-                } else true
-
-                Text("Model: ${android.os.Build.MODEL}", fontSize = 12.sp)
-                Text("Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})", fontSize = 12.sp)
-                Text("Optymalizacja baterii wyłączona: ${if (isIgnoring) "TAK" else "NIE"}", 
-                    fontSize = 12.sp, 
-                    color = if (isIgnoring) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                )
             }
         }
     }
 }
 
 @Composable
-fun DebugSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        content()
-        Spacer(Modifier.height(8.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+fun DebugSlider(label: String, value: Float, range: ClosedFloatingPointRange<Float>, onValueChange: (Float) -> Unit) {
+    Column {
+        Text(label, style = MaterialTheme.typography.labelMedium)
+        Slider(value = value, onValueChange = onValueChange, valueRange = range)
+    }
+}
+
+@Composable
+fun DebugSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(16.dp))
+            content()
+        }
     }
 }

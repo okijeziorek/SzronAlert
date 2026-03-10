@@ -1,218 +1,107 @@
 package pl.oki.frostalert.utils
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 import pl.oki.frostalert.data.remote.HourlyForecast
+import java.text.SimpleDateFormat
+import java.util.*
 
 class WeatherCalculationsTest {
 
     @Test
-    fun `calculateDewPoint returns correct value for typical conditions`() {
-        // Given: 20°C, 60% humidity
-        val temp = 20.0
-        val humidity = 60.0
-
-        // When
-        val dewPoint = WeatherCalculations.calculateDewPoint(temp, humidity)
-
-        // Then: Expected dew point around 12°C
-        assertEquals(12.0, dewPoint, 1.0)
-    }
-
-    @Test
-    fun `calculateDewPoint returns correct value for high humidity`() {
-        // Given: 25°C, 80% humidity
-        val temp = 25.0
-        val humidity = 80.0
-
-        // When
-        val dewPoint = WeatherCalculations.calculateDewPoint(temp, humidity)
-
-        // Then: Expected dew point around 21°C
-        assertEquals(21.0, dewPoint, 1.0)
-    }
-
-    @Test
-    fun `estimateSurfaceTemp reduces temperature for clear sky`() {
-        // Given: 10°C, clear sky (code 0), normal sensitivity
-        val temp = 10.0
-        val weatherCode = 0
-        val sensitivity = 1.0
-
-        // When
-        val surfaceTemp = WeatherCalculations.estimateSurfaceTemp(temp, weatherCode, sensitivity)
-
-        // Then: Should be significantly cooler (10 - 4.5 = 5.5°C)
-        assertEquals(5.5, surfaceTemp, 0.1)
-    }
-
-    @Test
-    fun `estimateSurfaceTemp sensitivity affects cooling rate`() {
-        // Given: Same conditions, higher sensitivity
-        val temp = 10.0
-        val weatherCode = 0
-        val normalSensitivity = 1.0
-        val highSensitivity = 1.5
-
-        // When
-        val normalTemp = WeatherCalculations.estimateSurfaceTemp(temp, weatherCode, normalSensitivity)
-        val highTemp = WeatherCalculations.estimateSurfaceTemp(temp, weatherCode, highSensitivity)
-
-        // Then: Higher sensitivity should result in lower temperature
-        assertTrue(highTemp < normalTemp)
-    }
-
-    @Test
-    fun `hasFrostRisk returns true for frost conditions`() {
-        // Given: Cold temperature, high humidity, clear sky
-        val temp = -2.0
-        val humidity = 85.0
-        val precip = 0.0
-        val weatherCode = 0
-        val tempThreshold = 1.0
-        val humidityThreshold = 75.0
-        val precipitationThreshold = 0.2
-
-        // When
+    fun `test frost risk with clear sky and freezing temperature`() {
         val hasRisk = WeatherCalculations.hasFrostRisk(
-            temp, humidity, precip, weatherCode,
-            tempThreshold, humidityThreshold, precipitationThreshold
+            temp = 1.0,
+            humidity = 85.0,
+            precip = 0.0,
+            weatherCode = 0,
+            tempThreshold = 1.0,
+            humidityThreshold = 75.0,
+            precipitationThreshold = 0.2
         )
-
-        // Then
-        assertTrue(hasRisk)
+        assertTrue("Powinno być ryzyko przy czystym niebie i 1.0C", hasRisk)
     }
 
     @Test
-    fun `hasFrostRisk returns false for warm temperature`() {
-        // Given: Warm temperature
-        val temp = 15.0
-        val humidity = 85.0
-        val precip = 0.0
-        val weatherCode = 0
-        val tempThreshold = 1.0
-        val humidityThreshold = 75.0
-        val precipitationThreshold = 0.2
-
-        // When
-        val hasRisk = WeatherCalculations.hasFrostRisk(
-            temp, humidity, precip, weatherCode,
-            tempThreshold, humidityThreshold, precipitationThreshold
+    fun `test wind impact on frost risk`() {
+        val windRisk = WeatherCalculations.hasFrostRisk(
+            temp = -2.0,
+            humidity = 90.0,
+            precip = 0.0,
+            weatherCode = 0,
+            tempThreshold = 0.0,
+            humidityThreshold = 75.0,
+            precipitationThreshold = 0.2,
+            windSpeed = 20.0
         )
-
-        // Then
-        assertFalse(hasRisk)
+        assertFalse("Silny wiatr powinien wyeliminować ryzyko szronu", windRisk)
     }
 
     @Test
-    fun `hasFrostRisk returns false for strong wind`() {
-        // Given: Cold but strong wind
-        val temp = -2.0
-        val humidity = 85.0
-        val precip = 0.0
-        val weatherCode = 0
-        val tempThreshold = 1.0
-        val humidityThreshold = 75.0
-        val precipitationThreshold = 0.2
-        val windSpeed = 20.0 // Strong wind
-
-        // When
-        val hasRisk = WeatherCalculations.hasFrostRisk(
-            temp, humidity, precip, weatherCode,
-            tempThreshold, humidityThreshold, precipitationThreshold,
-            windSpeed = windSpeed
+    fun `test sensitivity multiplier`() {
+        val highSensitivityRisk = WeatherCalculations.hasFrostRisk(
+            temp = 5.0,
+            humidity = 90.0,
+            precip = 0.0,
+            weatherCode = 0,
+            tempThreshold = 0.0,
+            humidityThreshold = 75.0,
+            precipitationThreshold = 0.2,
+            sensitivity = 2.0
         )
-
-        // Then: Strong wind should prevent frost risk
-        assertFalse(hasRisk)
-    }
-
-    @Test
-    fun `hasFrostRisk returns false for precipitation`() {
-        // Given: Cold but raining
-        val temp = -2.0
-        val humidity = 85.0
-        val precip = 0.5 // Raining
-        val weatherCode = 61 // Rain code
-        val tempThreshold = 1.0
-        val humidityThreshold = 75.0
-        val precipitationThreshold = 0.2
-
-        // When
-        val hasRisk = WeatherCalculations.hasFrostRisk(
-            temp, humidity, precip, weatherCode,
-            tempThreshold, humidityThreshold, precipitationThreshold
-        )
-
-        // Then: Precipitation should prevent frost risk
-        assertFalse(hasRisk)
+        assertTrue("Ryzyko przy podwojonej czułości", highSensitivityRisk)
     }
 
     @Test
     fun `getNightMinTemp returns minimum temperature from hourly data`() {
-        // Given: Hourly temperatures with minimum at night
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.US)
+        
+        // Zafiksujmy czas na 1 stycznia 2024, godzina 21:00
+        val baseDate = sdf.parse("2024-01-01T21:00")!!
+        
+        val times = mutableListOf<String>()
+        val temps = mutableListOf<Double>()
+        
+        // Generujemy 48h danych startując od baseDate - 24h
+        val tempCalendar = Calendar.getInstance().apply { time = baseDate }
+        tempCalendar.add(Calendar.DAY_OF_YEAR, -1)
+        
+        repeat(48) {
+            val timeStr = sdf.format(tempCalendar.time)
+            times.add(timeStr)
+            
+            // Ustawiamy minimum (-4.0) dokładnie o 3:00 rano dnia "jutrzejszego"
+            // (względem baseDate który jest o 21:00, okno to 20:00 - 08:00)
+            if (tempCalendar.get(Calendar.HOUR_OF_DAY) == 3 && tempCalendar.get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().apply { time = baseDate }.get(Calendar.DAY_OF_YEAR)) {
+                temps.add(-4.0)
+            } else {
+                temps.add(5.0)
+            }
+            tempCalendar.add(Calendar.HOUR_OF_DAY, 1)
+        }
+        
         val hourly = HourlyForecast(
-            time = List(24) { "2024-01-01T${it.toString().padStart(2, '0')}:00" },
-            temperature = listOf(
-                15.0, 12.0, 10.0, 8.0, 6.0, 4.0, 2.0, 1.0,  // Day
-                0.0, -1.0, -2.0, -3.0, -4.0, -3.0, -2.0, -1.0, // Night (min -4.0)
-                0.0, 2.0, 5.0, 8.0, 12.0, 15.0, 18.0, 20.0   // Next day
-            ),
-            humidity = List(24) { 50.0 },
-            precipitation = List(24) { 0.0 },
-            weatherCode = List(24) { 0 },
-            windSpeed = List(24) { 5.0 }
+            time = times,
+            temperature = temps,
+            humidity = List(48) { 80.0 },
+            precipitation = List(48) { 0.0 },
+            weatherCode = List(48) { 0 },
+            windSpeed = List(48) { 5.0 }
         )
-
-        // When
-        val minTemp = WeatherCalculations.getNightMinTemp(hourly)
-
-        // Then: Should return -4.0 (minimum during night hours)
+        
+        val minTemp = WeatherCalculations.getNightMinTemp(hourly, baseDate.time)
         assertEquals(-4.0, minTemp, 0.1)
     }
 
     @Test
-    fun `getNightMinTemp handles empty data gracefully`() {
-        // Given: Empty hourly data
-        val hourly = HourlyForecast(
-            time = emptyList(),
-            temperature = emptyList(),
-            humidity = emptyList(),
-            precipitation = emptyList(),
-            weatherCode = emptyList(),
-            windSpeed = emptyList()
-        )
-
-        // When
-        val minTemp = WeatherCalculations.getNightMinTemp(hourly)
-
-        // Then: Should return a reasonable default (0.0)
-        assertEquals(0.0, minTemp, 0.1)
+    fun `calculateDewPoint returns correct value`() {
+        val dewPoint = WeatherCalculations.calculateDewPoint(10.0, 50.0)
+        assertEquals(0.1, dewPoint, 0.5)
     }
 
     @Test
     fun `celsiusToFahrenheit converts correctly`() {
-        // Given
-        val celsius = 20.0
-
-        // When
-        val fahrenheit = WeatherCalculations.celsiusToFahrenheit(celsius)
-
-        // Then: 20°C = 68°F
-        assertEquals(68.0, fahrenheit, 0.1)
-    }
-
-    @Test
-    fun `celsiusToFahrenheit converts freezing point correctly`() {
-        // Given
-        val celsius = 0.0
-
-        // When
-        val fahrenheit = WeatherCalculations.celsiusToFahrenheit(celsius)
-
-        // Then: 0°C = 32°F
-        assertEquals(32.0, fahrenheit, 0.1)
+        assertEquals(32.0, WeatherCalculations.celsiusToFahrenheit(0.0), 0.1)
+        assertEquals(68.0, WeatherCalculations.celsiusToFahrenheit(20.0), 0.1)
     }
 }

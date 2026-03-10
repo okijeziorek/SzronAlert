@@ -7,51 +7,79 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import pl.oki.frostalert.R
+import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.receiver.NotificationActionReceiver
+import pl.oki.frostalert.ui.MainActivity
 
 object NotificationHelper {
-
     private const val CHANNEL_ID = "frost_alert_channel"
+    private const val CHANNEL_NAME = "Frost Alerts"
+    private const val NOTIFICATION_ID = 1001
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Frost Alerts"
-            val descriptionText = "Powiadomienia o ryzyku wystąpienia szronu"
             val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
+            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
+                description = "Alerts about frost and ice on windshields"
             }
-            val notificationManager: NotificationManager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
 
     fun sendNotification(context: Context, title: String, message: String) {
-        val snoozeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-            action = "SNOOZE_15"
-        }
-        val snoozePendingIntent: PendingIntent =
-            PendingIntent.getBroadcast(context, 0, snoozeIntent, PendingIntent.FLAG_IMMUTABLE)
+        val settingsDataStore = SettingsDataStore(context)
+        val prefs = runBlocking { settingsDataStore.userPreferencesFlow.first() }
 
-        val ignoreIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-            action = "IGNORE_TODAY"
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        val ignorePendingIntent: PendingIntent =
-            PendingIntent.getBroadcast(context, 1, ignoreIntent, PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getActivity(
+            context, 0, intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_frost)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .addAction(R.drawable.ic_launcher_foreground, "Snooze 15 min", snoozePendingIntent)
-            .addAction(R.drawable.ic_launcher_foreground, "Ignoruj dziś", ignorePendingIntent)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
 
-        val notificationManager: NotificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        // Przycisk "Ignoruj dziś"
+        val ignoreIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = "ACTION_IGNORE_TODAY"
+        }
+        val ignorePendingIntent = PendingIntent.getBroadcast(
+            context, 1, ignoreIntent, PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(0, context.getString(R.string.action_ignore), ignorePendingIntent)
 
-        notificationManager.notify(1, builder.build())
+        // Przycisk "Snooze" (Przypomnij za 2h)
+        val snoozeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = "ACTION_SNOOZE_2H"
+        }
+        val snoozePendingIntent = PendingIntent.getBroadcast(
+            context, 3, snoozeIntent, PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(0, context.getString(R.string.action_snooze), snoozePendingIntent)
+
+        // Przycisk "Zastosowałem matę" - jeśli włączony w ustawieniach
+        if (prefs.isMataOptionEnabled) {
+            val mataIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+                action = "ACTION_MATA_APPLIED"
+            }
+            val mataPendingIntent = PendingIntent.getBroadcast(
+                context, 2, mataIntent, PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(0, context.getString(R.string.action_mata), mataPendingIntent)
+        }
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(NOTIFICATION_ID, builder.build())
     }
 }

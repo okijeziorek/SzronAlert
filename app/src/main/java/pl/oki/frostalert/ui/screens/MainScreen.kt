@@ -1,96 +1,141 @@
 package pl.oki.frostalert.ui.screens
 
 import androidx.compose.animation.*
-import androidx.compose.foundation.background
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import pl.oki.frostalert.R
 import pl.oki.frostalert.utils.NetworkMonitor
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(initialTab: Int = 0) {
-    var selectedTab by remember { mutableIntStateOf(initialTab) }
     val context = LocalContext.current
     val networkMonitor = remember { NetworkMonitor(context) }
     val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
+    
+    val pagerState = rememberPagerState(initialPage = initialTab) { 4 }
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            AnimatedVisibility(
-                visible = !isOnline,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.errorContainer)
-                        .padding(vertical = 4.dp),
-                    contentAlignment = Alignment.Center
+    // Optymalizacja: derivedStateOf zapobiega zbędnym przeliczeniom podczas swipowania
+    val targetColor by remember {
+        derivedStateOf {
+            when (pagerState.currentPage) {
+                0 -> Color(0xFFE3F2FD).copy(alpha = 0.4f) // Light Blue
+                1 -> Color(0xFFF1F8E9).copy(alpha = 0.4f) // Light Green
+                2 -> Color(0xFFFFF3E0).copy(alpha = 0.4f) // Light Orange
+                else -> Color(0xFFF5F5F5).copy(alpha = 0.4f)
+            }
+        }
+    }
+    
+    val animatedBgColor by animateColorAsState(
+        targetValue = targetColor,
+        animationSpec = tween(durationMillis = 400),
+        label = "bg_color_animation"
+    )
+
+    val surfaceColor = MaterialTheme.colorScheme.surface
+
+    LaunchedEffect(initialTab) {
+        if (pagerState.currentPage != initialTab) {
+            pagerState.animateScrollToPage(initialTab)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .drawBehind {
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        listOf(surfaceColor, animatedBgColor)
+                    )
+                )
+            }
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                AnimatedVisibility(
+                    visible = !isOnline,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.CloudOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Brak połączenia z internetem",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            fontWeight = FontWeight.Bold
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "Brak połączenia",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            },
+            bottomBar = {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    tonalElevation = 0.dp
+                ) {
+                    val tabs = listOf(
+                        Triple(0, Icons.Default.Home, R.string.tab_home),
+                        Triple(1, Icons.Default.Settings, R.string.tab_settings),
+                        Triple(2, Icons.Default.History, R.string.tab_history),
+                        Triple(3, Icons.Default.BugReport, R.string.tab_debug)
+                    )
+
+                    tabs.forEach { (index, icon, labelRes) ->
+                        NavigationBarItem(
+                            icon = { Icon(icon, contentDescription = null) },
+                            label = { Text(stringResource(labelRes)) },
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                scope.launch { pagerState.animateScrollToPage(index) }
+                            }
                         )
                     }
                 }
             }
-        },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text(stringResource(R.string.tab_home)) },
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 }
-                )
-                NavigationBarItem(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                    label = { Text(stringResource(R.string.tab_settings)) }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.History, contentDescription = null) },
-                    label = { Text(stringResource(R.string.tab_history)) },
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.BugReport, contentDescription = null) },
-                    label = { Text(stringResource(R.string.tab_debug)) },
-                    selected = selectedTab == 3,
-                    onClick = { selectedTab = 3 }
-                )
-            }
-        }
-    ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
-            when (selectedTab) {
-                0 -> HomeScreen()
-                1 -> SettingsScreen()
-                2 -> HistoryScreen()
-                3 -> DebugScreen()
+        ) { padding ->
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                beyondViewportPageCount = 1, // Kluczowe dla płynności: trzymamy 1 sąsiedni ekran w gotowości
+                key = { it } // Stabilne klucze dla optymalizacji rekompozycji
+            ) { page ->
+                when (page) {
+                    0 -> HomeScreen()
+                    1 -> SettingsScreen()
+                    2 -> HistoryScreen()
+                    3 -> DebugScreen()
+                }
             }
         }
     }

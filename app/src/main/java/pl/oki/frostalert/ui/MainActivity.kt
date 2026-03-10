@@ -13,15 +13,20 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import pl.oki.frostalert.data.local.SettingsDataStore
+import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.oki.frostalert.ui.screens.MainScreen
 import pl.oki.frostalert.ui.screens.OnboardingScreen
+import pl.oki.frostalert.ui.screens.SettingsViewModel
+import pl.oki.frostalert.ui.screens.SettingsViewModelFactory
 import pl.oki.frostalert.ui.theme.FrostAlertTheme
 import pl.oki.frostalert.utils.NotificationHelper
 
@@ -29,11 +34,14 @@ class MainActivity : ComponentActivity() {
 
     private var initialTabState = mutableIntStateOf(0)
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (!isGranted) {
-            Toast.makeText(this, "Potrzebujemy pozwolenia na notyfikacje!", Toast.LENGTH_SHORT).show()
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        
+        if (!fineGranted && !coarseGranted) {
+            Toast.makeText(this, "Lokalizacja jest niezbędna do prognozy pogody!", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -42,29 +50,47 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         NotificationHelper.createNotificationChannel(this)
-        askNotificationPermission()
         checkExactAlarmPermission()
         handleIntent(intent)
 
         setContent {
-            val settingsDataStore = remember { SettingsDataStore(this) }
-            val userPreferences by settingsDataStore.userPreferencesFlow.collectAsState(initial = null)
+            val settingsViewModel: SettingsViewModel = viewModel(
+                factory = SettingsViewModelFactory(this)
+            )
+            // Obserwujemy preferencje, które mogą być na początku null
+            val userPreferences by settingsViewModel.userPreferences.collectAsState()
 
-            if (userPreferences != null) {
+            if (userPreferences == null) {
+                // Ekran ładowania - zapobiega mignięciu Onboardingu
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                val prefs = userPreferences!!
+                
+                LaunchedEffect(Unit) {
+                    val permissionsToRequest = mutableListOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                    permissionLauncher.launch(permissionsToRequest.toTypedArray())
+                }
+
                 FrostAlertTheme(
-                    darkTheme = when (userPreferences?.theme) {
+                    darkTheme = when (prefs.theme) {
                         0 -> false
                         1 -> true
                         else -> isSystemInDarkTheme()
                     }
                 ) {
-                    if (userPreferences?.isOnboardingCompleted == true) {
+                    if (prefs.isOnboardingCompleted) {
                         MainScreen(initialTab = initialTabState.intValue)
                     } else {
                         OnboardingScreen(onFinish = {
-                            lifecycleScope.launch {
-                                settingsDataStore.setOnboardingCompleted(true)
-                            }
+                            settingsViewModel.setOnboardingCompleted(true)
                         })
                     }
                 }
@@ -80,16 +106,6 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(intent: Intent?) {
         if (intent?.getStringExtra("shortcut_target") == "history") {
             initialTabState.intValue = 2
-        }
-    }
-
-    private fun askNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
         }
     }
 

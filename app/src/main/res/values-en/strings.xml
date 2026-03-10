@@ -11,13 +11,19 @@
     <!-- Home Screen -->
     <string name="loading_weather">Fetching weather data…</string>
     <string name="risk_high">High frost risk!</string>
+    <string name="risk_garden">Frost risk!</string>
     <string name="risk_none">Safe – no frost risk</string>
     <string name="night_min_temp">Night Forecast (min)</string>
+    <string name="night_min_garden">Predicted min. in garden</string>
     <string name="hourly_forecast">Next 24 hours</string>
     <string name="refresh_success">Data updated</string>
     <string name="battery_warning_title">Reliable Alerts</string>
     <string name="battery_warning_desc">Disable battery optimization to receive notifications at night.</string>
     <string name="battery_fix_btn">SET</string>
+    <string name="home_garden_title">My Garden</string>
+    <string name="home_car_title">Your Car</string>
+    <string name="garden_status_label">Plant Status</string>
+    <string name="feedback_thanks">Thank you for your feedback!</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
@@ -36,16 +42,31 @@
     <string name="temp_threshold">Temp Threshold</string>
     <string name="humidity_threshold">Humidity Threshold</string>
     <string name="precipitation_threshold">Precipitation Threshold</string>
+
+    <string name="section_frost_options">Frost Options</string>
+    <string name="mata_option_label">\'Used a frost cover\' option</string>
+    <string name="mata_option_desc">Enables a button in the notification that silences alerts after covering the car.</string>
+
+    <string name="section_app_profile">App Profile</string>
+    <string name="profile_car">Car</string>
+    <string name="profile_garden">Garden</string>
+    <string name="profile_car_desc">Frost analysis for car windows.</string>
+    <string name="profile_garden_desc">Ground frost analysis for plants.</string>
+
+    <string name="section_units">Units</string>
+    <string name="use_fahrenheit_label">Use Fahrenheit (°F)</string>
+
     <string name="section_notifications">Notifications</string>
     <string name="alert_start">Alert start hour</string>
     <string name="alert_end">Alert end hour</string>
     <string name="car_mode_title">Car Mode (Ice on Windows)</string>
     <string name="car_mode_desc">Enable morning reminders</string>
     <string name="car_mode_check_hour">Morning check hour</string>
-    <string name="export_csv">Export to CSV</string>
-    <string name="export_error">Export error</string>
-    <string name="buy_pro">Buy Pro and remove ads</string>
-    <string name="trend_title">Temperature Trend (newest on left)</string>
+
+    <!-- Notifications Buttons -->
+    <string name="action_ignore">Ignore today</string>
+    <string name="action_mata">Cover applied</string>
+    <string name="action_snooze">Remind in 2h</string>
 
     <!-- History Screen -->
     <string name="history_title">Frost History</string>
@@ -54,6 +75,13 @@
     <string name="stat_avg_temp">Avg Min Temp</string>
     <string name="history_empty">No data in history</string>
     <string name="history_hint">Collect data from 2 nights to see the chart</string>
+    <string name="trend_title">Temperature Trend (newest on left)</string>
+    <string name="monthly_report_title">Monthly Report</string>
+    <string name="avg_min_label">Avg min: %s</string>
+    <string name="days_count_label">%d days</string>
+    <string name="export_csv">Export to CSV</string>
+    <string name="export_error">Export error</string>
+    <string name="buy_pro">Buy Pro and remove ads</string>
 
     <!-- Onboarding -->
     <string name="welcome_title">Welcome to FrostAlert</string>

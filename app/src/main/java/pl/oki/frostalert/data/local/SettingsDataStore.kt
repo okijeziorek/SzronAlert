@@ -13,13 +13,17 @@ data class UserPreferences(
     val tempThreshold: Double,
     val humidityThreshold: Int,
     val precipitationThreshold: Double,
-    val sensitivity: Double, // Nowy parametr: mnożnik wychłodzenia radiacyjnego
+    val sensitivity: Double,
     val alertStartHour: Int,
     val alertEndHour: Int,
     val ignoreUntil: Long,
     val carModeHour: Int,
     val isCarModeEnabled: Boolean,
     val isAutoModeEnabled: Boolean,
+    val isMataOptionEnabled: Boolean,
+    val appMode: Int,
+    val lastFeedbackTimestamp: Long,
+    val isProForced: Boolean, // Nowa opcja debugowania: wymuś tryb PRO
     val theme: Int,
     val isManualLocationEnabled: Boolean,
     val manualLatitude: Double,
@@ -42,6 +46,10 @@ class SettingsDataStore(private val context: Context) {
         val CAR_MODE_HOUR = intPreferencesKey("car_mode_hour")
         val IS_CAR_MODE_ENABLED = booleanPreferencesKey("is_car_mode_enabled")
         val IS_AUTO_MODE_ENABLED = booleanPreferencesKey("is_auto_mode_enabled")
+        val IS_MATA_OPTION_ENABLED = booleanPreferencesKey("is_mata_option_enabled")
+        val APP_MODE = intPreferencesKey("app_mode")
+        val LAST_FEEDBACK_TIMESTAMP = longPreferencesKey("last_feedback_timestamp")
+        val IS_PRO_FORCED = booleanPreferencesKey("is_pro_forced")
         val THEME = intPreferencesKey("theme")
         val IS_MANUAL_LOCATION_ENABLED = booleanPreferencesKey("is_manual_location_enabled")
         val MANUAL_LATITUDE = doublePreferencesKey("manual_latitude")
@@ -64,6 +72,10 @@ class SettingsDataStore(private val context: Context) {
                 carModeHour = preferences[Keys.CAR_MODE_HOUR] ?: 7,
                 isCarModeEnabled = preferences[Keys.IS_CAR_MODE_ENABLED] ?: true,
                 isAutoModeEnabled = preferences[Keys.IS_AUTO_MODE_ENABLED] ?: true,
+                isMataOptionEnabled = preferences[Keys.IS_MATA_OPTION_ENABLED] ?: false,
+                appMode = preferences[Keys.APP_MODE] ?: 0,
+                lastFeedbackTimestamp = preferences[Keys.LAST_FEEDBACK_TIMESTAMP] ?: 0L,
+                isProForced = preferences[Keys.IS_PRO_FORCED] ?: false,
                 theme = preferences[Keys.THEME] ?: 2,
                 isManualLocationEnabled = preferences[Keys.IS_MANUAL_LOCATION_ENABLED] ?: false,
                 manualLatitude = preferences[Keys.MANUAL_LATITUDE] ?: 52.2297,
@@ -74,8 +86,24 @@ class SettingsDataStore(private val context: Context) {
             )
         }
 
+    suspend fun updateIsProForced(isForced: Boolean) {
+        context.dataStore.edit { it[Keys.IS_PRO_FORCED] = isForced }
+    }
+
+    suspend fun updateLastFeedbackTimestamp(timestamp: Long) {
+        context.dataStore.edit { it[Keys.LAST_FEEDBACK_TIMESTAMP] = timestamp }
+    }
+
     suspend fun updateAutoModeEnabled(isEnabled: Boolean) {
         context.dataStore.edit { it[Keys.IS_AUTO_MODE_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateMataOptionEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_MATA_OPTION_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateAppMode(mode: Int) {
+        context.dataStore.edit { it[Keys.APP_MODE] = mode }
     }
 
     suspend fun updateCarModeEnabled(isEnabled: Boolean) {

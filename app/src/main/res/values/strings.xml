@@ -11,13 +11,19 @@
     <!-- Home Screen -->
     <string name="loading_weather">Pobieranie danych pogodowych…</string>
     <string name="risk_high">Wysokie ryzyko szronu!</string>
+    <string name="risk_garden">Ryzyko przymrozku!</string>
     <string name="risk_none">Bezpiecznie – brak ryzyka</string>
     <string name="night_min_temp">Prognoza na noc (min)</string>
+    <string name="night_min_garden">Przewidywane min. w ogrodzie</string>
     <string name="hourly_forecast">Najbliższe 24 godziny</string>
     <string name="refresh_success">Dane zaktualizowane</string>
     <string name="battery_warning_title">Niezawodne alerty</string>
     <string name="battery_warning_desc">Wyłącz optymalizację baterii, aby otrzymywać powiadomienia w nocy.</string>
     <string name="battery_fix_btn">USTAW</string>
+    <string name="home_garden_title">Mój Ogród</string>
+    <string name="home_car_title">Twoje Auto</string>
+    <string name="garden_status_label">Status Roślin</string>
+    <string name="feedback_thanks">Dziękujemy za opinię!</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Ustawienia</string>
@@ -36,12 +42,31 @@
     <string name="temp_threshold">Próg temperatury</string>
     <string name="humidity_threshold">Próg wilgotności</string>
     <string name="precipitation_threshold">Próg opadów</string>
+
+    <string name="section_frost_options">Opcje Szronu</string>
+    <string name="mata_option_label">Opcja \'Zastosowałem matę\'</string>
+    <string name="mata_option_desc">Włącza przycisk w powiadomieniu, który wycisza alerty po przykryciu auta.</string>
+
+    <string name="section_app_profile">Profil Aplikacji</string>
+    <string name="profile_car">Samochód</string>
+    <string name="profile_garden">Ogród</string>
+    <string name="profile_car_desc">Analiza szronu na szybach auta.</string>
+    <string name="profile_garden_desc">Analiza przymrozków przy gruncie dla roślin.</string>
+
+    <string name="section_units">Jednostki</string>
+    <string name="use_fahrenheit_label">Używaj stopni Fahrenheita (°F)</string>
+
     <string name="section_notifications">Powiadomienia</string>
     <string name="alert_start">Godzina rozpoczęcia alertów</string>
     <string name="alert_end">Godzina zakończenia alertów</string>
     <string name="car_mode_title">Tryb Samochód (Lód na szybach)</string>
     <string name="car_mode_desc">Włącz przypomnienia rano</string>
     <string name="car_mode_check_hour">Godzina porannego sprawdzenia</string>
+
+    <!-- Notifications Buttons -->
+    <string name="action_ignore">Ignoruj dziś</string>
+    <string name="action_mata">Zastosowałem matę</string>
+    <string name="action_snooze">Przypomnij za 2h</string>
 
     <!-- History Screen -->
     <string name="history_title">Historia Szronu</string>
@@ -51,6 +76,9 @@
     <string name="history_empty">Brak danych w historii</string>
     <string name="history_hint">Zbierz dane z 2 nocy, by zobaczyć wykres</string>
     <string name="trend_title">Trend temperatury (najnowsze po lewej)</string>
+    <string name="monthly_report_title">Raport Miesięczny</string>
+    <string name="avg_min_label">Śr. min: %s</string>
+    <string name="days_count_label">%d dni</string>
     <string name="export_csv">Eksportuj do CSV</string>
     <string name="export_error">Błąd eksportu danych</string>
     <string name="buy_pro">Kup Pro i usuń reklamy</string>

@@ -4,59 +4,96 @@ import kotlinx.coroutines.flow.Flow
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.UserPreferences
 
-class SettingsRepository(private val settingsDataStore: SettingsDataStore) {
+interface SettingsRepository {
+    val userPreferencesFlow: Flow<UserPreferences>
+    suspend fun updateAutoModeEnabled(isEnabled: Boolean)
+    suspend fun updateMataOptionEnabled(isEnabled: Boolean)
+    suspend fun updateAppMode(mode: Int)
+    suspend fun updateLastFeedbackTimestamp(timestamp: Long)
+    suspend fun updateIsProForced(isForced: Boolean)
+    suspend fun updateTempThreshold(threshold: Double)
+    suspend fun updateHumidityThreshold(threshold: Int)
+    suspend fun updatePrecipitationThreshold(threshold: Double)
+    suspend fun updateSensitivity(value: Double)
+    suspend fun updateAlertStartHour(hour: Int)
+    suspend fun updateAlertEndHour(hour: Int)
+    suspend fun updateCarModeEnabled(isEnabled: Boolean)
+    suspend fun updateCarModeHour(hour: Int)
+    suspend fun updateTheme(value: Int)
+    suspend fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String)
+    suspend fun setOnboardingCompleted(isCompleted: Boolean)
+    suspend fun updateUseFahrenheit(useFahrenheit: Boolean)
+}
 
-    val userPreferencesFlow: Flow<UserPreferences> = settingsDataStore.userPreferencesFlow
+class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) : SettingsRepository {
 
-    suspend fun updateAutoModeEnabled(isEnabled: Boolean) {
+    override val userPreferencesFlow: Flow<UserPreferences> = settingsDataStore.userPreferencesFlow
+
+    override suspend fun updateAutoModeEnabled(isEnabled: Boolean) {
         settingsDataStore.updateAutoModeEnabled(isEnabled)
     }
 
-    suspend fun updateTempThreshold(threshold: Double) {
+    override suspend fun updateMataOptionEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateMataOptionEnabled(isEnabled)
+    }
+
+    override suspend fun updateAppMode(mode: Int) {
+        settingsDataStore.updateAppMode(mode)
+    }
+
+    override suspend fun updateLastFeedbackTimestamp(timestamp: Long) {
+        settingsDataStore.updateLastFeedbackTimestamp(timestamp)
+    }
+
+    override suspend fun updateIsProForced(isForced: Boolean) {
+        settingsDataStore.updateIsProForced(isForced)
+    }
+
+    override suspend fun updateTempThreshold(threshold: Double) {
         settingsDataStore.updateTempThreshold(threshold)
     }
 
-    suspend fun updateHumidityThreshold(threshold: Int) {
+    override suspend fun updateHumidityThreshold(threshold: Int) {
         settingsDataStore.updateHumidityThreshold(threshold)
     }
 
-    suspend fun updatePrecipitationThreshold(threshold: Double) {
+    override suspend fun updatePrecipitationThreshold(threshold: Double) {
         settingsDataStore.updatePrecipitationThreshold(threshold)
     }
 
-    suspend fun updateSensitivity(value: Double) {
+    override suspend fun updateSensitivity(value: Double) {
         settingsDataStore.updateSensitivity(value)
     }
 
-    suspend fun updateAlertStartHour(hour: Int) {
+    override suspend fun updateAlertStartHour(hour: Int) {
         settingsDataStore.updateAlertStartHour(hour)
     }
 
-    suspend fun updateAlertEndHour(hour: Int) {
+    override suspend fun updateAlertEndHour(hour: Int) {
         settingsDataStore.updateAlertEndHour(hour)
     }
 
-    suspend fun updateCarModeEnabled(isEnabled: Boolean) {
+    override suspend fun updateCarModeEnabled(isEnabled: Boolean) {
         settingsDataStore.updateCarModeEnabled(isEnabled)
     }
 
-    suspend fun updateCarModeHour(hour: Int) {
+    override suspend fun updateCarModeHour(hour: Int) {
         settingsDataStore.updateCarModeHour(hour)
     }
 
-    suspend fun updateTheme(value: Int) {
+    override suspend fun updateTheme(value: Int) {
         settingsDataStore.updateTheme(value)
     }
 
-    suspend fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
+    override suspend fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
         settingsDataStore.updateManualLocation(isEnabled, lat, lon, name)
     }
 
-    suspend fun setOnboardingCompleted(isCompleted: Boolean) {
+    override suspend fun setOnboardingCompleted(isCompleted: Boolean) {
         settingsDataStore.setOnboardingCompleted(isCompleted)
     }
 
-    suspend fun updateUseFahrenheit(useFahrenheit: Boolean) {
+    override suspend fun updateUseFahrenheit(useFahrenheit: Boolean) {
         settingsDataStore.updateUseFahrenheit(useFahrenheit)
     }
 }

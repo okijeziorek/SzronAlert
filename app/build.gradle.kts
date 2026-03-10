@@ -21,11 +21,14 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true // Włączamy R8 (optymalizacja kodu)
+            isShrinkResources = true // Usuwamy nieużywane grafiki
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Używamy podpisu debug, abyś mógł łatwo przetestować wersję release lokalnie
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
@@ -53,17 +56,13 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    // Glance
+    // Glance, Splash, Charts
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
-
-    // Splash Screen
     implementation("androidx.core:core-splashscreen:1.0.1")
-
-    // Wykresy
     implementation(libs.ycharts)
 
-    // Location, Ktor, Serialization, WorkManager
+    // System
     implementation(libs.play.services.location)
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.content.negotiation)
@@ -71,15 +70,17 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.work.runtime.ktx)
 
-    // AdMob & Billing
+    // Ads & Billing
     implementation(libs.play.services.ads)
     implementation(libs.billing.ktx)
 
-    // Hilt
-
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    // Testing
     testImplementation(libs.junit)
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

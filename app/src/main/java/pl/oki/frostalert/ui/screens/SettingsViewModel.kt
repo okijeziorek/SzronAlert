@@ -11,34 +11,41 @@ import pl.oki.frostalert.data.repository.SettingsRepository
 
 class SettingsViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {
 
-    val userPreferences: StateFlow<UserPreferences> = settingsRepository.userPreferencesFlow
+    // Używamy StateFlow z wartością null jako początkową, aby wiedzieć kiedy dane się wczytały
+    val userPreferences: StateFlow<UserPreferences?> = settingsRepository.userPreferencesFlow
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserPreferences(
-                tempThreshold = 1.0,
-                humidityThreshold = 75,
-                precipitationThreshold = 0.2,
-                sensitivity = 1.0,
-                alertStartHour = 19,
-                alertEndHour = 8,
-                ignoreUntil = 0L,
-                carModeHour = 7,
-                isAutoModeEnabled = true,
-                isCarModeEnabled = true,
-                theme = 2,
-                isManualLocationEnabled = false,
-                manualLatitude = 52.2297,
-                manualLongitude = 21.0122,
-                manualLocationName = "Warszawa",
-                isOnboardingCompleted = false,
-                useFahrenheit = false
-            )
+            initialValue = null
         )
+
+    fun updateLastFeedbackTimestamp(timestamp: Long) {
+        viewModelScope.launch {
+            settingsRepository.updateLastFeedbackTimestamp(timestamp)
+        }
+    }
+
+    fun updateIsProForced(isForced: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateIsProForced(isForced)
+        }
+    }
 
     fun updateAutoModeEnabled(isEnabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.updateAutoModeEnabled(isEnabled)
+        }
+    }
+
+    fun updateMataOptionEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateMataOptionEnabled(isEnabled)
+        }
+    }
+
+    fun updateAppMode(mode: Int) {
+        viewModelScope.launch {
+            settingsRepository.updateAppMode(mode)
         }
     }
 

@@ -21,4 +21,15 @@ interface TemperatureDao {
 
     @Query("SELECT AVG(minTemp) FROM temperature_records")
     suspend fun getAverageMinTemp(): Double?
+
+    // Nowe zapytania dla Fazy 3: Ekspert Sezonowy
+    
+    @Query("SELECT COUNT(*) FROM temperature_records WHERE hasRisk = 1 AND timestamp >= :since")
+    suspend fun getRiskCountSince(since: Long): Int
+
+    @Query("SELECT MIN(minTemp) FROM temperature_records")
+    suspend fun getAbsoluteMinTemp(): Double?
+
+    @Query("SELECT AVG(minTemp) FROM temperature_records WHERE timestamp >= :since")
+    suspend fun getAverageMinTempSince(since: Long): Double?
 }

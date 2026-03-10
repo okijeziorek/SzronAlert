@@ -46,8 +46,10 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
         val userPreferences = settingsDataStore.userPreferencesFlow.first()
         val isCarMode = inputData.getBoolean("IS_CAR_MODE", false)
 
-        if (!isCarMode && System.currentTimeMillis() < userPreferences.ignoreUntil) {
-            Log.d(TAG, "Pomijanie: ostatnie powiadomienie jest ignorowane")
+        // POPRAWKA: Respektujemy wyciszenie (ignoreUntil) zawsze, 
+        // nawet w porannym trybie samochodu, jeśli użytkownik np. założył matę.
+        if (System.currentTimeMillis() < userPreferences.ignoreUntil) {
+            Log.d(TAG, "Pomijanie: Alerty są obecnie wyciszone (mata lub ignore)")
             return Result.success()
         }
 
@@ -55,6 +57,7 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
         val humidityThreshold = if (userPreferences.isAutoModeEnabled) 75.0 else userPreferences.humidityThreshold.toDouble()
         val precipitationThreshold = if (userPreferences.isAutoModeEnabled) 0.2 else userPreferences.precipitationThreshold
         val sensitivity = userPreferences.sensitivity
+        val appMode = userPreferences.appMode
 
         return try {
             val location = locationRepository.getEffectiveLocation()
@@ -63,18 +66,11 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
                 return Result.retry()
             }
 
-            Log.d(TAG, "Pobieranie pogody dla: lat=${location.latitude}, lon=${location.longitude}")
             val weatherResult = OpenMeteoApi.getWeather(location.latitude, location.longitude)
 
             when (weatherResult) {
                 is AppResult.Error -> {
-                    Log.e(TAG, "API Error: ${weatherResult.error.message}", weatherResult.error.cause)
-                    if (runAttemptCount < MAX_RETRIES) {
-                        Result.retry()
-                    } else {
-                        Log.e(TAG, "Max retries exceeded. Marking as failure.")
-                        Result.failure()
-                    }
+                    if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
                 }
                 is AppResult.Success -> {
                     val weather = weatherResult.data
@@ -89,7 +85,8 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
                         humidityThreshold = humidityThreshold,
                         precipitationThreshold = precipitationThreshold,
                         sensitivity = sensitivity,
-                        windSpeed = weather.current.windSpeed
+                        windSpeed = weather.current.windSpeed,
+                        appMode = appMode
                     )
 
                     val record = TemperatureRecord(
@@ -97,9 +94,7 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
                         minTemp = minTemp,
                         hasRisk = hasRisk
                     )
-                    val db = FrostDatabase.getDatabase(applicationContext)
-                    db.temperatureDao().insert(record)
-                    Log.d(TAG, "Rekord bazy danych wstawiony: minTemp=$minTemp, hasRisk=$hasRisk")
+                    FrostDatabase.getDatabase(applicationContext).temperatureDao().insert(record)
 
                     // Odświeżanie widgetów
                     val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
@@ -111,26 +106,20 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
                     if (isCarMode) {
                         if (hasRisk) {
                             NotificationHelper.createNotificationChannel(applicationContext)
-                            NotificationHelper.sendNotification(
-                                applicationContext,
-                                "Ryzyko szronu lub lodu!",
-                                "Szyby mogą wymagać skrobania. Temperatura: ${String.format(Locale.US, "%.1f", minTemp)}°C."
-                            )
-                            Log.d(TAG, "CarMode notification sent")
+                            val title = if (appMode == 1) "Ryzyko przymrozku w ogrodzie!" else "Ryzyko lodu na szybach!"
+                            val message = "Prognozowane min: ${String.format(Locale.US, "%.1f", minTemp)}°C."
+                            NotificationHelper.sendNotification(applicationContext, title, message)
                         }
                     } else {
                         val calendar = Calendar.getInstance()
                         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
 
+                        // Alerty wieczorne/nocne tylko w wyznaczonych godzinach
                         if (currentHour >= userPreferences.alertStartHour || currentHour < userPreferences.alertEndHour) {
                             if (hasRisk) {
                                 NotificationHelper.createNotificationChannel(applicationContext)
-                                NotificationHelper.sendNotification(
-                                    applicationContext,
-                                    "Ostrzeżenie o szronie",
-                                    "W nocy możliwe przymrozki. Zaplanuj wyjazd wcześniej!"
-                                )
-                                Log.d(TAG, "Frost warning notification sent")
+                                val title = if (appMode == 1) "Uwaga na rośliny!" else "Uwaga, szron!"
+                                NotificationHelper.sendNotification(applicationContext, title, "Możliwy przymrozek w nocy.")
                             }
                         }
                     }
@@ -138,14 +127,7 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Worker exception: ${e.message}", e)
-            if (runAttemptCount < MAX_RETRIES) {
-                Log.d(TAG, "Retrying... attempt ${runAttemptCount + 1}/$MAX_RETRIES")
-                Result.retry()
-            } else {
-                Log.e(TAG, "Max retries exceeded")
-                Result.failure()
-            }
+            if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
     }
 }
