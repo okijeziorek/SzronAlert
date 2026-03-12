@@ -10,7 +10,11 @@ interface SettingsRepository {
     suspend fun updateMataOptionEnabled(isEnabled: Boolean)
     suspend fun updateAppMode(mode: Int)
     suspend fun updateLastFeedbackTimestamp(timestamp: Long)
+    suspend fun updateIgnoreUntil(timestamp: Long)
     suspend fun updateIsProForced(isForced: Boolean)
+    suspend fun updateHeatThreshold(threshold: Double)
+    suspend fun updateStormAlertEnabled(isEnabled: Boolean)
+    suspend fun updateWateringReminderEnabled(isEnabled: Boolean)
     suspend fun updateTempThreshold(threshold: Double)
     suspend fun updateHumidityThreshold(threshold: Int)
     suspend fun updatePrecipitationThreshold(threshold: Double)
@@ -45,8 +49,24 @@ class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) :
         settingsDataStore.updateLastFeedbackTimestamp(timestamp)
     }
 
+    override suspend fun updateIgnoreUntil(timestamp: Long) {
+        settingsDataStore.updateIgnoreUntil(timestamp)
+    }
+
     override suspend fun updateIsProForced(isForced: Boolean) {
         settingsDataStore.updateIsProForced(isForced)
+    }
+
+    override suspend fun updateHeatThreshold(threshold: Double) {
+        settingsDataStore.updateHeatThreshold(threshold)
+    }
+
+    override suspend fun updateStormAlertEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateStormAlertEnabled(isEnabled)
+    }
+
+    override suspend fun updateWateringReminderEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateWateringReminderEnabled(isEnabled)
     }
 
     override suspend fun updateTempThreshold(threshold: Double) {

@@ -5,12 +5,16 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.TemperatureRecord
+import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
@@ -21,7 +25,14 @@ import pl.oki.frostalert.widget.updateAppWidget
 import java.util.Calendar
 import java.util.Locale
 
-class FrostCheckWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
+@HiltWorker
+class FrostCheckWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted params: WorkerParameters,
+    private val settingsDataStore: SettingsDataStore,
+    private val locationRepository: LocationRepository,
+    private val temperatureDao: TemperatureDao
+) : CoroutineWorker(appContext, params) {
 
     companion object {
         private const val TAG = "FrostCheckWorker"
@@ -41,13 +52,9 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
             return Result.success()
         }
 
-        val settingsDataStore = SettingsDataStore(applicationContext)
-        val locationRepository = LocationRepository(applicationContext, settingsDataStore)
         val userPreferences = settingsDataStore.userPreferencesFlow.first()
         val isCarMode = inputData.getBoolean("IS_CAR_MODE", false)
 
-        // POPRAWKA: Respektujemy wyciszenie (ignoreUntil) zawsze, 
-        // nawet w porannym trybie samochodu, jeśli użytkownik np. założył matę.
         if (System.currentTimeMillis() < userPreferences.ignoreUntil) {
             Log.d(TAG, "Pomijanie: Alerty są obecnie wyciszone (mata lub ignore)")
             return Result.success()
@@ -94,7 +101,7 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
                         minTemp = minTemp,
                         hasRisk = hasRisk
                     )
-                    FrostDatabase.getDatabase(applicationContext).temperatureDao().insert(record)
+                    temperatureDao.insert(record)
 
                     // Odświeżanie widgetów
                     val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
@@ -114,7 +121,6 @@ class FrostCheckWorker(appContext: Context, params: WorkerParameters) : Coroutin
                         val calendar = Calendar.getInstance()
                         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
 
-                        // Alerty wieczorne/nocne tylko w wyznaczonych godzinach
                         if (currentHour >= userPreferences.alertStartHour || currentHour < userPreferences.alertEndHour) {
                             if (hasRisk) {
                                 NotificationHelper.createNotificationChannel(applicationContext)

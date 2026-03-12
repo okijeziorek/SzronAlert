@@ -1,21 +1,24 @@
 package pl.oki.frostalert.ui.screens
 
-import android.app.Application
+import android.content.Context
 import androidx.glance.appwidget.updateAll
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import pl.oki.frostalert.data.local.FrostDatabase
-import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.TemperatureRecord
+import pl.oki.frostalert.data.local.TemperatureDao
+import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.remote.WeatherResponse
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.widget.FrostGlanceWidget
+import javax.inject.Inject
 
 sealed class HomeUiState {
     data object Loading : HomeUiState()
@@ -30,17 +33,17 @@ sealed class HomeUiState {
     data class Error(val message: String) : HomeUiState()
 }
 
-class HomeViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val context = application.applicationContext
-    private val settingsDataStore = SettingsDataStore(context)
-    private val locationRepository = LocationRepository(context, settingsDataStore)
-    private val db = FrostDatabase.getDatabase(context)
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val settingsDataStore: SettingsDataStore,
+    private val locationRepository: LocationRepository,
+    private val temperatureDao: TemperatureDao
+) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    // Reaktywne połączenie ustawień i danych pogodowych
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
 
     val uiState: StateFlow<HomeUiState> = combine(
@@ -91,7 +94,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val location = locationRepository.getEffectiveLocation()
                 if (location == null) {
-                    // Błąd obsłużony przez combine -> state
                     _isRefreshing.value = false
                     return@launch
                 }
@@ -101,7 +103,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 if (weatherResult is AppResult.Success) {
                     _weatherData.value = weatherResult.data
                     
-                    // Zapis do bazy (tylko przy fizycznym odświeżeniu)
                     val prefs = settingsDataStore.userPreferencesFlow.first()
                     val minTemp = WeatherCalculations.getNightMinTemp(weatherResult.data.hourly)
                     val hasRisk = WeatherCalculations.hasFrostRisk(
@@ -110,7 +111,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         sensitivity = prefs.sensitivity, appMode = prefs.appMode
                     )
                     
-                    db.temperatureDao().insert(TemperatureRecord(
+                    temperatureDao.insert(TemperatureRecord(
                         timestamp = System.currentTimeMillis(),
                         minTemp = minTemp,
                         hasRisk = hasRisk
@@ -118,7 +119,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     FrostGlanceWidget().updateAll(context)
                 }
             } catch (e: Exception) {
-                // Obsłużone przez stan
             } finally {
                 _isRefreshing.value = false
             }

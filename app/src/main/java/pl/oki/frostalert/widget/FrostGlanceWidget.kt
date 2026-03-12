@@ -23,10 +23,14 @@ import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import kotlinx.coroutines.flow.first
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.utils.WeatherCalculations
+import pl.oki.frostalert.worker.FrostCheckWorker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -56,7 +60,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (lastRecord != null) {
-                val sdf = SimpleDateFormat("d MMM", Locale.getDefault())
+                val sdf = SimpleDateFormat("d MMM, HH:mm", Locale.getDefault())
                 val date = sdf.format(Date(lastRecord.timestamp))
                 val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
                 val riskColor = if (lastRecord.hasRisk) GlanceTheme.colors.error else GlanceTheme.colors.primary
@@ -65,7 +69,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
                     text = "Szron Alert ($date)",
                     style = TextStyle(
                         color = GlanceTheme.colors.onSurface,
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -93,7 +97,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 )
             } else {
                 Text(
-                    text = "Brak danych",
+                    text = "Brak danych. Kliknij odśwież.",
                     style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp)
                 )
             }
@@ -114,7 +118,14 @@ class RefreshActionCallback : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        FrostGlanceWidget().update(context, glanceId)
+        // Uruchamiamy WorkManager, aby pobrać świeże dane
+        val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>().build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "manual_widget_refresh",
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
+        // Widget zaktualizuje się sam, gdy Worker skończy pracę i wywoła updateAll
     }
 }
 

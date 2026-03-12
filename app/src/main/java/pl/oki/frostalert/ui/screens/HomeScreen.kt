@@ -31,7 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.R
@@ -39,13 +39,14 @@ import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.UserPreferences
 import pl.oki.frostalert.data.remote.HourlyForecast
 import pl.oki.frostalert.utils.WeatherCalculations
+import pl.oki.frostalert.utils.SummerCalculations
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel(),
-    settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(LocalContext.current))
+    viewModel: HomeViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -72,6 +73,9 @@ fun HomeScreen(
                         CircularProgressIndicator()
                     }
                 } else {
+                    val prefs = userPrefs!!
+                    MutedAlertsBanner(prefs, settingsViewModel)
+
                     when (val state = uiState) {
                         is HomeUiState.Loading -> {
                             Box(Modifier.fillMaxSize().padding(top = 100.dp), contentAlignment = Alignment.Center) {
@@ -82,10 +86,32 @@ fun HomeScreen(
                             ErrorState(state.message) { viewModel.refreshData() }
                         }
                         is HomeUiState.Success -> {
-                            WeatherSuccessContent(state, viewModel, settingsViewModel, userPrefs!!, scope)
+                            WeatherSuccessContent(state, viewModel, settingsViewModel, prefs, scope)
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun MutedAlertsBanner(prefs: UserPreferences, viewModel: SettingsViewModel) {
+    val isMuted = remember(prefs.ignoreUntil) { prefs.ignoreUntil > System.currentTimeMillis() }
+    AnimatedVisibility(visible = isMuted, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.NotificationsOff, contentDescription = null)
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = stringResource(R.string.muted_banner_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.muted_banner_desc), style = MaterialTheme.typography.bodySmall)
+                }
+                TextButton(onClick = { viewModel.updateIgnoreUntil(0L) }) { Text(stringResource(R.string.restore_btn)) }
             }
         }
     }
@@ -100,17 +126,20 @@ fun WeatherSuccessContent(
     scope: kotlinx.coroutines.CoroutineScope
 ) {
     val isGarden = state.appMode == 1
-    val showFeedback = remember(userPrefs.lastFeedbackTimestamp) {
+    val isSummer = state.weather.current.temperature > 15.0
+    
+    // Zapamiętujemy lokalnie, czy feedback został wysłany w tej sesji
+    var feedbackSubmitted by remember { mutableStateOf(false) }
+    
+    val showFeedback = remember(userPrefs.lastFeedbackTimestamp, feedbackSubmitted) {
         val lastFeedback = userPrefs.lastFeedbackTimestamp
         val now = System.currentTimeMillis()
-        (now - lastFeedback) > (12 * 60 * 60 * 1000)
+        // Pokaż feedback tylko raz na 12 godzin i jeśli nie wysłano go przed chwilą
+        !feedbackSubmitted && (now - lastFeedback) > (12 * 60 * 60 * 1000)
     }
     
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = if (isGarden) Icons.Default.Agriculture else Icons.Default.DirectionsCar,
                 contentDescription = null,
@@ -120,31 +149,58 @@ fun WeatherSuccessContent(
             Text(
                 text = if (isGarden) stringResource(R.string.home_garden_title) else stringResource(R.string.home_car_title),
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                fontWeight = FontWeight.Bold
             )
         }
 
-        FrostWarningCard(
-            hasRisk = state.hasFrostRisk,
-            warningMessage = state.warningMessage,
-            windSpeed = state.weather.current.windSpeed,
-            isGarden = isGarden
-        )
+        if (isSummer) {
+            SummerRiskCard(state, userPrefs, isGarden)
+        } else {
+            FrostWarningCard(
+                hasRisk = state.hasFrostRisk,
+                warningMessage = state.warningMessage,
+                windSpeed = state.weather.current.windSpeed,
+                isGarden = isGarden
+            )
+        }
 
-        if (isGarden && state.hasFrostRisk) {
+        if (!isSummer && isGarden && state.hasFrostRisk) {
             GardenAdviceCard(state.minTemp)
         }
 
-        if (showFeedback) {
+        if (state.weather.current.uvIndex >= 3.0) {
+            UvIndexCard(state.weather.current.uvIndex)
+        }
+
+        // FEEDBACK z animacją zanikania
+        AnimatedVisibility(
+            visible = showFeedback,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
             FeedbackSection(onCorrection = { isPositive ->
+                feedbackSubmitted = true // Ukrywamy natychmiast
                 if (!isPositive) {
                     val adjustment = if (state.hasFrostRisk) -0.1 else 0.1
                     settingsViewModel.updateSensitivity((userPrefs.sensitivity + adjustment).coerceIn(0.5, 2.0))
                 }
                 settingsViewModel.updateLastFeedbackTimestamp(System.currentTimeMillis())
-                viewModel.refreshData()
+                // Odświeżamy dane po małym opóźnieniu, aby animacja ukrywania mogła się zakończyć
+                scope.launch {
+                    kotlinx.coroutines.delay(500)
+                    viewModel.refreshData()
+                }
             })
+        }
+        
+        if (feedbackSubmitted) {
+            Text(
+                text = stringResource(R.string.feedback_thanks),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         }
 
         MinTemperatureCard(minTemp = state.minTemp, useFahrenheit = state.useFahrenheit, isGarden = isGarden)
@@ -153,33 +209,80 @@ fun WeatherSuccessContent(
 }
 
 @Composable
+fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden: Boolean) {
+    val summerMsg = SummerCalculations.getSummerWarningMessage(
+        state.weather.current.temperature,
+        state.weather.current.weatherCode,
+        state.weather.current.uvIndex,
+        prefs.heatThreshold,
+        state.appMode
+    )
+    val hasHeat = SummerCalculations.hasHeatRisk(state.weather.current.temperature, prefs.heatThreshold)
+    val hasStorm = SummerCalculations.hasStormOrHailRisk(state.weather.current.weatherCode)
+    
+    val needsWatering = if (isGarden && state.weather.daily != null) {
+        SummerCalculations.needsWatering(state.weather.daily.precipitationSum.firstOrNull() ?: 0.0, 26.0)
+    } else false
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (hasStorm || hasHeat) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = RoundedCornerShape(28.dp)
+    ) {
+        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = if (hasStorm) Icons.Default.Thunderstorm else if (hasHeat) Icons.Default.WbSunny else Icons.Default.CheckCircle,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = if (summerMsg.isEmpty()) stringResource(R.string.summer_optimal) else summerMsg,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            if (needsWatering) {
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(R.string.watering_needed), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun UvIndexCard(uvIndex: Double) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.LightMode, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(stringResource(R.string.uv_label, "%.1f".format(Locale.US, uvIndex), SummerCalculations.getUvDescription(uvIndex)), fontWeight = FontWeight.Bold)
+                Text(SummerCalculations.getUvAdvice(uvIndex), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+@Composable
 fun GardenAdviceCard(minTemp: Double) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-        shape = RoundedCornerShape(20.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f))
+        shape = RoundedCornerShape(20.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.Eco, 
-                contentDescription = null, 
-                modifier = Modifier.size(32.dp), 
-                tint = MaterialTheme.colorScheme.onTertiaryContainer
-            )
+            Icon(Icons.Default.Eco, contentDescription = null, modifier = Modifier.size(32.dp))
             Spacer(Modifier.width(16.dp))
             Column {
-                Text(
-                    stringResource(R.string.garden_status_label), 
-                    style = MaterialTheme.typography.labelLarge, 
-                    fontWeight = FontWeight.Bold, 
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                Text(
-                    WeatherCalculations.getGardenTip(minTemp), 
-                    style = MaterialTheme.typography.bodyMedium, 
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
+                Text(stringResource(R.string.garden_status_label), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(WeatherCalculations.getGardenTip(minTemp), style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -214,13 +317,7 @@ fun FeedbackSection(onCorrection: (Boolean) -> Unit) {
 
 @Composable
 fun FrostWarningCard(hasRisk: Boolean, warningMessage: String, windSpeed: Double, isGarden: Boolean) {
-    val containerColor = when {
-        isGarden && hasRisk -> MaterialTheme.colorScheme.errorContainer
-        isGarden -> MaterialTheme.colorScheme.tertiaryContainer
-        hasRisk -> MaterialTheme.colorScheme.errorContainer
-        else -> MaterialTheme.colorScheme.primaryContainer
-    }
-    
+    val containerColor = if (hasRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
     val icon = if (hasRisk) (if (isGarden) Icons.Default.Warning else Icons.Default.AcUnit) else Icons.Default.CheckCircle
     
     Card(
@@ -229,27 +326,18 @@ fun FrostWarningCard(hasRisk: Boolean, warningMessage: String, windSpeed: Double
         shape = RoundedCornerShape(28.dp)
     ) {
         Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = icon, 
-                contentDescription = null, 
-                modifier = Modifier.size(64.dp), 
-                tint = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-            )
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(64.dp), tint = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(16.dp))
             Text(
                 text = if (isGarden && hasRisk) warningMessage.replace("Wysokie ryzyko szronu!", stringResource(R.string.risk_garden)) else warningMessage,
                 style = MaterialTheme.typography.titleLarge, 
                 fontWeight = FontWeight.ExtraBold, 
-                textAlign = TextAlign.Center,
-                color = if (hasRisk) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
+                textAlign = TextAlign.Center
             )
             
             if (windSpeed > 10.0) {
                 Spacer(Modifier.height(12.dp))
-                Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), 
-                    shape = CircleShape
-                ) {
+                Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), shape = CircleShape) {
                     Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Air, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(Modifier.width(4.dp))
@@ -266,31 +354,15 @@ fun MinTemperatureCard(minTemp: Double, useFahrenheit: Boolean, isGarden: Boolea
     Card(
         modifier = Modifier.fillMaxWidth(), 
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isGarden) MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors = CardDefaults.cardColors(containerColor = if (isGarden) MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (isGarden) stringResource(R.string.night_min_garden) else stringResource(R.string.night_min_temp),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(text = if (isGarden) stringResource(R.string.night_min_garden) else stringResource(R.string.night_min_temp), style = MaterialTheme.typography.labelLarge)
                 val tempValue = if (useFahrenheit) WeatherCalculations.celsiusToFahrenheit(minTemp) else minTemp
-                Text(
-                    text = "%.1f%s".format(Locale.US, tempValue, if (useFahrenheit) "°F" else "°C"),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Text(text = "%.1f%s".format(Locale.US, tempValue, if (useFahrenheit) "°F" else "°C"), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             }
-            Icon(
-                imageVector = if (isGarden) Icons.Default.NaturePeople else Icons.Default.Nightlight, 
-                contentDescription = null, 
-                modifier = Modifier.size(40.dp), 
-                tint = if (isGarden) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
-            )
+            Icon(imageVector = if (isGarden) Icons.Default.NaturePeople else Icons.Default.Nightlight, contentDescription = null, modifier = Modifier.size(40.dp), tint = if (isGarden) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary)
         }
     }
 }
@@ -359,5 +431,6 @@ fun getWeatherIcon(code: Int): ImageVector = when (code) {
     in 51..67 -> Icons.Default.WaterDrop
     in 71..77 -> Icons.Default.AcUnit
     in 80..82 -> Icons.Default.BeachAccess
+    95, 96, 99 -> Icons.Default.Thunderstorm
     else -> Icons.Default.Cloud
 }

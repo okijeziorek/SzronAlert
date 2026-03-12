@@ -24,6 +24,12 @@
     <string name="home_car_title">Twoje Auto</string>
     <string name="garden_status_label">Status Roślin</string>
     <string name="feedback_thanks">Dziękujemy za opinię!</string>
+    <string name="summer_optimal">Warunki optymalne</string>
+    <string name="watering_needed">💧 Rośliny wymagają podlewania!</string>
+    <string name="uv_label">Indeks UV: %1$s (%2$s)</string>
+    <string name="muted_banner_title">Alerty wyciszone</string>
+    <string name="muted_banner_desc">Mata założona lub ignorujesz alerty.</string>
+    <string name="restore_btn">PRZYWRÓĆ</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Ustawienia</string>
@@ -46,6 +52,11 @@
     <string name="section_frost_options">Opcje Szronu</string>
     <string name="mata_option_label">Opcja \'Zastosowałem matę\'</string>
     <string name="mata_option_desc">Włącza przycisk w powiadomieniu, który wycisza alerty po przykryciu auta.</string>
+
+    <string name="section_summer_settings">Ustawienia Letnie (NOWOŚĆ)</string>
+    <string name="storm_alert_label">Ostrzegaj o burzach i gradzie</string>
+    <string name="watering_reminder_label">Przypominaj o podlewaniu</string>
+    <string name="heat_threshold_label">Próg ostrzeżenia o upale</string>
 
     <string name="section_app_profile">Profil Aplikacji</string>
     <string name="profile_car">Samochód</string>

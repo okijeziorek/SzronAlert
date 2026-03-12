@@ -23,7 +23,13 @@ data class UserPreferences(
     val isMataOptionEnabled: Boolean,
     val appMode: Int,
     val lastFeedbackTimestamp: Long,
-    val isProForced: Boolean, // Nowa opcja debugowania: wymuś tryb PRO
+    val isProForced: Boolean,
+    
+    // NOWE POLA DLA TRYBU LETNIEGO
+    val heatThreshold: Double, // Próg upału (np. 30°C)
+    val isStormAlertEnabled: Boolean, // Czy ostrzegać o burzach/gradzie
+    val isWateringReminderEnabled: Boolean, // Czy przypominać o podlewaniu (Garden)
+    
     val theme: Int,
     val isManualLocationEnabled: Boolean,
     val manualLatitude: Double,
@@ -50,6 +56,12 @@ class SettingsDataStore(private val context: Context) {
         val APP_MODE = intPreferencesKey("app_mode")
         val LAST_FEEDBACK_TIMESTAMP = longPreferencesKey("last_feedback_timestamp")
         val IS_PRO_FORCED = booleanPreferencesKey("is_pro_forced")
+        
+        // KLUCZE LETNIE
+        val HEAT_THRESHOLD = doublePreferencesKey("heat_threshold")
+        val IS_STORM_ALERT_ENABLED = booleanPreferencesKey("is_storm_alert_enabled")
+        val IS_WATERING_REMINDER_ENABLED = booleanPreferencesKey("is_watering_reminder_enabled")
+        
         val THEME = intPreferencesKey("theme")
         val IS_MANUAL_LOCATION_ENABLED = booleanPreferencesKey("is_manual_location_enabled")
         val MANUAL_LATITUDE = doublePreferencesKey("manual_latitude")
@@ -76,6 +88,12 @@ class SettingsDataStore(private val context: Context) {
                 appMode = preferences[Keys.APP_MODE] ?: 0,
                 lastFeedbackTimestamp = preferences[Keys.LAST_FEEDBACK_TIMESTAMP] ?: 0L,
                 isProForced = preferences[Keys.IS_PRO_FORCED] ?: false,
+                
+                // DOMYŚLNE WARTOŚCI LETNIE
+                heatThreshold = preferences[Keys.HEAT_THRESHOLD] ?: 30.0,
+                isStormAlertEnabled = preferences[Keys.IS_STORM_ALERT_ENABLED] ?: true,
+                isWateringReminderEnabled = preferences[Keys.IS_WATERING_REMINDER_ENABLED] ?: true,
+                
                 theme = preferences[Keys.THEME] ?: 2,
                 isManualLocationEnabled = preferences[Keys.IS_MANUAL_LOCATION_ENABLED] ?: false,
                 manualLatitude = preferences[Keys.MANUAL_LATITUDE] ?: 52.2297,
@@ -85,6 +103,18 @@ class SettingsDataStore(private val context: Context) {
                 useFahrenheit = preferences[Keys.USE_FAHRENHEIT] ?: false
             )
         }
+
+    suspend fun updateHeatThreshold(value: Double) {
+        context.dataStore.edit { it[Keys.HEAT_THRESHOLD] = value }
+    }
+
+    suspend fun updateStormAlertEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_STORM_ALERT_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateWateringReminderEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_WATERING_REMINDER_ENABLED] = isEnabled }
+    }
 
     suspend fun updateIsProForced(isForced: Boolean) {
         context.dataStore.edit { it[Keys.IS_PRO_FORCED] = isForced }

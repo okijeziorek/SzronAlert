@@ -18,7 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.android.billingclient.api.ProductDetails
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
@@ -32,14 +32,12 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = viewModel(
-        factory = SettingsViewModelFactory(LocalContext.current)
-    )
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val userPreferences by viewModel.userPreferences.collectAsState()
     val billingClient = remember { BillingClientWrapper(context) }
-    val isPro by billingClient.isPro.collectAsState()
+    val isProActual by billingClient.isPro.collectAsState()
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
 
     if (userPreferences == null) {
@@ -48,6 +46,7 @@ fun SettingsScreen(
         }
     } else {
         val prefs = userPreferences!!
+        val isPro = isProActual || prefs.isProForced
 
         // Stan dla pól tekstowych lokalizacji
         var latText by remember(prefs.manualLatitude) { mutableStateOf(prefs.manualLatitude.toString()) }
@@ -92,25 +91,25 @@ fun SettingsScreen(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                SectionTitle("Profil Aplikacji")
+                SectionTitle(stringResource(R.string.section_app_profile))
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(
                         selected = prefs.appMode == 0,
                         onClick = { viewModel.updateAppMode(0) },
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Text("Samochód")
+                        Text(stringResource(R.string.profile_car))
                     }
                     SegmentedButton(
                         selected = prefs.appMode == 1,
                         onClick = { viewModel.updateAppMode(1) },
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Text("Ogród")
+                        Text(stringResource(R.string.profile_garden))
                     }
                 }
                 Text(
-                    text = if (prefs.appMode == 0) "Analiza szronu na szybach auta." else "Analiza przymrozków przy gruncie dla roślin.",
+                    text = if (prefs.appMode == 0) stringResource(R.string.profile_car_desc) else stringResource(R.string.profile_garden_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
@@ -189,6 +188,46 @@ fun SettingsScreen(
                 HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
 
+                SectionTitle(stringResource(R.string.section_summer_settings))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(stringResource(R.string.storm_alert_label), style = MaterialTheme.typography.bodyLarge)
+                    Switch(
+                        checked = prefs.isStormAlertEnabled,
+                        onCheckedChange = { viewModel.updateStormAlertEnabled(it) }
+                    )
+                }
+                
+                if (prefs.appMode == 1) { // Tylko w trybie Garden
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(stringResource(R.string.watering_reminder_label), style = MaterialTheme.typography.bodyLarge)
+                        Switch(
+                            checked = prefs.isWateringReminderEnabled,
+                            onCheckedChange = { viewModel.updateWateringReminderEnabled(it) }
+                        )
+                    }
+                }
+
+                SettingSlider(
+                    label = stringResource(R.string.heat_threshold_label),
+                    value = prefs.heatThreshold.toFloat(),
+                    onValueChange = { viewModel.updateHeatThreshold(it.toDouble()) },
+                    range = 20f..40f,
+                    steps = 20,
+                    format = if (prefs.useFahrenheit) "%.0f °F" else "%.0f °C"
+                )
+
+                Spacer(Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(16.dp))
+
                 SectionTitle(stringResource(R.string.section_frost_options))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -207,13 +246,13 @@ fun SettingsScreen(
                 HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
 
-                SectionTitle("Jednostki")
+                SectionTitle(stringResource(R.string.section_units))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Używaj stopni Fahrenheita (°F)", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.use_fahrenheit_label), style = MaterialTheme.typography.bodyLarge)
                     Switch(checked = prefs.useFahrenheit, onCheckedChange = { viewModel.updateUseFahrenheit(it) })
                 }
 
@@ -256,24 +295,6 @@ fun SettingsScreen(
                     range = -10f..10f,
                     steps = 19,
                     format = if (prefs.useFahrenheit) "%.1f °F" else "%.1f °C",
-                    enabled = !prefs.isAutoModeEnabled
-                )
-                SettingSlider(
-                    label = stringResource(R.string.humidity_threshold),
-                    value = prefs.humidityThreshold.toFloat(),
-                    onValueChange = { viewModel.updateHumidityThreshold(it.toInt()) },
-                    range = 0f..100f,
-                    steps = 100,
-                    format = "%.0f %%",
-                    enabled = !prefs.isAutoModeEnabled
-                )
-                SettingSlider(
-                    label = stringResource(R.string.precipitation_threshold),
-                    value = prefs.precipitationThreshold.toFloat(),
-                    onValueChange = { viewModel.updatePrecipitationThreshold(it.toDouble()) },
-                    range = 0f..1f,
-                    steps = 10,
-                    format = "%.1f mm",
                     enabled = !prefs.isAutoModeEnabled
                 )
                 

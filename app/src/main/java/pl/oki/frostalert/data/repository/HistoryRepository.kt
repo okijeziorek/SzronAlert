@@ -1,44 +1,56 @@
 package pl.oki.frostalert.data.repository
 
 import pl.oki.frostalert.data.local.TemperatureDao
+import pl.oki.frostalert.utils.AppError
+import pl.oki.frostalert.utils.AppResult
 import java.util.Calendar
 import java.util.Locale
+import javax.inject.Inject
 
 data class MonthlyStat(
+    val monthNumber: Int,
     val monthName: String,
     val riskDays: Int,
     val averageMinTemp: Double
 )
 
-class HistoryRepository(private val dao: TemperatureDao) {
+class HistoryRepository @Inject constructor(private val dao: TemperatureDao) {
 
-    suspend fun getSeasonStats(): List<MonthlyStat> {
-        val allRecords = dao.getAllRecords()
-        if (allRecords.isEmpty()) return emptyList()
+    suspend fun getSeasonStats(): AppResult<List<MonthlyStat>> {
+        return try {
+            val allRecords = dao.getAllRecords()
+            if (allRecords.isEmpty()) return AppResult.Success(emptyList())
 
-        return allRecords
-            .groupBy { 
-                val cal = Calendar.getInstance()
-                cal.timeInMillis = it.timestamp
-                cal.get(Calendar.MONTH)
-            }
-            .map { (month, records) ->
-                val monthName = Calendar.getInstance().apply { set(Calendar.MONTH, month) }.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) ?: "Błąd"
-                val riskDays = records.count { it.hasRisk }
-                val avgTemp = records.map { it.minTemp }.average()
-                MonthlyStat(monthName, riskDays, avgTemp)
-            }
-            .sortedBy { 
-                val cal = Calendar.getInstance()
-                val month = cal.get(Calendar.MONTH)
-                (it.monthName.let { name -> 
-                    val monthMap = (0..11).associateBy { cal.apply { set(Calendar.MONTH, it) }.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) }
-                    monthMap[name]
-                } ?: month) - month + (if (month < 6) 12 else 0) % 12
-            }
+            val stats = allRecords
+                .groupBy { 
+                    val cal = Calendar.getInstance()
+                    cal.timeInMillis = it.timestamp
+                    cal.get(Calendar.MONTH)
+                }
+                .map { (month, records) ->
+                    val monthName = Calendar.getInstance().apply { set(Calendar.MONTH, month) }
+                        .getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) ?: "Nieznany"
+                    val riskDays = records.count { it.hasRisk }
+                    val avgTemp = records.map { it.minTemp }.average()
+                    MonthlyStat(month, monthName, riskDays, avgTemp)
+                }
+                .sortedBy { 
+                    val cal = Calendar.getInstance()
+                    val currentMonth = cal.get(Calendar.MONTH)
+                    // Sortowanie od jesieni do wiosny (sezon zimowy)
+                    (it.monthNumber - currentMonth + 12) % 12 
+                }
+            AppResult.Success(stats)
+        } catch (e: Exception) {
+            AppResult.Error(AppError.DatabaseError("Błąd odczytu statystyk: ${e.message}", e))
+        }
     }
 
-    suspend fun getAbsoluteMinTemp(): Double? {
-        return dao.getAbsoluteMinTemp()
+    suspend fun getAbsoluteMinTemp(): AppResult<Double?> {
+        return try {
+            AppResult.Success(dao.getAbsoluteMinTemp())
+        } catch (e: Exception) {
+            AppResult.Error(AppError.DatabaseError("Błąd odczytu temperatury minimalnej", e))
+        }
     }
 }

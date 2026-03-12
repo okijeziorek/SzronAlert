@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -28,13 +29,15 @@ import kotlinx.coroutines.withContext
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.utils.WeatherCalculations
+import pl.oki.frostalert.utils.SummerCalculations
 import pl.oki.frostalert.worker.FrostCheckWorker
+import java.util.Locale
 import java.util.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebugScreen(
-    settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(LocalContext.current))
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -45,6 +48,7 @@ fun DebugScreen(
     var simTemp by remember { mutableStateOf(0.0f) }
     var simHumidity by remember { mutableStateOf(80.0f) }
     var simWind by remember { mutableStateOf(5.0f) }
+    var simUv by remember { mutableStateOf(1.0f) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Laboratorium Dewelopera") }) }
@@ -63,14 +67,15 @@ fun DebugScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // SEKCJA 1: SYMULATOR ALGORYTMU
-                DebugSection("🧪 Symulator Algorytmu", Icons.Default.Science) {
+                // SEKCJA 1: SYMULATOR ALGORYTMU (ZIMA + LATO)
+                DebugSection("🧪 Symulator Warunków", Icons.Default.Science) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DebugSlider("Temp: ${"%.1f".format(simTemp)}°C", simTemp, -10f..15f) { simTemp = it }
+                        DebugSlider("Temp: ${"%.1f".format(Locale.US, simTemp)}°C", simTemp, -10f..40f) { simTemp = it }
                         DebugSlider("Wilgotność: ${simHumidity.toInt()}%", simHumidity, 0f..100f) { simHumidity = it }
-                        DebugSlider("Wiatr: ${simWind.toInt()} km/h", simWind, 0f..30f) { simWind = it }
+                        DebugSlider("Wiatr: ${simWind.toInt()} km/h", simWind, 0f..40f) { simWind = it }
+                        DebugSlider("Indeks UV: ${"%.1f".format(Locale.US, simUv)}", simUv, 0f..12f) { simUv = it }
                         
-                        val hasRisk = WeatherCalculations.hasFrostRisk(
+                        val hasFrostRisk = WeatherCalculations.hasFrostRisk(
                             temp = simTemp.toDouble(),
                             humidity = simHumidity.toDouble(),
                             precip = 0.0,
@@ -83,19 +88,45 @@ fun DebugScreen(
                             appMode = prefs.appMode
                         )
 
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (hasRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
-                            )
-                        ) {
-                            Text(
-                                text = if (hasRisk) "WYNIK: RYZYKO SZRONU" else "WYNIK: BEZPIECZNIE",
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .align(Alignment.CenterHorizontally)
-                            )
+                        val summerMsg = SummerCalculations.getSummerWarningMessage(
+                            currentTemp = simTemp.toDouble(),
+                            weatherCode = 0,
+                            uvIndex = simUv.toDouble(),
+                            heatThreshold = prefs.heatThreshold,
+                            appMode = prefs.appMode
+                        )
+
+                        // Wynik Zima
+                        if (simTemp < 15) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (hasFrostRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
+                                )
+                            ) {
+                                Text(
+                                    text = if (hasFrostRisk) "WYNIK ZIMA: RYZYKO SZRONU" else "WYNIK ZIMA: BEZPIECZNIE",
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+
+                        // Wynik Lato
+                        if (simTemp >= 15 || simUv >= 3) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (summerMsg.isNotEmpty()) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text(
+                                    text = if (summerMsg.isEmpty()) "WYNIK LATO: OPTYMALNIE" else "LATO: $summerMsg",
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally),
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -113,11 +144,6 @@ fun DebugScreen(
                             onCheckedChange = { settingsViewModel.updateIsProForced(it) }
                         )
                     }
-                    Text(
-                        "Odblokowuje eksport CSV i usuwa reklamy bez płacenia.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
 
                 // SEKCJA 3: WORKER & POWIADOMIENIA
@@ -148,12 +174,14 @@ fun DebugScreen(
                                         hasRisk = temp < 1.0
                                     ))
                                 }
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(context, "Dodano 14 dni historii", Toast.LENGTH_SHORT).show()
+                                }
                             }
-                            Toast.makeText(context, "Dodano 14 dni historii", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Generuj 2 tygodnie historii")
+                        Text("Generuj historię")
                     }
 
                     Button(

@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -22,17 +23,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
+import dagger.hilt.android.AndroidEntryPoint
 import pl.oki.frostalert.ui.screens.MainScreen
 import pl.oki.frostalert.ui.screens.OnboardingScreen
 import pl.oki.frostalert.ui.screens.SettingsViewModel
-import pl.oki.frostalert.ui.screens.SettingsViewModelFactory
 import pl.oki.frostalert.ui.theme.FrostAlertTheme
 import pl.oki.frostalert.utils.NotificationHelper
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private var initialTabState = mutableIntStateOf(0)
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -54,14 +56,9 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
 
         setContent {
-            val settingsViewModel: SettingsViewModel = viewModel(
-                factory = SettingsViewModelFactory(this)
-            )
-            // Obserwujemy preferencje, które mogą być na początku null
             val userPreferences by settingsViewModel.userPreferences.collectAsState()
 
             if (userPreferences == null) {
-                // Ekran ładowania - zapobiega mignięciu Onboardingu
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }

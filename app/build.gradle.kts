@@ -1,8 +1,10 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -21,13 +23,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true // Włączamy R8 (optymalizacja kodu)
-            isShrinkResources = true // Usuwamy nieużywane grafiki
+            isMinifyEnabled = true 
+            isShrinkResources = true 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Używamy podpisu debug, abyś mógł łatwo przetestować wersję release lokalnie
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -52,9 +53,18 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.material)
+    
+    // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
 
     // Glance, Splash, Charts
     implementation(libs.androidx.glance.appwidget)

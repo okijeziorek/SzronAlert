@@ -24,6 +24,12 @@
     <string name="home_car_title">Your Car</string>
     <string name="garden_status_label">Plant Status</string>
     <string name="feedback_thanks">Thank you for your feedback!</string>
+    <string name="summer_optimal">Optimal conditions</string>
+    <string name="watering_needed">💧 Plants need watering!</string>
+    <string name="uv_label">UV Index: %1$s (%2$s)</string>
+    <string name="muted_banner_title">Alerts muted</string>
+    <string name="muted_banner_desc">Mata applied or ignoring alerts.</string>
+    <string name="restore_btn">RESTORE</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
@@ -44,8 +50,13 @@
     <string name="precipitation_threshold">Precipitation Threshold</string>
 
     <string name="section_frost_options">Frost Options</string>
-    <string name="mata_option_label">\'Used a frost cover\' option</string>
-    <string name="mata_option_desc">Enables a button in the notification that silences alerts after covering the car.</string>
+    <string name="mata_option_label">\'Cover applied\' option</string>
+    <string name="mata_option_desc">Enables button in notification to mute alerts after covering car.</string>
+
+    <string name="section_summer_settings">Summer Settings (NEW)</string>
+    <string name="storm_alert_label">Warn about storms and hail</string>
+    <string name="watering_reminder_label">Remind about watering</string>
+    <string name="heat_threshold_label">Heat warning threshold</string>
 
     <string name="section_app_profile">App Profile</string>
     <string name="profile_car">Car</string>

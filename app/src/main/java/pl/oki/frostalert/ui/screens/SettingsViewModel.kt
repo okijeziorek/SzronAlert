@@ -2,16 +2,20 @@ package pl.oki.frostalert.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.data.local.UserPreferences
 import pl.oki.frostalert.data.repository.SettingsRepository
+import javax.inject.Inject
 
-class SettingsViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
 
-    // Używamy StateFlow z wartością null jako początkową, aby wiedzieć kiedy dane się wczytały
     val userPreferences: StateFlow<UserPreferences?> = settingsRepository.userPreferencesFlow
         .stateIn(
             scope = viewModelScope,
@@ -22,6 +26,12 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
     fun updateLastFeedbackTimestamp(timestamp: Long) {
         viewModelScope.launch {
             settingsRepository.updateLastFeedbackTimestamp(timestamp)
+        }
+    }
+
+    fun updateIgnoreUntil(timestamp: Long) {
+        viewModelScope.launch {
+            settingsRepository.updateIgnoreUntil(timestamp)
         }
     }
 
@@ -46,6 +56,24 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
     fun updateAppMode(mode: Int) {
         viewModelScope.launch {
             settingsRepository.updateAppMode(mode)
+        }
+    }
+
+    fun updateHeatThreshold(threshold: Double) {
+        viewModelScope.launch {
+            settingsRepository.updateHeatThreshold(threshold)
+        }
+    }
+
+    fun updateStormAlertEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateStormAlertEnabled(isEnabled)
+        }
+    }
+
+    fun updateWateringReminderEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateWateringReminderEnabled(isEnabled)
         }
     }
 
