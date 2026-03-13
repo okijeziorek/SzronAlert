@@ -6,6 +6,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import pl.oki.frostalert.data.local.CalibrationDao
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.TemperatureDao
@@ -55,5 +56,10 @@ object AppModule {
         dataStore: SettingsDataStore
     ): LocationRepository {
         return LocationRepository(context, dataStore)
+    }
+
+    @Provides
+    fun provideCalibrationDao(database: FrostDatabase): CalibrationDao {
+        return database.calibrationDao()
     }
 }

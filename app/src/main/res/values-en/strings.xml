@@ -68,8 +68,17 @@
     <string name="use_fahrenheit_label">Use Fahrenheit (°F)</string>
 
     <string name="section_notifications">Notifications</string>
-    <string name="alert_start">Alert start hour</string>
-    <string name="alert_end">Alert end hour</string>
+    <string name="section_geofencing">Geofencing (NEW)</string>
+    <string name="geofencing_label">Geofencing alerts</string>
+    <string name="geofencing_desc">Warn when you enter areas with higher frost risk</string>
+
+    <string name="section_calibration">Algorithm Calibration</string>
+    <string name="calibration_accuracy">Prediction accuracy</string>
+    <string name="calibration_feedback_count">Feedback count</string>
+    <string name="calibration_apply_recommendations">Apply recommendations</string>
+    <string name="calibration_explanation">The algorithm learns from your answers to improve forecast accuracy.</string>
+    <string name="calibration_no_data">No data - answer weather questions to help calibrate the algorithm.</string>
+
     <string name="car_mode_title">Car Mode (Ice on Windows)</string>
     <string name="car_mode_desc">Enable morning reminders</string>
     <string name="car_mode_check_hour">Morning check hour</string>
@@ -93,6 +102,13 @@
     <string name="export_csv">Export to CSV</string>
     <string name="export_error">Export error</string>
     <string name="buy_pro">Buy Pro and remove ads</string>
+
+    <!-- Trend Screen (NEW) -->
+    <string name="trend_screen_title">7-Day Trend</string>
+    <string name="trend_high_risk">⚠️ Very high frost risk this week</string>
+    <string name="trend_moderate_risk">⚡ Moderate frost risk</string>
+    <string name="trend_low_risk">🧊 Sporadic frosts</string>
+    <string name="trend_no_risk">✅ No frost risk</string>
 
     <!-- Onboarding -->
     <string name="welcome_title">Welcome to FrostAlert</string>

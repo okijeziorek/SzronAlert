@@ -30,6 +30,9 @@ data class UserPreferences(
     val isStormAlertEnabled: Boolean, // Czy ostrzegać o burzach/gradzie
     val isWateringReminderEnabled: Boolean, // Czy przypominać o podlewaniu (Garden)
     
+    // NOWE POLE DLA GEOFENCING
+    val isGeofencingEnabled: Boolean, // Czy włączyć powiadomienia geoprzestrzennych
+    
     val theme: Int,
     val isManualLocationEnabled: Boolean,
     val manualLatitude: Double,
@@ -62,6 +65,9 @@ class SettingsDataStore(private val context: Context) {
         val IS_STORM_ALERT_ENABLED = booleanPreferencesKey("is_storm_alert_enabled")
         val IS_WATERING_REMINDER_ENABLED = booleanPreferencesKey("is_watering_reminder_enabled")
         
+        // KLUCZ DO GEOFENCING
+        val IS_GEOFENCING_ENABLED = booleanPreferencesKey("is_geofencing_enabled")
+        
         val THEME = intPreferencesKey("theme")
         val IS_MANUAL_LOCATION_ENABLED = booleanPreferencesKey("is_manual_location_enabled")
         val MANUAL_LATITUDE = doublePreferencesKey("manual_latitude")
@@ -93,6 +99,9 @@ class SettingsDataStore(private val context: Context) {
                 heatThreshold = preferences[Keys.HEAT_THRESHOLD] ?: 30.0,
                 isStormAlertEnabled = preferences[Keys.IS_STORM_ALERT_ENABLED] ?: true,
                 isWateringReminderEnabled = preferences[Keys.IS_WATERING_REMINDER_ENABLED] ?: true,
+                
+                // DOMYŚLNE WARTOŚCI DLA GEOFENCING
+                isGeofencingEnabled = preferences[Keys.IS_GEOFENCING_ENABLED] ?: false,
                 
                 theme = preferences[Keys.THEME] ?: 2,
                 isManualLocationEnabled = preferences[Keys.IS_MANUAL_LOCATION_ENABLED] ?: false,
@@ -191,5 +200,9 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun updateUseFahrenheit(useFahrenheit: Boolean) {
         context.dataStore.edit { it[Keys.USE_FAHRENHEIT] = useFahrenheit }
+    }
+
+    suspend fun updateGeofencingEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_GEOFENCING_ENABLED] = isEnabled }
     }
 }

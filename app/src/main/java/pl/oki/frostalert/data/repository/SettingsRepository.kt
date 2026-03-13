@@ -27,6 +27,7 @@ interface SettingsRepository {
     suspend fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String)
     suspend fun setOnboardingCompleted(isCompleted: Boolean)
     suspend fun updateUseFahrenheit(useFahrenheit: Boolean)
+    suspend fun updateGeofencingEnabled(isEnabled: Boolean)
 }
 
 class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) : SettingsRepository {
@@ -115,5 +116,9 @@ class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) :
 
     override suspend fun updateUseFahrenheit(useFahrenheit: Boolean) {
         settingsDataStore.updateUseFahrenheit(useFahrenheit)
+    }
+
+    override suspend fun updateGeofencingEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateGeofencingEnabled(isEnabled)
     }
 }

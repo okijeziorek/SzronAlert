@@ -68,6 +68,17 @@
     <string name="use_fahrenheit_label">Używaj stopni Fahrenheita (°F)</string>
 
     <string name="section_notifications">Powiadomienia</string>
+    <string name="section_geofencing">Geofencing (NOWOŚĆ)</string>
+    <string name="geofencing_label">Powiadomienia geoprzestrzennych</string>
+    <string name="geofencing_desc">Ostrzegaj gdy wjedziesz w rejon z wyższym ryzykiem szronu</string>
+
+    <string name="section_calibration">Kalibracja Algorytmu</string>
+    <string name="calibration_accuracy">Dokładność predykcji</string>
+    <string name="calibration_feedback_count">Liczba feedbacków</string>
+    <string name="calibration_apply_recommendations">Zastosuj rekomendacje</string>
+    <string name="calibration_explanation">Algorytm uczy się z Twoich odpowiedzi, aby poprawić dokładność prognoz.</string>
+    <string name="calibration_no_data">Brak danych - odpowiedz na pytania o pogodzie, aby pomóc w kalibracji.</string>
+
     <string name="alert_start">Godzina rozpoczęcia alertów</string>
     <string name="alert_end">Godzina zakończenia alertów</string>
     <string name="car_mode_title">Tryb Samochód (Lód na szybach)</string>
@@ -93,6 +104,13 @@
     <string name="export_csv">Eksportuj do CSV</string>
     <string name="export_error">Błąd eksportu danych</string>
     <string name="buy_pro">Kup Pro i usuń reklamy</string>
+
+    <!-- Trend Screen (NEW) -->
+    <string name="trend_screen_title">Trend 7-dniowy</string>
+    <string name="trend_high_risk">⚠️ Bardzo wysokie ryzyko szronu w tym tygodniu</string>
+    <string name="trend_moderate_risk">⚡ Umiarkowane ryzyko szronu</string>
+    <string name="trend_low_risk">🧊 Sporadyczne przymrozki</string>
+    <string name="trend_no_risk">✅ Brak ryzyka szronu</string>
 
     <!-- Onboarding -->
     <string name="welcome_title">Witaj we FrostAlert</string>

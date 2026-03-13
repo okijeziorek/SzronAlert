@@ -16,7 +16,8 @@
 
 ### Spatial Data Boundaries
 - **Temperature Physics** (`utils/WeatherCalculations.kt`): Core frost risk algorithm—handles all meteorological math
-- **Garden-specific Logic** (`utils/SummerCalculations.kt`): Separate module for summer features (storm risk, watering reminders)
+- **Garden & Summer Logic** (`utils/SummerCalculations.kt`): Heat risk detection (temp >= heatThreshold), storm/hail warnings (WMO codes 95, 96, 99), and watering needs (dailyPrecip < 2mm AND nextDayMaxTemp > 25°C)
+- **Network Monitor** (`utils/NetworkMonitor.kt`): Reactive Flow<Boolean> for detecting online/offline state, used by workers to skip execution when no internet
 - **Notification System** (`utils/NotificationHelper.kt`): Centralized notification with action buttons that trigger WorkManager tasks
 
 ## 🧊 Critical Algorithm: Frost Risk Detection
@@ -57,6 +58,7 @@
 
 ### Special Triggers
 - **Car Mode Alarm**: `CarModeReceiver` schedules exact alarm at user's set hour, triggers worker
+- **Quick Settings Tile**: `FrostTileService` provides real-time frost risk check from Android Quick Settings panel (one-tap frost check)
 - **Manual Widget Refresh**: `RefreshActionCallback` in Glance widget enqueues immediate `FrostCheckWorker`
 
 ## 📊 Data Storage Pattern
@@ -71,11 +73,13 @@
 
 ### SettingsDataStore (Preferences)
 - Uses `DataStore<Preferences>` not Proto (easier for migrations)
-- `UserPreferences` data class contains 20+ settings:
+- `UserPreferences` data class contains 25+ settings:
   - Risk thresholds: `tempThreshold`, `humidityThreshold`, `precipitationThreshold`, `sensitivity`
+  - Summer mode: `heatThreshold` (e.g., 30°C), `isStormAlertEnabled`, `isWateringReminderEnabled`
   - Time ranges: `alertStartHour`, `alertEndHour`, `carModeHour`
-  - Feature flags: `isAutoModeEnabled`, `isMataOptionEnabled`, `isProForced`
-  - Location: `manualLatitude`, `manualLongitude`, `manualLocationName`
+  - Feature flags: `isAutoModeEnabled`, `isMataOptionEnabled`, `isProForced`, `useFahrenheit`
+  - Location: `manualLatitude`, `manualLongitude`, `manualLocationName`, `isManualLocationEnabled`
+  - UI: `theme` (0=light, 1=dark, 2=system default), `isOnboardingCompleted`
 
 ### Reactive Flow Strategy
 - All data access returns `Flow<T>` or `StateFlow<T>` for reactive updates
@@ -87,6 +91,7 @@
 - **Open-Meteo Weather API** (`api.open-meteo.com`): Free, no authentication. Fetches current + 48h hourly forecast
 - **Google Play Services Location**: For GPS-based auto-location detection
 - **Google Mobile Ads**: Initialized in app onCreate but not actively used in displayed code
+- **Google Play Billing**: In-app purchase integration via `BillingClientWrapper` (manages PRO subscription state)
 
 ### Compose & Material
 - **Material 3** with dynamic colors based on system wallpaper
@@ -137,9 +142,11 @@ File → Sync Now (or ./gradlew help)
 - `data/local/`: Database and DataStore (Room, preferences)
 - `data/remote/`: API calls (only Open-Meteo client)
 - `data/repository/`: Abstraction layer (single responsibility)
+- `di/`: Dependency injection modules (Hilt @Module, @Provides for singletons)
 - `utils/`: Utility objects (WeatherCalculations, NotificationHelper, AppResult sealed class)
 - `worker/`: WorkManager tasks (FrostCheckWorker)
-- `receiver/`: BroadcastReceivers (notification actions, alarms)
+- `receiver/`: BroadcastReceivers (notification actions, alarms, Quick Settings tile)
+- `billing/`: In-app billing (BillingClientWrapper for PRO subscription)
 - `widget/`: Jetpack Glance widget (FrostGlanceWidget, FrostWidgetProvider)
 
 ### Error Handling
@@ -158,6 +165,8 @@ File → Sync Now (or ./gradlew help)
 - All UI text externalized (no hardcoded strings in Compose)
 
 ### Kotlin-Specific Practices
+- **Java Target**: Projects targets Java 17 (JVM target) and Android API 26+ (minSdk)
+- **Compose**: Uses `org.jetbrains.kotlin.plugin.compose` plugin (2.1.10)
 - Extension functions for DataStore: `Context.dataStore` delegation pattern
 - Object singletons for APIs and calculations: `OpenMeteoApi`, `WeatherCalculations`
 - KSP-based code generation: Hilt DI, Room DAOs, Kotlin Serialization
@@ -189,6 +198,14 @@ File → Sync Now (or ./gradlew help)
 3. Add entity to `@Database` annotation in `FrostDatabase`
 4. Create migration if version change needed (not yet needed)
 
+### Managing PRO Subscription & Billing
+1. Initialize `BillingClientWrapper` in SettingsViewModel or dependency injection
+2. Subscribe to `isPro` StateFlow to track purchase state
+3. Feature gates reference `UserPreferences.isProForced` for testing or `BillingClientWrapper.isPro` for production
+4. When user taps purchase button, call `BillingClientWrapper.launchPurchaseFlow(activity, productDetails)`
+5. Billing events (success, cancelled, error) automatically update internal `_isPro` StateFlow
+6. Database stores purchase history in TemperatureRecord if needed
+
 ## ⚠️ Critical Gotchas
 
 - **Permissions**: App requires SCHEDULE_EXACT_ALARM and ACCESS_BACKGROUND_LOCATION (check AndroidManifest)
@@ -202,6 +219,7 @@ File → Sync Now (or ./gradlew help)
 | File | Purpose |
 |------|---------|
 | `WeatherCalculations.kt` | Physics engine for frost risk (dew point, surface cooling) |
+| `SummerCalculations.kt` | Heat risk, storm/hail detection (WMO 95/96/99), watering logic |
 | `FrostCheckWorker.kt` | Hourly background job (fetch weather, check risk, notify) |
 | `HomeViewModel.kt` | Main screen state (weather data, refresh control) |
 | `HistoryViewModel.kt` | Stats screen state (monthly aggregations, trends) |
@@ -210,6 +228,8 @@ File → Sync Now (or ./gradlew help)
 | `SettingsDataStore.kt` | User preferences persistence (non-database) |
 | `OpenMeteoApi.kt` | HTTP client for weather forecast |
 | `FrostGlanceWidget.kt` | Modern glance widget (Material 3) |
+| `BillingClientWrapper.kt` | Google Play Billing for PRO subscription |
+| `FrostTileService.kt` | Quick Settings Tile for one-tap frost check |
 
 ## 🚀 Quick Start for Contributors
 

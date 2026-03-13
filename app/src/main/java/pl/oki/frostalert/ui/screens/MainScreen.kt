@@ -29,7 +29,7 @@ fun MainScreen(initialTab: Int = 0) {
     val networkMonitor = remember { NetworkMonitor(context) }
     val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
     
-    val pagerState = rememberPagerState(initialPage = initialTab) { 4 }
+    val pagerState = rememberPagerState(initialPage = initialTab) { 5 }
     val scope = rememberCoroutineScope()
 
     // Optymalizacja: derivedStateOf zapobiega zbędnym przeliczeniom podczas swipowania
@@ -106,7 +106,8 @@ fun MainScreen(initialTab: Int = 0) {
                         Triple(0, Icons.Default.Home, R.string.tab_home),
                         Triple(1, Icons.Default.Settings, R.string.tab_settings),
                         Triple(2, Icons.Default.History, R.string.tab_history),
-                        Triple(3, Icons.Default.BugReport, R.string.tab_debug)
+                        Triple(3, Icons.Default.TrendingUp, R.string.trend_screen_title),
+                        Triple(4, Icons.Default.BugReport, R.string.tab_debug)
                     )
 
                     tabs.forEach { (index, icon, labelRes) ->
@@ -134,7 +135,8 @@ fun MainScreen(initialTab: Int = 0) {
                     0 -> HomeScreen()
                     1 -> SettingsScreen()
                     2 -> HistoryScreen()
-                    3 -> DebugScreen()
+                    3 -> TrendScreen()
+                    4 -> DebugScreen()
                 }
             }
         }

@@ -19,6 +19,7 @@ import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.widget.FrostGlanceWidget
 import javax.inject.Inject
+import pl.oki.frostalert.data.local.CalibrationDao
 
 sealed class HomeUiState {
     data object Loading : HomeUiState()
@@ -28,29 +29,49 @@ sealed class HomeUiState {
         val hasFrostRisk: Boolean,
         val warningMessage: String,
         val appMode: Int,
-        val useFahrenheit: Boolean
+        val useFahrenheit: Boolean,
+        val showCalibrationDialog: Boolean = false,
+        val lastWeatherData: WeatherDataForCalibration? = null
     ) : HomeUiState()
     data class Error(val message: String) : HomeUiState()
 }
+
+data class WeatherDataForCalibration(
+    val temperature: Double,
+    val humidity: Int,
+    val weatherCode: Int,
+    val locationLat: Double,
+    val locationLon: Double,
+    val predictedRisk: Boolean,
+    val usedThreshold: Double,
+    val usedHumidityThreshold: Int,
+    val usedSensitivity: Double
+)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settingsDataStore: SettingsDataStore,
     private val locationRepository: LocationRepository,
-    private val temperatureDao: TemperatureDao
+    private val temperatureDao: TemperatureDao,
+    private val calibrationDao: CalibrationDao
 ) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
+    
+    // Stan dialogu kalibracji
+    private val _showCalibrationDialog = MutableStateFlow(false)
+    val showCalibrationDialog: StateFlow<Boolean> = _showCalibrationDialog.asStateFlow()
 
     val uiState: StateFlow<HomeUiState> = combine(
         settingsDataStore.userPreferencesFlow,
         _weatherData,
-        _isRefreshing
-    ) { prefs, weather, refreshing ->
+        _isRefreshing,
+        _showCalibrationDialog
+    ) { prefs, weather, refreshing, showDialog ->
         if (weather == null) {
             if (refreshing) HomeUiState.Loading else HomeUiState.Error("Pociągnij, aby odświeżyć dane.")
         } else {
@@ -79,7 +100,8 @@ class HomeViewModel @Inject constructor(
             )
 
             HomeUiState.Success(
-                weather, minTemp, hasRisk, warningMessage, prefs.appMode, prefs.useFahrenheit
+                weather, minTemp, hasRisk, warningMessage, prefs.appMode, prefs.useFahrenheit,
+                showCalibrationDialog = showDialog
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState.Loading)
@@ -117,10 +139,69 @@ class HomeViewModel @Inject constructor(
                         hasRisk = hasRisk
                     ))
                     FrostGlanceWidget().updateAll(context)
+
+                    // KALIBRACJA: Sprawdź czy należy pokazać dialog feedbacku
+                    val lastFeedback = prefs.lastFeedbackTimestamp
+                    val currentTime = System.currentTimeMillis()
+                    val hoursSinceLastFeedback = (currentTime - lastFeedback) / (1000 * 60 * 60)
+
+                    if (hoursSinceLastFeedback >= 12) { // Co najmniej 12 godzin od ostatniego feedbacku
+                        // Pokaż dialog kalibracji w następnym cyklu życia UI
+                        // Ustawimy flagę, która zostanie sprawdzona w UI
+                        viewModelScope.launch {
+                            // Opóźnienie aby dać czas na zakończenie animacji odświeżania
+                            kotlinx.coroutines.delay(1000)
+                            _showCalibrationDialog.value = true
+                        }
+                    }
                 }
             } catch (e: Exception) {
             } finally {
                 _isRefreshing.value = false
+            }
+        }
+    }
+
+    // KALIBRACJA ALGORYTMU
+    fun showCalibrationDialog(weatherData: WeatherDataForCalibration) {
+        _showCalibrationDialog.value = true
+    }
+
+    fun hideCalibrationDialog() {
+        _showCalibrationDialog.value = false
+    }
+
+    fun submitCalibrationFeedback(actualFrostOccurred: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentState = uiState.value
+            if (currentState is HomeUiState.Success) {
+                val weather = currentState.weather
+                val prefs = settingsDataStore.userPreferencesFlow.first()
+                
+                // Zapisz feedback do bazy danych
+                val feedback = pl.oki.frostalert.data.local.CalibrationFeedback(
+                    timestamp = System.currentTimeMillis(),
+                    actualFrostOccurred = actualFrostOccurred,
+                    predictedRisk = currentState.hasFrostRisk,
+                    temperature = currentState.minTemp,
+                    humidity = weather.current.humidity.toInt(),
+                    weatherCode = weather.current.weatherCode,
+                    locationLat = 0.0, // TODO: pobrać z location
+                    locationLon = 0.0, // TODO: pobrać z location
+                    appMode = prefs.appMode,
+                    usedThreshold = if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                    usedHumidityThreshold = if (prefs.isAutoModeEnabled) 75 else prefs.humidityThreshold,
+                    usedSensitivity = prefs.sensitivity
+                )
+
+                // Zapisz do bazy
+                calibrationDao.insertFeedback(feedback)
+
+                // Zaktualizuj timestamp ostatniego feedbacku
+                settingsDataStore.updateLastFeedbackTimestamp(System.currentTimeMillis())
+
+                // Ukryj dialog
+                _showCalibrationDialog.value = false
             }
         }
     }

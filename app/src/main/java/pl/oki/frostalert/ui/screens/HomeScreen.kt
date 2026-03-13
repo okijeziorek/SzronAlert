@@ -31,7 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.R
@@ -205,6 +205,39 @@ fun WeatherSuccessContent(
 
         MinTemperatureCard(minTemp = state.minTemp, useFahrenheit = state.useFahrenheit, isGarden = isGarden)
         HourlyForecastSection(hourly = state.weather.hourly, useFahrenheit = state.useFahrenheit)
+    }
+
+    // KALIBRACJA ALGORYTMU - Dialog zbierania feedbacku
+    if (state.showCalibrationDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideCalibrationDialog() },
+            title = { Text("Kalibracja Algorytmu") },
+            text = {
+                Column {
+                    Text("Czy w nocy wystąpił szron lub oblodzenie?")
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Twoja odpowiedź pomoże ulepszyć dokładność prognoz.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.submitCalibrationFeedback(true)
+                }) {
+                    Text("TAK - Wystąpił szron")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    viewModel.submitCalibrationFeedback(false)
+                }) {
+                    Text("NIE - Nie wystąpił")
+                }
+            }
+        )
     }
 }
 

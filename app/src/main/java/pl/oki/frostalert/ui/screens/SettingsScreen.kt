@@ -17,8 +17,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.android.billingclient.api.ProductDetails
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
@@ -302,6 +303,34 @@ fun SettingsScreen(
                 HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
 
+                SectionTitle(stringResource(R.string.section_geofencing))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.geofencing_label),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = stringResource(R.string.geofencing_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = prefs.isGeofencingEnabled,
+                        onCheckedChange = { viewModel.updateGeofencingEnabled(it) }
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(16.dp))
+
                 SectionTitle(stringResource(R.string.section_notifications))
                 SettingSlider(label = stringResource(R.string.alert_start), value = prefs.alertStartHour.toFloat(), onValueChange = { viewModel.updateAlertStartHour(it.toInt()) }, range = 0f..23f, steps = 23, format = "%.0f:00")
                 SettingSlider(label = stringResource(R.string.alert_end), value = prefs.alertEndHour.toFloat(), onValueChange = { viewModel.updateAlertEndHour(it.toInt()) }, range = 0f..23f, steps = 23, format = "%.0f:00")
@@ -335,6 +364,96 @@ fun SettingsScreen(
                     format = "%.0f:00",
                     enabled = prefs.isCarModeEnabled
                 )
+
+                Spacer(Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(16.dp))
+
+                SectionTitle(stringResource(R.string.section_calibration))
+                val calibrationViewModel: CalibrationViewModel = hiltViewModel()
+                val calibrationState by calibrationViewModel.uiState.collectAsState()
+
+                if (calibrationState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                } else {
+                    calibrationState.calibrationResult?.let { result ->
+                        // Dokładność predykcji
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.calibration_accuracy),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "%.1f%%".format(Locale.US, result.accuracyPercentage),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = when {
+                                    result.accuracyPercentage >= 80 -> MaterialTheme.colorScheme.primary
+                                    result.accuracyPercentage >= 60 -> MaterialTheme.colorScheme.secondary
+                                    else -> MaterialTheme.colorScheme.error
+                                }
+                            )
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        // Liczba feedbacków
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.calibration_feedback_count),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = result.totalFeedback.toString(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Wyjaśnienie
+                        Text(
+                            text = calibrationViewModel.getCalibrationExplanation(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        // Przycisk zastosowania rekomendacji
+                        if (calibrationState.shouldShowSuggestions) {
+                            Spacer(Modifier.height(12.dp))
+                            Button(
+                                onClick = { calibrationViewModel.applyCalibrationRecommendations() },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.calibration_apply_recommendations))
+                            }
+                        }
+                    } ?: run {
+                        // Brak danych
+                        Text(
+                            text = stringResource(R.string.calibration_no_data),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.calibration_explanation),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 if (!isPro) {
                     Spacer(Modifier.height(24.dp))

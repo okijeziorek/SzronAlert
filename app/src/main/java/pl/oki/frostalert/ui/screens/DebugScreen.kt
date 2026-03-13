@@ -9,17 +9,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -30,6 +36,7 @@ import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.SummerCalculations
+import pl.oki.frostalert.utils.TrendCalculations
 import pl.oki.frostalert.worker.FrostCheckWorker
 import java.util.Locale
 import java.util.Random
@@ -37,12 +44,14 @@ import java.util.Random
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebugScreen(
-    settingsViewModel: SettingsViewModel = hiltViewModel()
+    settingsViewModel: SettingsViewModel = hiltViewModel(),
+    trendViewModel: TrendViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val db = FrostDatabase.getDatabase(context)
     val userPrefs by settingsViewModel.userPreferences.collectAsState()
+    val trendState by trendViewModel.trendState.collectAsState()
 
     // Stan dla symulatora
     var simTemp by remember { mutableStateOf(0.0f) }
@@ -146,7 +155,30 @@ fun DebugScreen(
                     }
                 }
 
-                // SEKCJA 3: WORKER & POWIADOMIENIA
+                // SEKCJA 3: TREND 7-DNIOWY
+                DebugSection("📈 Trend 7-dniowy", Icons.Default.TrendingUp) {
+                    if (trendState.weeklyStats != null) {
+                        val stats = trendState.weeklyStats!!
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Ryzyko szronu: ${stats.frostRiskPercentage.toInt()}%", fontWeight = FontWeight.Bold)
+                            Text("Noce z ryzykiem: ${stats.nightsWithFrostRisk}/7")
+                            Text("Średnia min: ${"%.1f".format(stats.averageMinTemp)}°C")
+                            Text("Najniższa: ${"%.1f".format(stats.lowestTemp)}°C")
+                            Text("Trend: ${TrendCalculations.getTrendEmoji(stats.trend)}")
+                            Button(
+                                onClick = {},
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = false
+                            ) {
+                                Text("Otwórz ekran Trendu (4. tab)")
+                            }
+                        }
+                    } else {
+                        Text("Ładowanie trendu...")
+                    }
+                }
+
+                // SEKCJA 4: WORKER & POWIADOMIENIA
                 DebugSection("🔔 System & Tło", Icons.Default.Info) {
                     Button(
                         onClick = {
@@ -193,6 +225,178 @@ fun DebugScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Wyczyść wszystko")
+                    }
+                }
+
+                // SEKCJA 5: KALIBRACJA ALGORYTMU
+                DebugSection("🎯 Kalibracja Algorytmu", Icons.Default.Science) {
+                    val calibrationViewModel: CalibrationViewModel = hiltViewModel()
+                    val calibrationState by calibrationViewModel.uiState.collectAsState()
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (calibrationState.calibrationResult != null) {
+                            val result = calibrationState.calibrationResult!!
+                            Text("Feedbacków: ${result.totalFeedback}", fontWeight = FontWeight.Bold)
+                            Text("Dokładność: ${result.accuracyPercentage.toInt()}%", color = MaterialTheme.colorScheme.primary)
+                            Text("Poziom ufności: ${result.confidenceLevel}", style = MaterialTheme.typography.labelSmall)
+                        } else {
+                            Text("Brak danych kalibracji", style = MaterialTheme.typography.labelSmall)
+                        }
+
+                        Button(
+                            onClick = {
+                                scope.launch(Dispatchers.IO) {
+                                    db.calibrationDao().clearAllFeedback()
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Kalibracja wyczyszczona", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Wyczyść feedback")
+                        }
+                    }
+                }
+
+                // SEKCJA 6: STATYSTYKI BAZY DANYCH
+                DebugSection("💾 Baza Danych", Icons.Default.Info) {
+                    var dbStats by remember { mutableStateOf<Map<String, Int>?>(null) }
+
+                    LaunchedEffect(Unit) {
+                        scope.launch(Dispatchers.IO) {
+                            val tempCount = db.temperatureDao().getAllRecords().size
+                            val feedbackCount = db.calibrationDao().getTotalFeedbackCount()
+                            val riskCount = db.temperatureDao().getRiskCount()
+                            withContext(Dispatchers.Main) {
+                                dbStats = mapOf(
+                                    "Rekordów temp" to tempCount,
+                                    "Feedbacków" to feedbackCount,
+                                    "Ryzyk szronu" to riskCount
+                                )
+                            }
+                        }
+                    }
+
+                    if (dbStats != null) {
+                        dbStats!!.forEach { (label, count) ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(label, style = MaterialTheme.typography.bodyMedium)
+                                Text(count.toString(), fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    } else {
+                        Text("Ładowanie statystyk...", style = MaterialTheme.typography.labelSmall)
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                db.temperatureDao().insert(TemperatureRecord(
+                                    timestamp = System.currentTimeMillis(),
+                                    minTemp = simTemp.toDouble(),
+                                    hasRisk = WeatherCalculations.hasFrostRisk(
+                                        temp = simTemp.toDouble(),
+                                        humidity = simHumidity.toDouble(),
+                                        precip = 0.0,
+                                        weatherCode = 0,
+                                        tempThreshold = prefs.tempThreshold,
+                                        humidityThreshold = prefs.humidityThreshold.toDouble(),
+                                        precipitationThreshold = prefs.precipitationThreshold,
+                                        sensitivity = prefs.sensitivity,
+                                        windSpeed = simWind.toDouble(),
+                                        appMode = prefs.appMode
+                                    )
+                                ))
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(context, "Dodano rekord testowy", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Dodaj rekord z symulatora")
+                    }
+                }
+
+                // SEKCJA 7: POWIADOMIENIA I AKCJE
+                DebugSection("🔔 Test Powiadomień", Icons.Default.Notifications) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = {
+                                val testData = Data.Builder().putBoolean("IS_TEST", true).build()
+                                val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>()
+                                    .setInputData(testData)
+                                    .build()
+                                WorkManager.getInstance(context).enqueue(workRequest)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Wyślij testowe powiadomienie")
+                        }
+
+                        Button(
+                            onClick = {
+                                // Symuluj akcję "Ignoruj dziś"
+                                settingsViewModel.updateIgnoreUntil(System.currentTimeMillis() + 24 * 60 * 60 * 1000)
+                                Toast.makeText(context, "Ustawiono 'Ignoruj dziś'", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Text("Test: Ignoruj dziś")
+                        }
+
+                        Button(
+                            onClick = {
+                                // Symuluj akcję "Przypomnij za 2h"
+                                val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>()
+                                    .setInitialDelay(2, java.util.concurrent.TimeUnit.HOURS)
+                                    .build()
+                                WorkManager.getInstance(context).enqueue(workRequest)
+                                Toast.makeText(context, "Zaplanowano przypomnienie za 2h", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                        ) {
+                            Text("Test: Przypomnij za 2h")
+                        }
+                    }
+                }
+
+                // SEKCJA 8: TRYB APLIKACJI
+                DebugSection("🔄 Tryb Aplikacji", Icons.Default.SwapHoriz) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Aktualny tryb: ${if (prefs.appMode == 0) "Samochód" else "Ogród"}", fontWeight = FontWeight.Bold)
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Button(
+                                onClick = { settingsViewModel.updateAppMode(0) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (prefs.appMode == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text("🚗 Samochód")
+                            }
+
+                            Button(
+                                onClick = { settingsViewModel.updateAppMode(1) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (prefs.appMode == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text("🌱 Ogród")
+                            }
+                        }
                     }
                 }
             }

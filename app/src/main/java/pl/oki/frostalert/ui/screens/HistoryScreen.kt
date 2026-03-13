@@ -4,8 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import co.yml.charts.axis.AxisData
 import co.yml.charts.common.model.Point
 import co.yml.charts.ui.linechart.LineChart
@@ -38,7 +36,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.oki.frostalert.R
 import pl.oki.frostalert.billing.BillingClientWrapper
-import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.TemperatureRecord
 import java.io.File
 import java.text.SimpleDateFormat
@@ -51,35 +48,22 @@ fun HistoryScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val db = remember { FrostDatabase.getDatabase(context) }
-    val dao = db.temperatureDao()
-    val records by dao.getRecentRecords().collectAsState(initial = emptyList())
-    
     val uiState by historyViewModel.uiState.collectAsState()
-    val userPrefs by settingsViewModel.userPreferences.collectAsState()
+    val userPrefsState by settingsViewModel.userPreferences.collectAsState()
     val scope = rememberCoroutineScope()
     val billingClient = remember { BillingClientWrapper(context) }
     val isProActual by billingClient.isPro.collectAsState()
 
-    // Stan przewijania dla wykresu
-    val chartScrollState = rememberScrollState()
-
-    if (userPrefs == null) {
+    if (userPrefsState == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
     } else {
-        val prefs = userPrefs!!
+        val prefs = userPrefsState!!
         val isPro = isProActual || prefs.isProForced
 
-        LaunchedEffect(records) {
-            scope.launch { 
-                historyViewModel.refreshStats()
-                // Po załadowaniu rekordów przewijamy wykres do końca (najnowsze dane)
-                if (records.isNotEmpty()) {
-                    chartScrollState.scrollTo(Int.MAX_VALUE)
-                }
-            }
+        LaunchedEffect(Unit) {
+            historyViewModel.refreshStats()
         }
 
         Scaffold(
@@ -90,6 +74,8 @@ fun HistoryScreen(
                     Text(uiState.errorMessage!!, color = MaterialTheme.colorScheme.error)
                 }
             } else {
+                val records by historyViewModel.recentRecords.collectAsState()
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -113,8 +99,7 @@ fun HistoryScreen(
                             TextButton(onClick = { 
                                 if (isPro) {
                                     scope.launch {
-                                        val allRecords = withContext(Dispatchers.IO) { dao.getAllRecords() }
-                                        exportToCsv(context, allRecords)
+                                        exportToCsv(context, records)
                                     }
                                 } else {
                                     billingClient.queryProductDetails { productDetails: ProductDetails? ->
@@ -182,13 +167,12 @@ fun HistoryScreen(
                         )
 
                         Card(
-                            modifier = Modifier.fillMaxWidth().height(320.dp),
+                            modifier = Modifier.fillMaxWidth().height(350.dp),
                             shape = RoundedCornerShape(24.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
                         ) {
-                            // Dane chronologiczne: najstarsze na początku (lewo), najnowsze na końcu (prawo)
-                            val chronologicalRecords = records.sortedBy { it.timestamp }
-                            val points = chronologicalRecords.mapIndexed { index, record ->
+                            // NAJBARDZIEJ LUDZKIE PODEJŚCIE: Najnowsze dane po lewej stronie (index 0)
+                            val points = records.mapIndexed { index, record ->
                                 Point(index.toFloat(), record.minTemp.toFloat())
                             }
 
@@ -198,10 +182,10 @@ fun HistoryScreen(
                             val yMax = (if (maxVal < 2) 4.0 else maxVal + 2.0).toFloat()
 
                             val xAxisData = AxisData.Builder()
-                                .axisStepSize(80.dp)
+                                .axisStepSize(100.dp)
                                 .steps(points.size - 1)
                                 .labelData { index -> 
-                                    chronologicalRecords.getOrNull(index)?.let {
+                                    records.getOrNull(index)?.let {
                                         SimpleDateFormat("d/MM", Locale.getDefault()).format(Date(it.timestamp))
                                     } ?: ""
                                 }
@@ -247,18 +231,10 @@ fun HistoryScreen(
                                 isZoomAllowed = true
                             )
 
-                            // Używamy horizontalScroll z chartScrollState, aby wymusić start z prawej
-                            Box(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .fillMaxSize()
-                                    .horizontalScroll(chartScrollState)
-                            ) {
-                                LineChart(
-                                    modifier = Modifier.width((points.size * 80).dp).fillMaxHeight(),
-                                    lineChartData = lineChartData
-                                )
-                            }
+                            LineChart(
+                                modifier = Modifier.fillMaxSize(),
+                                lineChartData = lineChartData
+                            )
                         }
                     }
 
@@ -330,6 +306,7 @@ private fun exportToCsv(context: Context, records: List<TemperatureRecord>) {
         
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/csv"
+            putExtra(Intent.EXTRA_SUBJECT, "Historia FrostAlert")
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }

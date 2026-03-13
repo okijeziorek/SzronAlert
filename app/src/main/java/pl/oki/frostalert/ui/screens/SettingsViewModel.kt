@@ -148,4 +148,10 @@ class SettingsViewModel @Inject constructor(
             settingsRepository.updateUseFahrenheit(useFahrenheit)
         }
     }
+
+    fun updateGeofencingEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateGeofencingEnabled(isEnabled)
+        }
+    }
 }

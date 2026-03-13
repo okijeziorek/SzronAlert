@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
+import androidx.glance.appwidget.updateAll
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -102,6 +103,37 @@ class FrostCheckWorker @AssistedInject constructor(
                         hasRisk = hasRisk
                     )
                     temperatureDao.insert(record)
+
+                    // Aktualizuj Glance widget
+                    pl.oki.frostalert.widget.FrostGlanceWidget().updateAll(applicationContext)
+
+                    // SPRAWDŹ GEOFENCING - czy użytkownik wjechał w rejon z wyższym ryzykiem
+                    if (!isCarMode && userPreferences.isGeofencingEnabled) {
+                        try {
+                            val geofencingResult = locationRepository.checkGeofencingRisk(location, userPreferences)
+                            when (geofencingResult) {
+                                is pl.oki.frostalert.data.repository.GeofencingResult.HigherRiskNearby -> {
+                                    val direction = geofencingResult.direction
+                                    val riskIncrease = geofencingResult.riskIncrease
+                                    val currentMinTemp = geofencingResult.currentRisk.minTemp
+
+                                    NotificationHelper.createNotificationChannel(applicationContext)
+                                    val title = "⚠️ Wyższe ryzyko szronu w okolicy!"
+                                    val message = "W kierunku $direction ryzyko jest o ${(riskIncrease * 100).toInt()}% wyższe. " +
+                                                 "Aktualna prognoza: ${String.format(Locale.US, "%.1f", currentMinTemp)}°C."
+                                    NotificationHelper.sendNotification(applicationContext, title, message)
+                                }
+                                is pl.oki.frostalert.data.repository.GeofencingResult.Error -> {
+                                    Log.w(TAG, "Błąd sprawdzania geofencing: ${geofencingResult.message}")
+                                }
+                                else -> {
+                                    // NoRisk - nic nie robimy
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Wyjątek podczas sprawdzania geofencing: ${e.message}")
+                        }
+                    }
 
                     // Odświeżanie widgetów
                     val appWidgetManager = AppWidgetManager.getInstance(applicationContext)

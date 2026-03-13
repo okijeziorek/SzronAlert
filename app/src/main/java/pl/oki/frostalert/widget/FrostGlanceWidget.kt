@@ -14,6 +14,8 @@ import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.compose.ui.graphics.Color
+import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
@@ -39,22 +41,23 @@ class FrostGlanceWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val db = FrostDatabase.getDatabase(context)
-        val lastRecord = db.temperatureDao().getRecentRecords().first().firstOrNull()
+        val records = db.temperatureDao().getRecentRecords().first()
+        val lastRecord = records.firstOrNull()
         val settings = SettingsDataStore(context).userPreferencesFlow.first()
 
         provideContent {
             GlanceTheme {
-                WidgetContent(lastRecord, settings.useFahrenheit)
+                WidgetContent(lastRecord, settings.useFahrenheit, records.size)
             }
         }
     }
 
     @androidx.compose.runtime.Composable
-    private fun WidgetContent(lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?, useFahrenheit: Boolean) {
+    private fun WidgetContent(lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?, useFahrenheit: Boolean, recordsCount: Int) {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(GlanceTheme.colors.surface)
+                .background(ColorProvider(day = Color.DarkGray, night = Color.DarkGray))
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalAlignment = Alignment.CenterVertically
@@ -63,12 +66,12 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 val sdf = SimpleDateFormat("d MMM, HH:mm", Locale.getDefault())
                 val date = sdf.format(Date(lastRecord.timestamp))
                 val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
-                val riskColor = if (lastRecord.hasRisk) GlanceTheme.colors.error else GlanceTheme.colors.primary
+                val riskColor = if (lastRecord.hasRisk) ColorProvider(day = Color.Red, night = Color.Red) else ColorProvider(day = Color.Green, night = Color.Green)
 
                 Text(
                     text = "Szron Alert ($date)",
                     style = TextStyle(
-                        color = GlanceTheme.colors.onSurface,
+                        color = ColorProvider(day = Color.White, night = Color.White),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -79,12 +82,12 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Noc min: ",
-                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp)
+                        style = TextStyle(color = ColorProvider(day = Color.White, night = Color.White), fontSize = 12.sp)
                     )
                     Text(
                         text = WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit),
                         style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
+                            color = ColorProvider(day = Color.White, night = Color.White),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -97,8 +100,8 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 )
             } else {
                 Text(
-                    text = "Brak danych. Kliknij odśwież.",
-                    style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp)
+                    text = "Brak danych ($recordsCount rekordów). Kliknij odśwież.",
+                    style = TextStyle(color = ColorProvider(day = Color.White, night = Color.White), fontSize = 14.sp)
                 )
             }
 
