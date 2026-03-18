@@ -11,13 +11,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.android.billingclient.api.ProductDetails
@@ -36,6 +36,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val userPreferences by viewModel.userPreferences.collectAsState()
     val billingClient = remember { BillingClientWrapper(context) }
     val isProActual by billingClient.isPro.collectAsState()
@@ -128,7 +129,20 @@ fun SettingsScreen(
                         onCheckedChange = { viewModel.updateManualLocation(it, prefs.manualLatitude, prefs.manualLongitude, prefs.manualLocationName) }
                     )
                 }
-                
+
+                Spacer(Modifier.height(12.dp))
+                var showGeofenceHistory by remember { mutableStateOf(false) }
+                Button(onClick = { showGeofenceHistory = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Historia Geofence")
+                }
+
+                if (showGeofenceHistory) {
+                    androidx.compose.ui.window.Dialog(onDismissRequest = { showGeofenceHistory = false }) {
+                        Surface(modifier = Modifier.fillMaxSize()) {
+                            GeofenceHistoryScreen()
+                        }
+                    }
+                }
                 if (prefs.isManualLocationEnabled) {
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
@@ -188,6 +202,27 @@ fun SettingsScreen(
                 Spacer(Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
+                // Geofence radius setting
+                Text("Promień Geofence", style = MaterialTheme.typography.titleMedium)
+                val radiusKm = prefs.geofenceRadiusMeters / 1000.0
+                var sliderRadius by remember { mutableStateOf(radiusKm.toFloat()) }
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Slider(value = sliderRadius, onValueChange = {
+                        sliderRadius = it
+                    }, valueRange = 1f..100f, steps = 99)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("${String.format(Locale.US, "%.0f", sliderRadius)} km")
+                        Button(onClick = { viewModel.updateGeofenceRadius((sliderRadius * 1000.0)) }) {
+                            Text("Zapisz promień")
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { sliderRadius = 5f }) { Text("5 km") }
+                        Button(onClick = { sliderRadius = 10f }) { Text("10 km") }
+                        Button(onClick = { sliderRadius = 20f }) { Text("20 km") }
+                        Button(onClick = { sliderRadius = 50f }) { Text("50 km") }
+                    }
+                }
 
                 SectionTitle(stringResource(R.string.section_summer_settings))
                 Row(
@@ -323,7 +358,10 @@ fun SettingsScreen(
                     }
                     Switch(
                         checked = prefs.isGeofencingEnabled,
-                        onCheckedChange = { viewModel.updateGeofencingEnabled(it) }
+                        onCheckedChange = {
+                            // Delegujemy logikę rejestracji do ViewModel / GeofenceRegistrar
+                            viewModel.updateGeofencingEnabled(it)
+                        }
                     )
                 }
 
@@ -334,6 +372,18 @@ fun SettingsScreen(
                 SectionTitle(stringResource(R.string.section_notifications))
                 SettingSlider(label = stringResource(R.string.alert_start), value = prefs.alertStartHour.toFloat(), onValueChange = { viewModel.updateAlertStartHour(it.toInt()) }, range = 0f..23f, steps = 23, format = "%.0f:00")
                 SettingSlider(label = stringResource(R.string.alert_end), value = prefs.alertEndHour.toFloat(), onValueChange = { viewModel.updateAlertEndHour(it.toInt()) }, range = 0f..23f, steps = 23, format = "%.0f:00")
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Powiadomienia o zmianie trendu", style = MaterialTheme.typography.bodyLarge)
+                    Switch(
+                        checked = prefs.isTrendChangeNotificationsEnabled,
+                        onCheckedChange = { viewModel.updateTrendChangeNotificationsEnabled(it) }
+                    )
+                }
 
                 Spacer(Modifier.height(24.dp))
                 SectionTitle(stringResource(R.string.car_mode_title))

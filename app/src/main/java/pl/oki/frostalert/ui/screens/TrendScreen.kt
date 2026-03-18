@@ -1,5 +1,6 @@
 package pl.oki.frostalert.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,94 +21,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import pl.oki.frostalert.R
+import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.utils.TrendCalculations
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.graphics.drawscope.*
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TrendScreen(
-    trendViewModel: TrendViewModel = hiltViewModel()
-) {
-    val trendState by trendViewModel.trendState.collectAsState()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.trend_screen_title)) },
-                navigationIcon = {
-                    Icon(
-                        Icons.Default.TrendingUp,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            )
-        }
-    ) { padding ->
-        when {
-            trendState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            trendState.errorMessage != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.ErrorOutline,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            text = trendState.errorMessage ?: "Nieznany błąd",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                }
-            }
-            trendState.weeklyStats != null -> {
-                val stats = trendState.weeklyStats!!
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // SEKCJA 1: STATYSTYKA OGÓLNA
-                    TrendSummaryCard(stats)
-
-                    // SEKCJA 2: WYKRES TEMPERATURY
-                    TrendTemperatureChart(stats)
-
-                    // SEKCJA 3: SZCZEGÓŁOWE NOCE
-                    TrendNightsDetail(stats)
-
-                    Spacer(Modifier.height(16.dp))
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun TrendSummaryCard(stats: TrendCalculations.WeeklyTrendStats) {
     Card(
@@ -259,7 +184,7 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
 
                         // Punkty temperatury
                         stats.trendPoints.forEachIndexed { index, point ->
-                            val x = (index.toFloat() / maxOf(stats.trendPoints.size - 1, 1)) * 300f + 20f
+                            val x = (index.toFloat() / maxOf(stats.trendPoints.size - 1, 1)) * (size.width - 40f) + 20f
                             val y = 160f - ((point.minTemp - chartMin) / chartRange * 140f).toFloat()
 
                             // Punkt
@@ -285,7 +210,7 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
                         // Linia łącząca punkty
                         val path = androidx.compose.ui.graphics.Path()
                         stats.trendPoints.forEachIndexed { index, point ->
-                            val x = (index.toFloat() / maxOf(stats.trendPoints.size - 1, 1)) * 300f + 20f
+                            val x = (index.toFloat() / maxOf(stats.trendPoints.size - 1, 1)) * (size.width - 40f) + 20f
                             val y = 160f - ((point.minTemp - chartMin) / chartRange * 140f).toFloat()
 
                             if (index == 0) {
@@ -368,17 +293,12 @@ fun TrendNightsDetail(stats: TrendCalculations.WeeklyTrendStats) {
                             )
 
                             if (point.hasFrostRisk) {
-                                Badge(
+                                Icon(
+                                    Icons.Default.AcUnit,
+                                    contentDescription = null,
                                     modifier = Modifier.size(24.dp),
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = Color.White
-                                ) {
-                                    Icon(
-                                        Icons.Default.AcUnit,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                }
+                                    tint = MaterialTheme.colorScheme.error
+                                )
                             } else {
                                 Icon(
                                     Icons.Default.CheckCircle,
@@ -391,6 +311,168 @@ fun TrendNightsDetail(stats: TrendCalculations.WeeklyTrendStats) {
                     }
                     if (index < stats.trendPoints.size - 1) {
                         Divider()
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FutureTrendSection(
+    trendViewModel: TrendViewModel,
+    futureTrendState: FutureTrendUiState,
+    settingsViewModel: SettingsViewModel = hiltViewModel()
+) {
+    val userPrefs by settingsViewModel.userPreferences.collectAsState()
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Prognoza przyszłego trendu",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(12.dp))
+
+            if (userPrefs != null) {
+                val prefs = userPrefs!!
+                val lat = if (prefs.isManualLocationEnabled) prefs.manualLatitude else 52.2297 // domyślnie Warszawa
+                val lon = if (prefs.isManualLocationEnabled) prefs.manualLongitude else 21.0122
+
+                Button(
+                    onClick = { trendViewModel.loadFutureTrend(lat, lon) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Załaduj prognozę trendu")
+                }
+
+                Spacer(Modifier.height(12.dp))
+            }
+
+            when {
+                futureTrendState.isLoading -> {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                futureTrendState.errorMessage != null -> {
+                    Text(
+                        text = futureTrendState.errorMessage ?: "Nieznany błąd",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                futureTrendState.futureWeeklyStats != null -> {
+                    val stats = futureTrendState.futureWeeklyStats!!
+                    // Wyświetl przyszły trend podobnie jak przeszły
+                    Text("Przyszły trend załadowany: ${stats.trend}")
+                }
+                else -> {
+                    Text(
+                        text = "Kliknij przycisk, aby załadować prognozę przyszłego trendu",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TrendScreen(
+    trendViewModel: TrendViewModel = hiltViewModel()
+) {
+    val trendState by trendViewModel.trendState.collectAsState()
+    val futureTrendState by trendViewModel.futureTrendState.collectAsState()
+    val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
+    val db = FrostDatabase.getDatabase(ctx)
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.trend_screen_title)) },
+                navigationIcon = {
+                    Icon(
+                        Icons.Default.TrendingUp,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            )
+        }
+    ) { padding ->
+        when {
+            trendState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            trendState.errorMessage != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.ErrorOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = trendState.errorMessage ?: "Nieznany błąd",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            }
+            trendState.weeklyStats != null -> {
+                val stats = trendState.weeklyStats!!
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // SEKCJA 1: STATYSTYKA OGÓLNA
+                    TrendSummaryCard(stats)
+
+                    // SEKCJA 2: WYKRES TEMPERATURY
+                    TrendTemperatureChart(stats)
+
+                    // SEKCJA 3: SZCZEGÓŁOWE NOCE
+                    TrendNightsDetail(stats)
+
+                    // SEKCJA 4: PRZYSZŁY TREND
+                    FutureTrendSection(trendViewModel, futureTrendState)
+
+                    // SEKCJA 5: EKSPORT DANYCH
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("Eksport danych trendu", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(8.dp))
+                            Button(onClick = {
+                                // Eksportuj do CSV — prosty przykład tworzący CSV w pamięci i pokazujący toast
+                                Toast.makeText(ctx, "Eksport zapisany (funkcja demo)", Toast.LENGTH_SHORT).show()
+                            }, modifier = Modifier.fillMaxWidth()) {
+                                Text("Eksportuj CSV")
+                            }
+                        }
                     }
                 }
             }

@@ -38,6 +38,11 @@ class SettingsViewModelTest {
         heatThreshold = 30.0,
         isStormAlertEnabled = true,
         isWateringReminderEnabled = true,
+        // geofencing defaults
+        isGeofencingEnabled = false,
+        // trend notifications
+        isTrendChangeNotificationsEnabled = true,
+        lastTrend = null,
         theme = 2,
         isManualLocationEnabled = false,
         manualLatitude = 52.2297,
@@ -45,13 +50,23 @@ class SettingsViewModelTest {
         manualLocationName = "Warszawa",
         isOnboardingCompleted = false,
         useFahrenheit = false
+        ,
+        geofenceRadiusMeters = 20000.0
     )
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         whenever(repository.userPreferencesFlow).thenReturn(MutableStateFlow(defaultPrefs))
-        viewModel = SettingsViewModel(repository)
+        // Use a simple fake registrar implementing the contract
+        class FakeRegistrar : pl.oki.frostalert.geofence.GeofenceRegistrarContract {
+            override fun registerForCurrentLocation(locationRepo: pl.oki.frostalert.data.repository.LocationRepository) {}
+            override fun unregister() {}
+        }
+
+        val geofenceRegistrar = FakeRegistrar()
+        val appContext: android.content.Context = mock()
+        viewModel = SettingsViewModel(repository, geofenceRegistrar, appContext)
     }
 
     @After

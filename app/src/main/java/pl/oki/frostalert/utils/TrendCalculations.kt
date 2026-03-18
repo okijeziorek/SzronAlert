@@ -102,6 +102,90 @@ object TrendCalculations {
     }
 
     /**
+     * Wylicza przyszły trend 7-dniowy na podstawie prognozy pogody
+     */
+    fun calculateFutureWeeklyTrend(weatherResponse: pl.oki.frostalert.data.remote.WeatherResponse): WeeklyTrendStats {
+        val hourly = weatherResponse.hourly
+        val now = System.currentTimeMillis()
+        val calendar = Calendar.getInstance()
+
+        // Znajdź indeks dla jutra 00:00
+        calendar.timeInMillis = now
+        calendar.add(Calendar.DAY_OF_YEAR, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val tomorrowStart = calendar.timeInMillis
+
+        // Znajdź indeks w hourly.time najbliższy do tomorrowStart
+        var startIndex = 0
+        for (i in hourly.time.indices) {
+            val timeMillis = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault()).parse(hourly.time[i])?.time ?: 0
+            if (timeMillis >= tomorrowStart) {
+                startIndex = i
+                break
+            }
+        }
+
+        val trendPoints = mutableListOf<DailyTrendPoint>()
+        for (day in 0 until 7) {
+            val dayStartIndex = startIndex + (day * 24)
+            if (dayStartIndex + 24 > hourly.temperature.size) break
+
+            // Znajdź min temp w nocy (20:00 - 08:00 następnego dnia)
+            var minTemp = Double.MAX_VALUE
+            for (hour in 20 until 32) { // 20:00 dziś do 08:00 jutro
+                val index = dayStartIndex + hour
+                if (index < hourly.temperature.size) {
+                    minTemp = minOf(minTemp, hourly.temperature[index])
+                }
+            }
+            if (minTemp == Double.MAX_VALUE) minTemp = hourly.temperature.getOrElse(dayStartIndex + 20) { 0.0 }
+
+            // Oblicz ryzyko szronu (uproszczone: temp < 2°C, humidity > 70)
+            val humidity = hourly.humidity.getOrElse(dayStartIndex + 20) { 80.0 }
+            val hasFrostRisk = minTemp < 2.0 && humidity > 70.0
+
+            val timestamp = tomorrowStart + (day * 24 * 60 * 60 * 1000L)
+            trendPoints.add(DailyTrendPoint(
+                dayLabel = getFutureDayLabel(day),
+                minTemp = minTemp,
+                hasFrostRisk = hasFrostRisk,
+                timestamp = timestamp
+            ))
+        }
+
+        val nightsWithRisk = trendPoints.count { it.hasFrostRisk }
+        val percentage = if (trendPoints.isNotEmpty()) (nightsWithRisk.toDouble() / trendPoints.size) * 100.0 else 0.0
+        val avgTemp = trendPoints.map { it.minTemp }.average()
+        val lowestTemp = trendPoints.minOfOrNull { it.minTemp } ?: 0.0
+
+        // Określ trend: porównaj średnią pierwszych 3 dni vs ostatnich 3 dni
+        val trend = if (trendPoints.size >= 6) {
+            val firstThreeAvg = trendPoints.take(3).map { it.minTemp }.average()
+            val lastThreeAvg = trendPoints.takeLast(3).map { it.minTemp }.average()
+
+            when {
+                lastThreeAvg > firstThreeAvg + 2.0 -> TrendDirection.UP
+                firstThreeAvg > lastThreeAvg + 2.0 -> TrendDirection.DOWN
+                else -> TrendDirection.STABLE
+            }
+        } else {
+            TrendDirection.STABLE
+        }
+
+        return WeeklyTrendStats(
+            trendPoints = trendPoints,
+            nightsWithFrostRisk = nightsWithRisk,
+            frostRiskPercentage = percentage,
+            averageMinTemp = avgTemp,
+            lowestTemp = lowestTemp,
+            trend = trend
+        )
+    }
+
+    /**
      * Zwraca opis trendu w naturalnym języku
      */
     fun getTrendDescription(stats: WeeklyTrendStats): String {
@@ -134,6 +218,20 @@ object TrendCalculations {
         5 -> "5 dni temu"
         6 -> "6 dni temu"
         else -> "Starsze"
+    }
+
+    /**
+     * Zwraca etykietę przyszłego dnia (Jutro, Pojutrze, itd.)
+     */
+    private fun getFutureDayLabel(daysAhead: Int): String = when (daysAhead) {
+        0 -> "Jutro"
+        1 -> "Pojutrze"
+        2 -> "Za 3 dni"
+        3 -> "Za 4 dni"
+        4 -> "Za 5 dni"
+        5 -> "Za 6 dni"
+        6 -> "Za 7 dni"
+        else -> "Później"
     }
 
     /**

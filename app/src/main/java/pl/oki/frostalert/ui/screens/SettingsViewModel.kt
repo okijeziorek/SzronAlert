@@ -13,7 +13,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val geofenceRegistrar: pl.oki.frostalert.geofence.GeofenceRegistrarContract,
+    @javax.inject.Named("app_context") private val appContext: android.content.Context
 ) : ViewModel() {
 
     val userPreferences: StateFlow<UserPreferences?> = settingsRepository.userPreferencesFlow
@@ -134,6 +136,11 @@ class SettingsViewModel @Inject constructor(
     fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
         viewModelScope.launch {
             settingsRepository.updateManualLocation(isEnabled, lat, lon, name)
+            // Jeśli włączone geofencing, przerejestruj geofence dla nowej lokalizacji
+            try {
+                val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(appContext, pl.oki.frostalert.data.local.SettingsDataStore(appContext))
+                geofenceRegistrar.registerForCurrentLocation(locationRepo)
+            } catch (_: Exception) {}
         }
     }
 
@@ -152,6 +159,32 @@ class SettingsViewModel @Inject constructor(
     fun updateGeofencingEnabled(isEnabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.updateGeofencingEnabled(isEnabled)
+            if (isEnabled) {
+                try {
+                    val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(appContext, pl.oki.frostalert.data.local.SettingsDataStore(appContext))
+                    geofenceRegistrar.registerForCurrentLocation(locationRepo)
+                } catch (_: Exception) {}
+            } else {
+                geofenceRegistrar.unregister()
+            }
+        }
+    }
+
+    fun updateGeofenceRadius(radiusMeters: Double) {
+        viewModelScope.launch {
+            settingsRepository.updateGeofenceRadius(radiusMeters)
+        }
+    }
+
+    fun updateTrendChangeNotificationsEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateTrendChangeNotificationsEnabled(isEnabled)
+        }
+    }
+
+    fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
+        viewModelScope.launch {
+            settingsRepository.updateLastTrend(trend)
         }
     }
 }

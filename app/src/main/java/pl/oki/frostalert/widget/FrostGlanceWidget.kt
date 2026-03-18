@@ -57,7 +57,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(ColorProvider(day = Color.DarkGray, night = Color.DarkGray))
+                .background(ColorProvider(day = Color.White, night = Color.Black))
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalAlignment = Alignment.CenterVertically
@@ -71,7 +71,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 Text(
                     text = "Szron Alert ($date)",
                     style = TextStyle(
-                        color = ColorProvider(day = Color.White, night = Color.White),
+                        color = ColorProvider(day = Color.Black, night = Color.White),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -82,12 +82,12 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Noc min: ",
-                        style = TextStyle(color = ColorProvider(day = Color.White, night = Color.White), fontSize = 12.sp)
+                        style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 12.sp)
                     )
                     Text(
                         text = WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit),
                         style = TextStyle(
-                            color = ColorProvider(day = Color.White, night = Color.White),
+                            color = ColorProvider(day = Color.Black, night = Color.White),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -101,7 +101,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
             } else {
                 Text(
                     text = "Brak danych ($recordsCount rekordów). Kliknij odśwież.",
-                    style = TextStyle(color = ColorProvider(day = Color.White, night = Color.White), fontSize = 14.sp)
+                    style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 14.sp)
                 )
             }
 

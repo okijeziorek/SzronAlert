@@ -77,6 +77,14 @@
             android:name=".receiver.CarModeReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".receiver.GeofenceBroadcastReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="pl.oki.frostalert.ACTION_GEOFENCE" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

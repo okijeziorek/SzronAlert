@@ -5,6 +5,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Named
 import dagger.hilt.components.SingletonComponent
 import pl.oki.frostalert.data.local.CalibrationDao
 import pl.oki.frostalert.data.local.FrostDatabase
@@ -57,6 +58,38 @@ object AppModule {
     ): LocationRepository {
         return LocationRepository(context, dataStore)
     }
+
+    @Provides
+    @Singleton
+    fun provideGeofenceDao(database: FrostDatabase): pl.oki.frostalert.data.local.GeofenceDao {
+        return database.geofenceDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeofenceRepository(@ApplicationContext context: Context): pl.oki.frostalert.data.repository.GeofenceRepository {
+        return pl.oki.frostalert.data.repository.GeofenceRepository(context)
+    }
+
+    @Provides
+    fun provideGeofenceManager(@ApplicationContext context: Context): pl.oki.frostalert.geofence.GeofenceManager {
+        return pl.oki.frostalert.geofence.GeofenceManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeofenceRegistrar(
+        @ApplicationContext context: Context,
+        settingsDataStore: pl.oki.frostalert.data.local.SettingsDataStore,
+        locationRepository: LocationRepository,
+        geofenceManager: pl.oki.frostalert.geofence.GeofenceManager
+    ): pl.oki.frostalert.geofence.GeofenceRegistrarContract {
+        return pl.oki.frostalert.geofence.GeofenceRegistrar(context, settingsDataStore, locationRepository, geofenceManager)
+    }
+
+    @Provides
+    @Named("app_context")
+    fun provideAppContext(@ApplicationContext context: Context): Context = context
 
     @Provides
     fun provideCalibrationDao(database: FrostDatabase): CalibrationDao {

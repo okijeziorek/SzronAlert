@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
@@ -34,6 +35,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.TemperatureRecord
+import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.SummerCalculations
 import pl.oki.frostalert.utils.TrendCalculations
@@ -52,6 +54,7 @@ fun DebugScreen(
     val db = FrostDatabase.getDatabase(context)
     val userPrefs by settingsViewModel.userPreferences.collectAsState()
     val trendState by trendViewModel.trendState.collectAsState()
+    val settingsDataStore = SettingsDataStore(context)
 
     // Stan dla symulatora
     var simTemp by remember { mutableStateOf(0.0f) }
@@ -397,6 +400,80 @@ fun DebugScreen(
                                 Text("🌱 Ogród")
                             }
                         }
+                    }
+                }
+
+                // SEKCJA 9: TEST GEOFENCING
+                DebugSection("🗺️ Test Geofencing", Icons.Default.Info) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Symuluj sprawdzenie geofencing (wymaga włączonej opcji w ustawieniach)", style = MaterialTheme.typography.bodySmall)
+
+                        Button(
+                            onClick = {
+                                scope.launch(Dispatchers.IO) {
+                                    // Symuluj lokalizację (np. Warszawa)
+                                    val mockLocation = android.location.Location("mock").apply {
+                                        latitude = 52.2297
+                                        longitude = 21.0122
+                                    }
+                                    val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(context, settingsDataStore)
+                                    val result = locationRepo.checkGeofencingRisk(mockLocation, prefs)
+                                    withContext(Dispatchers.Main) {
+                                        val msg = when (result) {
+                                            is pl.oki.frostalert.data.repository.GeofencingResult.NoRisk -> "Brak wyższego ryzyka w okolicy"
+                                            is pl.oki.frostalert.data.repository.GeofencingResult.HigherRiskNearby -> "Wyższe ryzyko w kierunku ${result.direction}: +${(result.riskIncrease * 100).toInt()}%"
+                                            is pl.oki.frostalert.data.repository.GeofencingResult.Error -> "Błąd: ${result.message}"
+                                        }
+                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Test Geofencing (Warszawa)")
+                        }
+
+                        Button(
+                            onClick = {
+                                scope.launch(Dispatchers.IO) {
+                                    // Symuluj inną lokalizację (np. Kraków)
+                                    val mockLocation = android.location.Location("mock").apply {
+                                        latitude = 50.0647
+                                        longitude = 19.9450
+                                    }
+                                    val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(context, settingsDataStore)
+                                    val result = locationRepo.checkGeofencingRisk(mockLocation, prefs)
+                                    withContext(Dispatchers.Main) {
+                                        val msg = when (result) {
+                                            is pl.oki.frostalert.data.repository.GeofencingResult.NoRisk -> "Brak wyższego ryzyka w okolicy"
+                                            is pl.oki.frostalert.data.repository.GeofencingResult.HigherRiskNearby -> "Wyższe ryzyko w kierunku ${result.direction}: +${(result.riskIncrease * 100).toInt()}%"
+                                            is pl.oki.frostalert.data.repository.GeofencingResult.Error -> "Błąd: ${result.message}"
+                                        }
+                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Test Geofencing (Kraków)")
+                        }
+
+                                        Spacer(Modifier.height(8.dp))
+                                        var showGeofenceHistory by remember { mutableStateOf(false) }
+                                        Button(
+                                            onClick = { showGeofenceHistory = true },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("Otwórz historię Geofence")
+                                        }
+
+                                        if (showGeofenceHistory) {
+                                            Dialog(onDismissRequest = { showGeofenceHistory = false }) {
+                                                Surface(modifier = Modifier.fillMaxSize()) {
+                                                    GeofenceHistoryScreen()
+                                                }
+                                            }
+                                        }
                     }
                 }
             }

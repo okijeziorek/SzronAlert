@@ -21,8 +21,10 @@ import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.NotificationHelper
 import pl.oki.frostalert.utils.WeatherCalculations
-import pl.oki.frostalert.widget.FrostWidgetProvider
+import pl.oki.frostalert.utils.TrendCalculations
 import pl.oki.frostalert.widget.updateAppWidget
+import pl.oki.frostalert.widget.FrostWidgetProvider
+import pl.oki.frostalert.geofence.GeofenceManager
 import java.util.Calendar
 import java.util.Locale
 
@@ -107,9 +109,37 @@ class FrostCheckWorker @AssistedInject constructor(
                     // Aktualizuj Glance widget
                     pl.oki.frostalert.widget.FrostGlanceWidget().updateAll(applicationContext)
 
+                    // SPRAWDŹ ZMIANĘ TRENDU
+                    if (userPreferences.isTrendChangeNotificationsEnabled) {
+                        try {
+                            val recordsAfterInsert = temperatureDao.getRecentRecords().first()
+                            val newTrend = TrendCalculations.calculateWeeklyTrend(recordsAfterInsert).trend
+                            val oldTrend = userPreferences.lastTrend
+                            if (newTrend != oldTrend && oldTrend != null) {
+                                // Trend się zmienił
+                                val trendMessage = when (newTrend) {
+                                    TrendCalculations.TrendDirection.UP -> "Robi się cieplej! 📈"
+                                    TrendCalculations.TrendDirection.DOWN -> "Robi się chłodniej! 📉"
+                                    TrendCalculations.TrendDirection.STABLE -> "Trend się ustabilizował ➡️"
+                                }
+                                NotificationHelper.createNotificationChannel(applicationContext)
+                                NotificationHelper.sendNotification(
+                                    applicationContext,
+                                    "Zmiana trendu temperatury",
+                                    trendMessage
+                                )
+                            }
+                            // Zaktualizuj ostatni trend
+                            settingsDataStore.updateLastTrend(newTrend)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Błąd sprawdzania zmiany trendu: ${e.message}")
+                        }
+                    }
+
                     // SPRAWDŹ GEOFENCING - czy użytkownik wjechał w rejon z wyższym ryzykiem
                     if (!isCarMode && userPreferences.isGeofencingEnabled) {
                         try {
+
                             val geofencingResult = locationRepository.checkGeofencingRisk(location, userPreferences)
                             when (geofencingResult) {
                                 is pl.oki.frostalert.data.repository.GeofencingResult.HigherRiskNearby -> {

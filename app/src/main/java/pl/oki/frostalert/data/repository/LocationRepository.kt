@@ -74,47 +74,40 @@ class LocationRepository(private val context: Context, private val settingsDataS
 
         val currentRiskData = (currentRisk as AppResult.Success).data
 
-        // Sprawdź ryzyko w sąsiednich lokalizacjach (w promieniu 10-50km)
+        // Sprawdź ryzyko w sąsiednich lokalizacjach (w promieniu ~20km)
+        // Używamy 0.18 dla przesunięć N/S/E/W (~20km), a dla diagonalnych przesunięć ~0.127 (0.18/sqrt(2))
+        val d = 0.18
+        val dDiag = 0.127
         val nearbyLocations = listOf(
-            // N (północ) - 20km
-            Location("").apply {
-                latitude = currentLocation.latitude + 0.18
-                longitude = currentLocation.longitude
-            },
-            // S (południe) - 20km
-            Location("").apply {
-                latitude = currentLocation.latitude - 0.18
-                longitude = currentLocation.longitude
-            },
-            // E (wschód) - 20km
-            Location("").apply {
-                latitude = currentLocation.latitude
-                longitude = currentLocation.longitude + 0.18
-            },
-            // W (zachód) - 20km
-            Location("").apply {
-                latitude = currentLocation.latitude
-                longitude = currentLocation.longitude - 0.18
-            }
+            // 0 N
+            Pair(Location("").apply { latitude = currentLocation.latitude + d; longitude = currentLocation.longitude }, "północ"),
+            // 1 S
+            Pair(Location("").apply { latitude = currentLocation.latitude - d; longitude = currentLocation.longitude }, "południe"),
+            // 2 E
+            Pair(Location("").apply { latitude = currentLocation.latitude; longitude = currentLocation.longitude + d }, "wschód"),
+            // 3 W
+            Pair(Location("").apply { latitude = currentLocation.latitude; longitude = currentLocation.longitude - d }, "zachód"),
+            // 4 NE
+            Pair(Location("").apply { latitude = currentLocation.latitude + dDiag; longitude = currentLocation.longitude + dDiag }, "północny-wschód"),
+            // 5 SE
+            Pair(Location("").apply { latitude = currentLocation.latitude - dDiag; longitude = currentLocation.longitude + dDiag }, "południowy-wschód"),
+            // 6 NW
+            Pair(Location("").apply { latitude = currentLocation.latitude + dDiag; longitude = currentLocation.longitude - dDiag }, "północny-zachód"),
+            // 7 SW
+            Pair(Location("").apply { latitude = currentLocation.latitude - dDiag; longitude = currentLocation.longitude - dDiag }, "południowy-zachód")
         )
 
         var maxNearbyRisk = 0.0
         var riskierDirection: String? = null
 
-        for ((index, nearbyLoc) in nearbyLocations.withIndex()) {
+        for ((nearbyLoc, dir) in nearbyLocations) {
             val nearbyRisk = getFrostRiskForLocation(nearbyLoc.latitude, nearbyLoc.longitude, userPrefs)
             if (nearbyRisk is AppResult.Success) {
                 val nearbyRiskData = nearbyRisk.data
                 if (nearbyRiskData.riskLevel > currentRiskData.riskLevel + 0.3) { // Co najmniej 30% wyższe ryzyko
                     if (nearbyRiskData.riskLevel > maxNearbyRisk) {
                         maxNearbyRisk = nearbyRiskData.riskLevel
-                        riskierDirection = when (index) {
-                            0 -> "północ"
-                            1 -> "południe"
-                            2 -> "wschód"
-                            3 -> "zachód"
-                            else -> "nieznany"
-                        }
+                        riskierDirection = dir
                     }
                 }
             }

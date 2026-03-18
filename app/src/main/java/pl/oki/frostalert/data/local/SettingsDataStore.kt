@@ -33,6 +33,10 @@ data class UserPreferences(
     // NOWE POLE DLA GEOFENCING
     val isGeofencingEnabled: Boolean, // Czy włączyć powiadomienia geoprzestrzennych
     
+    // NOWE POLE DLA POWIADOMIEŃ O ZMIANIE TRENDU
+    val isTrendChangeNotificationsEnabled: Boolean, // Czy włączyć powiadomienia o zmianie trendu
+    val lastTrend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?, // Ostatni obliczony trend
+    
     val theme: Int,
     val isManualLocationEnabled: Boolean,
     val manualLatitude: Double,
@@ -40,6 +44,8 @@ data class UserPreferences(
     val manualLocationName: String,
     val isOnboardingCompleted: Boolean,
     val useFahrenheit: Boolean
+    ,
+    val geofenceRadiusMeters: Double
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -67,6 +73,11 @@ class SettingsDataStore(private val context: Context) {
         
         // KLUCZ DO GEOFENCING
         val IS_GEOFENCING_ENABLED = booleanPreferencesKey("is_geofencing_enabled")
+        val GEOFENCE_RADIUS = doublePreferencesKey("geofence_radius")
+        
+        // KLUCZ DO POWIADOMIEŃ O ZMIANIE TRENDU
+        val IS_TREND_CHANGE_NOTIFICATIONS_ENABLED = booleanPreferencesKey("is_trend_change_notifications_enabled")
+        val LAST_TREND = stringPreferencesKey("last_trend") // Zakładam, że TrendDirection można zapisać jako String
         
         val THEME = intPreferencesKey("theme")
         val IS_MANUAL_LOCATION_ENABLED = booleanPreferencesKey("is_manual_location_enabled")
@@ -103,6 +114,10 @@ class SettingsDataStore(private val context: Context) {
                 // DOMYŚLNE WARTOŚCI DLA GEOFENCING
                 isGeofencingEnabled = preferences[Keys.IS_GEOFENCING_ENABLED] ?: false,
                 
+                // DOMYŚLNE WARTOŚCI DLA POWIADOMIEŃ O ZMIANIE TRENDU
+                isTrendChangeNotificationsEnabled = preferences[Keys.IS_TREND_CHANGE_NOTIFICATIONS_ENABLED] ?: true,
+                lastTrend = preferences[Keys.LAST_TREND]?.let { pl.oki.frostalert.utils.TrendCalculations.TrendDirection.valueOf(it) }, // Parsowanie z String
+                
                 theme = preferences[Keys.THEME] ?: 2,
                 isManualLocationEnabled = preferences[Keys.IS_MANUAL_LOCATION_ENABLED] ?: false,
                 manualLatitude = preferences[Keys.MANUAL_LATITUDE] ?: 52.2297,
@@ -110,6 +125,8 @@ class SettingsDataStore(private val context: Context) {
                 manualLocationName = preferences[Keys.MANUAL_LOCATION_NAME] ?: "Warszawa",
                 isOnboardingCompleted = preferences[Keys.IS_ONBOARDING_COMPLETED] ?: false,
                 useFahrenheit = preferences[Keys.USE_FAHRENHEIT] ?: false
+                ,
+                geofenceRadiusMeters = preferences[Keys.GEOFENCE_RADIUS] ?: 20000.0
             )
         }
 
@@ -204,5 +221,23 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun updateGeofencingEnabled(isEnabled: Boolean) {
         context.dataStore.edit { it[Keys.IS_GEOFENCING_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateGeofenceRadius(radiusMeters: Double) {
+        context.dataStore.edit { it[Keys.GEOFENCE_RADIUS] = radiusMeters }
+    }
+
+    suspend fun updateTrendChangeNotificationsEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_TREND_CHANGE_NOTIFICATIONS_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
+        context.dataStore.edit { 
+            if (trend != null) {
+                it[Keys.LAST_TREND] = trend.name
+            } else {
+                it.remove(Keys.LAST_TREND)
+            }
+        }
     }
 }

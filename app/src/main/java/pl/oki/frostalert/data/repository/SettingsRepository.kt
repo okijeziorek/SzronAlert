@@ -28,6 +28,9 @@ interface SettingsRepository {
     suspend fun setOnboardingCompleted(isCompleted: Boolean)
     suspend fun updateUseFahrenheit(useFahrenheit: Boolean)
     suspend fun updateGeofencingEnabled(isEnabled: Boolean)
+    suspend fun updateGeofenceRadius(radiusMeters: Double)
+    suspend fun updateTrendChangeNotificationsEnabled(isEnabled: Boolean)
+    suspend fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?)
 }
 
 class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) : SettingsRepository {
@@ -120,5 +123,17 @@ class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) :
 
     override suspend fun updateGeofencingEnabled(isEnabled: Boolean) {
         settingsDataStore.updateGeofencingEnabled(isEnabled)
+    }
+
+    override suspend fun updateGeofenceRadius(radiusMeters: Double) {
+        settingsDataStore.updateGeofenceRadius(radiusMeters)
+    }
+
+    override suspend fun updateTrendChangeNotificationsEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateTrendChangeNotificationsEnabled(isEnabled)
+    }
+
+    override suspend fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
+        settingsDataStore.updateLastTrend(trend)
     }
 }
