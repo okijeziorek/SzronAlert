@@ -166,10 +166,24 @@ class FrostCheckWorker @AssistedInject constructor(
                     }
 
                     // Odświeżanie widgetów
-                    val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
-                    val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(applicationContext, FrostWidgetProvider::class.java))
-                    for (appWidgetId in appWidgetIds) {
-                        updateAppWidget(applicationContext, appWidgetManager, appWidgetId)
+                    // Aktualizuj zarówno Glance (updateAll) jak i tradycyjny AppWidget (RemoteViews)
+                    try {
+                        val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
+                        // update dla klasy FrostWidgetProvider (jeśli ktoś używa RemoteViews widget)
+                        val classicIds = appWidgetManager.getAppWidgetIds(ComponentName(applicationContext, FrostWidgetProvider::class.java))
+                        for (appWidgetId in classicIds) {
+                            updateAppWidget(applicationContext, appWidgetManager, appWidgetId)
+                        }
+
+                        // update dla Glance receiver (jeśli widgety Glance są zainstalowane)
+                        val glanceIds = appWidgetManager.getAppWidgetIds(ComponentName(applicationContext, pl.oki.frostalert.widget.FrostGlanceWidgetReceiver::class.java))
+                        for (appWidgetId in glanceIds) {
+                            // fallback: we still call updateAppWidget for any classic instances; Glance.updateAll() was already called above
+                            updateAppWidget(applicationContext, appWidgetManager, appWidgetId)
+                        }
+                    } catch (e: Exception) {
+                        // Nie blokujemy pracy - logujemy i kontynuujemy
+                        Log.w(TAG, "Nie udało się zaktualizować AppWidgetów: ${e.message}")
                     }
 
                     if (isCarMode) {

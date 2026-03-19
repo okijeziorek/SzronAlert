@@ -30,6 +30,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.glance.appwidget.updateAll
+import android.util.Log
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,6 +45,9 @@ import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.SummerCalculations
 import pl.oki.frostalert.utils.TrendCalculations
 import pl.oki.frostalert.worker.FrostCheckWorker
+import pl.oki.frostalert.geofence.GeofenceRegistrar
+import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.widget.FrostGlanceWidget
 import java.util.Locale
 import java.util.Random
 
@@ -55,6 +63,11 @@ fun DebugScreen(
     val userPrefs by settingsViewModel.userPreferences.collectAsState()
     val trendState by trendViewModel.trendState.collectAsState()
     val settingsDataStore = SettingsDataStore(context)
+
+    // dodatkowe repo/registrar
+    val locationRepo = remember { LocationRepository(context, settingsDataStore) }
+    var geofenceRegistrarRef = remember { mutableStateOf<GeofenceRegistrar?>(null) }
+    var geofenceRunning by remember { mutableStateOf(false) }
 
     // Stan dla symulatora
     var simTemp by remember { mutableStateOf(0.0f) }
@@ -86,7 +99,7 @@ fun DebugScreen(
                         DebugSlider("Wilgotność: ${simHumidity.toInt()}%", simHumidity, 0f..100f) { simHumidity = it }
                         DebugSlider("Wiatr: ${simWind.toInt()} km/h", simWind, 0f..40f) { simWind = it }
                         DebugSlider("Indeks UV: ${"%.1f".format(Locale.US, simUv)}", simUv, 0f..12f) { simUv = it }
-                        
+
                         val hasFrostRisk = WeatherCalculations.hasFrostRisk(
                             temp = simTemp.toDouble(),
                             humidity = simHumidity.toDouble(),
@@ -228,6 +241,139 @@ fun DebugScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Wyczyść wszystko")
+                    }
+
+                    // DODATKOWE: Krótkie narzędzia (długa historia, force widget, geofence)
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                val random = Random()
+                                val now = System.currentTimeMillis()
+                                val days = 90
+                                for (i in 0 until days) {
+                                    val temp = -6.0 + random.nextDouble() * 20.0
+                                    db.temperatureDao().insert(TemperatureRecord(
+                                        timestamp = now - (i * 24 * 60 * 60 * 1000L),
+                                        minTemp = temp,
+                                        hasRisk = temp < 1.0
+                                    ))
+                                }
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(context, "Dodano $days dni historii", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Generuj długą historię (90 dni)")
+                    }
+
+                    Button(
+                        onClick = {
+                            // Wymuś odświeżenie Glance widget
+                            scope.launch(Dispatchers.IO) {
+                                try {
+                                    pl.oki.frostalert.widget.FrostGlanceWidget().updateAll(context)
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Widget odświeżony", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Błąd odświeżania widgetu: ${e.message}", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Text("Wymuś odświeżenie widgetu")
+                    }
+
+                    // NEW: Log widget data for debugging
+                    Button(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                try {
+                                    val db = FrostDatabase.getDatabase(context)
+                                    val records = try { db.temperatureDao().getRecentRecords().first() } catch (e: Exception) { emptyList() }
+                                    val last = records.firstOrNull()
+                                    val settings = try { SettingsDataStore(context).userPreferencesFlow.first() } catch (e: Exception) { null }
+                                    Log.i("WidgetDebug", "recordsCount=${records.size}, lastMin=${last?.minTemp}, lastHasRisk=${last?.hasRisk}, settings=${settings}")
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Zalogowano dane widgetu (sprawdź logcat)", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) { Toast.makeText(context, "Błąd logowania danych: ${e.message}", Toast.LENGTH_LONG).show() }
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Log widget data")
+                    }
+
+                    // NEW: Force update classic AppWidget (RemoteViews)
+                    Button(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                try {
+                                    val appWidgetManager = AppWidgetManager.getInstance(context)
+                                    val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, pl.oki.frostalert.widget.FrostWidgetProvider::class.java))
+                                    for (id in ids) {
+                                        pl.oki.frostalert.widget.updateAppWidget(context, appWidgetManager, id)
+                                    }
+                                    withContext(Dispatchers.Main) { Toast.makeText(context, "Wymuszono update klasycznych widgetów", Toast.LENGTH_SHORT).show() }
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) { Toast.makeText(context, "Błąd przy update widgetów: ${e.message}", Toast.LENGTH_LONG).show() }
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                    ) {
+                        Text("Force classic widget update")
+                    }
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = {
+                                scope.launch(Dispatchers.IO) {
+                                    if (!geofenceRunning) {
+                                        val registrar = GeofenceRegistrar(context, settingsDataStore, locationRepo)
+                                        geofenceRegistrarRef.value = registrar
+                                        registrar.start()
+                                        geofenceRunning = true
+                                        withContext(Dispatchers.Main) { Toast.makeText(context, "Geofence registrar uruchomiony", Toast.LENGTH_SHORT).show() }
+                                    } else {
+                                        geofenceRegistrarRef.value?.stop()
+                                        geofenceRegistrarRef.value = null
+                                        geofenceRunning = false
+                                        withContext(Dispatchers.Main) { Toast.makeText(context, "Geofence registrar zatrzymany", Toast.LENGTH_SHORT).show() }
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(if (!geofenceRunning) "Start GeofenceRegistrar" else "Stop GeofenceRegistrar")
+                        }
+
+                        Button(
+                            onClick = {
+                                scope.launch(Dispatchers.IO) {
+                                    try {
+                                        geofenceRegistrarRef.value?.registerForCurrentLocation(locationRepo)
+                                        withContext(Dispatchers.Main) { Toast.makeText(context, "Wywołano jednorazową rejestrację geofence", Toast.LENGTH_SHORT).show() }
+                                    } catch (e: Exception) {
+                                        withContext(Dispatchers.Main) { Toast.makeText(context, "Błąd rejestracji geofence: ${e.message}", Toast.LENGTH_LONG).show() }
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Register Now")
+                        }
                     }
                 }
 

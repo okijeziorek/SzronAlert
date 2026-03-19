@@ -1,6 +1,7 @@
 package pl.oki.frostalert.widget
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.Button
@@ -37,79 +38,70 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private const val TAG = "FrostGlanceWidget"
+
 class FrostGlanceWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val db = FrostDatabase.getDatabase(context)
-        val records = db.temperatureDao().getRecentRecords().first()
-        val lastRecord = records.firstOrNull()
-        val settings = SettingsDataStore(context).userPreferencesFlow.first()
+        var lastRecord: pl.oki.frostalert.data.local.TemperatureRecord? = null
+        var recordsCount = 0
+        var useFahrenheit = false
 
+        try {
+            val db = FrostDatabase.getDatabase(context)
+            val records = try {
+                db.temperatureDao().getRecentRecords().first()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to read recent records: ${e.message}")
+                emptyList()
+            }
+            lastRecord = records.firstOrNull()
+            recordsCount = records.size
+
+            try {
+                val settings = SettingsDataStore(context).userPreferencesFlow.first()
+                useFahrenheit = settings.useFahrenheit
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to read settings for widget: ${e.message}")
+            }
+
+            // Diagnostic log
+            Log.i(TAG, "provideGlance: recordsCount=$recordsCount, lastRecordMin=${lastRecord?.minTemp}, lastHasRisk=${lastRecord?.hasRisk}, useFahrenheit=$useFahrenheit")
+        } catch (e: Exception) {
+            Log.w(TAG, "Error preparing widget data: ${e.message}")
+        }
+
+        // Provide content directly (no try/catch around composable invocation)
         provideContent {
             GlanceTheme {
-                WidgetContent(lastRecord, settings.useFahrenheit, records.size)
+                WidgetContent(lastRecord, useFahrenheit, recordsCount)
             }
         }
     }
 
     @androidx.compose.runtime.Composable
     private fun WidgetContent(lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?, useFahrenheit: Boolean, recordsCount: Int) {
+        // Compact single-line widget content to improve rendering across launchers and sizes
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
                 .background(ColorProvider(day = Color.White, night = Color.Black))
-                .padding(12.dp),
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (lastRecord != null) {
-                val sdf = SimpleDateFormat("d MMM, HH:mm", Locale.getDefault())
-                val date = sdf.format(Date(lastRecord.timestamp))
+            val contentText = if (lastRecord != null) {
+                val date = try { SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(lastRecord.timestamp)) } catch (_: Exception) { "--" }
+                val tempText = try { WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit) } catch (_: Exception) { "--" }
                 val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
-                val riskColor = if (lastRecord.hasRisk) ColorProvider(day = Color.Red, night = Color.Red) else ColorProvider(day = Color.Green, night = Color.Green)
-
-                Text(
-                    text = "Szron Alert ($date)",
-                    style = TextStyle(
-                        color = ColorProvider(day = Color.Black, night = Color.White),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                
-                Spacer(GlanceModifier.padding(vertical = 4.dp))
-                
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Noc min: ",
-                        style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 12.sp)
-                    )
-                    Text(
-                        text = WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit),
-                        style = TextStyle(
-                            color = ColorProvider(day = Color.Black, night = Color.White),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                }
-
-                Text(
-                    text = "Ryzyko: $riskText",
-                    style = TextStyle(color = riskColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                )
+                "Szron: $tempText • $riskText • $date"
             } else {
-                Text(
-                    text = "Brak danych ($recordsCount rekordów). Kliknij odśwież.",
-                    style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 14.sp)
-                )
+                "Brak danych ($recordsCount)"
             }
 
-            Spacer(GlanceModifier.padding(vertical = 4.dp))
-            
-            Button(
-                text = "Odśwież",
-                onClick = actionRunCallback<RefreshActionCallback>()
+            Text(
+                text = contentText,
+                style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             )
         }
     }
@@ -121,14 +113,17 @@ class RefreshActionCallback : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        // Uruchamiamy WorkManager, aby pobrać świeże dane
-        val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>().build()
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            "manual_widget_refresh",
-            ExistingWorkPolicy.REPLACE,
-            workRequest
-        )
-        // Widget zaktualizuje się sam, gdy Worker skończy pracę i wywoła updateAll
+        try {
+            Log.i(TAG, "RefreshActionCallback: enqueueing FrostCheckWorker")
+            val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>().build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "manual_widget_refresh",
+                ExistingWorkPolicy.REPLACE,
+                workRequest
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to enqueue widget refresh worker: ${e.message}")
+        }
     }
 }
 

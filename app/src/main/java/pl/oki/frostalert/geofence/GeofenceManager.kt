@@ -19,15 +19,28 @@ class GeofenceManager(private val context: Context) {
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
-    fun registerGeofence(id: String, lat: Double, lon: Double, radiusMeters: Float = 20000f) {
-        val geofence = Geofence.Builder()
+    fun registerGeofence(id: String, lat: Double, lon: Double, radiusMeters: Float = 20000f, loiteringDelayMs: Int = 60_000) {
+        // Verify permission first
+        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // permission missing, cannot register
+            return
+        }
+
+        val builder = Geofence.Builder()
             .setRequestId(id)
             .setCircularRegion(lat, lon, radiusMeters)
-            // Required when using GEOFENCE_TRANSITION_DWELL
-            .setLoiteringDelay(60_000)
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
-            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL)
-            .build()
+
+        // If caller provided a non-negative loitering delay, include DWELL transition and set the delay
+        if (loiteringDelayMs > 0) {
+            builder.setLoiteringDelay(loiteringDelayMs)
+            builder.setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL)
+        } else {
+            // Otherwise only monitor ENTER
+            builder.setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+        }
+
+        val geofence = builder.build()
 
         val request = GeofencingRequest.Builder().apply {
             setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)

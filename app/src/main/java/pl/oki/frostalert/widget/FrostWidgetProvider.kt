@@ -27,23 +27,44 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
     val scope = CoroutineScope(Dispatchers.IO)
 
     scope.launch {
-        val db = FrostDatabase.getDatabase(context)
-        val lastRecord = db.temperatureDao().getRecentRecords().first().firstOrNull()
+        try {
+            val db = FrostDatabase.getDatabase(context)
+            val records = try { db.temperatureDao().getRecentRecords().first() } catch (e: Exception) {
+                // log and fallback
+                android.util.Log.w("FrostWidgetProvider", "Failed to read recent records: ${e.message}")
+                emptyList()
+            }
+            val lastRecord = records.firstOrNull()
 
-        if (lastRecord != null) {
-            val sdf = SimpleDateFormat("d MMM", Locale.getDefault())
-            val date = sdf.format(Date(lastRecord.timestamp))
-            val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
+            android.util.Log.i("FrostWidgetProvider", "updateAppWidget: appWidgetId=$appWidgetId, recordsCount=${records.size}, last=${lastRecord?.minTemp}")
 
-            views.setTextViewText(R.id.widget_title, "Szron Alert ($date)")
-            views.setTextViewText(R.id.widget_temp, "Noc min: ${String.format(Locale.US, "%.1f", lastRecord.minTemp)}°C")
-            views.setTextViewText(R.id.widget_risk, "Ryzyko: $riskText")
-        } else {
-            views.setTextViewText(R.id.widget_title, "Brak danych")
-            views.setTextViewText(R.id.widget_temp, "")
-            views.setTextViewText(R.id.widget_risk, "")
+            if (lastRecord != null) {
+                val sdf = SimpleDateFormat("d MMM", Locale.getDefault())
+                val date = sdf.format(Date(lastRecord.timestamp))
+                val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
+
+                // Compact the widget content so small widget sizes still show the important info
+                val compact = "Szron: ${String.format(Locale.US, "%.1f", lastRecord.minTemp)}°C • $riskText (${date})"
+                views.setTextViewText(R.id.widget_title, compact)
+                // Hide the secondary fields to avoid large empty areas on small widgets
+                views.setViewVisibility(R.id.widget_temp, android.view.View.GONE)
+                views.setViewVisibility(R.id.widget_risk, android.view.View.GONE)
+            } else {
+                views.setTextViewText(R.id.widget_title, "Brak danych\nKliknij odśwież")
+                views.setViewVisibility(R.id.widget_temp, android.view.View.GONE)
+                views.setViewVisibility(R.id.widget_risk, android.view.View.GONE)
+            }
+
+            // Ensure widget update runs on main thread to avoid potential platform limitations
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                try {
+                    appWidgetManager.updateAppWidget(appWidgetId, views)
+                } catch (e: Exception) {
+                    android.util.Log.w("FrostWidgetProvider", "Failed to post updateAppWidget for $appWidgetId: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("FrostWidgetProvider", "Error updating widget $appWidgetId: ${e.message}")
         }
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 }

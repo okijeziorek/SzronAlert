@@ -171,13 +171,14 @@ fun HistoryScreen(
                             shape = RoundedCornerShape(24.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
                         ) {
-                            // NAJBARDZIEJ LUDZKIE PODEJŚCIE: Najnowsze dane po lewej stronie (index 0)
-                            val points = records.mapIndexed { index, record ->
+                            // Najnowsze dane po lewej: odwracamy listę tak, by index 0 było najnowszym
+                            val displayRecords = records.reversed()
+                            val points = displayRecords.mapIndexed { index, record ->
                                 Point(index.toFloat(), record.minTemp.toFloat())
                             }
 
-                            val minVal = records.minOf { it.minTemp }
-                            val maxVal = records.maxOf { it.minTemp }
+                            val minVal = displayRecords.minOf { it.minTemp }
+                            val maxVal = displayRecords.maxOf { it.minTemp }
                             val yMin = (if (minVal > 0) -2.0 else minVal - 2.0).toFloat()
                             val yMax = (if (maxVal < 2) 4.0 else maxVal + 2.0).toFloat()
 
@@ -185,7 +186,7 @@ fun HistoryScreen(
                                 .axisStepSize(100.dp)
                                 .steps(points.size - 1)
                                 .labelData { index -> 
-                                    records.getOrNull(index)?.let {
+                                    displayRecords.getOrNull(index)?.let {
                                         SimpleDateFormat("d/MM", Locale.getDefault()).format(Date(it.timestamp))
                                     } ?: ""
                                 }
