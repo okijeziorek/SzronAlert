@@ -51,6 +51,7 @@ import pl.oki.frostalert.worker.FrostCheckWorker
 import pl.oki.frostalert.geofence.GeofenceRegistrar
 import pl.oki.frostalert.data.repository.GeofencingResult
 import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.BuildConfig
 import pl.oki.frostalert.widget.FrostGlanceWidget
 import pl.oki.frostalert.widget.FrostWidgetProvider
 import pl.oki.frostalert.widget.updateAppWidget
