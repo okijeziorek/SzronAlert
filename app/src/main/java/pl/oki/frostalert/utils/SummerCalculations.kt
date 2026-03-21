@@ -1,6 +1,5 @@
 package pl.oki.frostalert.utils
 
-import pl.oki.frostalert.data.remote.WeatherResponse
 import java.util.Locale
 
 object SummerCalculations {
@@ -10,7 +9,7 @@ object SummerCalculations {
      * Kody 95, 96, 99 oznaczają burze, przy czym 96 i 99 to burze z gradem.
      */
     fun hasStormOrHailRisk(weatherCode: Int): Boolean {
-        return weatherCode in listOf(95, 96, 99)
+        return weatherCode == 95 || weatherCode == 96 || weatherCode == 99
     }
 
     /**

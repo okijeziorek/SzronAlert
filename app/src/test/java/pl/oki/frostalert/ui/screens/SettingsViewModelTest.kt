@@ -43,6 +43,7 @@ class SettingsViewModelTest {
         // trend notifications
         isTrendChangeNotificationsEnabled = true,
         lastTrend = null,
+        pendingTrend = null,
         theme = 2,
         isManualLocationEnabled = false,
         manualLatitude = 52.2297,
@@ -62,6 +63,9 @@ class SettingsViewModelTest {
         class FakeRegistrar : pl.oki.frostalert.geofence.GeofenceRegistrarContract {
             override fun registerForCurrentLocation(locationRepo: pl.oki.frostalert.data.repository.LocationRepository) {}
             override fun unregister() {}
+            override fun start() {}
+            override fun stop() {}
+            override fun isRunning(): Boolean = false
         }
 
         val geofenceRegistrar = FakeRegistrar()

@@ -78,7 +78,7 @@ class FrostCheckWorker @AssistedInject constructor(
 
             when (weatherResult) {
                 is AppResult.Error -> {
-                    Log.w(TAG, "Weather fetch error (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${weatherResult.message}")
+                    Log.w(TAG, "Weather fetch error (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${weatherResult.error.message}")
                     if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
                 }
                 is AppResult.Success -> {
