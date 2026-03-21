@@ -1,5 +1,7 @@
 package pl.oki.frostalert.ui.screens
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.ViewModel
@@ -18,6 +20,8 @@ import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.widget.FrostGlanceWidget
+import pl.oki.frostalert.widget.FrostWidgetProvider
+import pl.oki.frostalert.widget.updateAppWidget
 import javax.inject.Inject
 import pl.oki.frostalert.data.local.CalibrationDao
 
@@ -143,7 +147,21 @@ class HomeViewModel @Inject constructor(
                         minTemp = minTemp,
                         hasRisk = hasRisk
                     ))
+                    // Update Glance widget
                     FrostGlanceWidget().updateAll(context)
+                    // Update classic AppWidget (RemoteViews) so it never shows stale "Brak danych"
+                    try {
+                        val appWidgetManager = AppWidgetManager.getInstance(context)
+                        val ids = appWidgetManager.getAppWidgetIds(
+                            ComponentName(context, FrostWidgetProvider::class.java)
+                        )
+                        for (id in ids) {
+                            updateAppWidget(context, appWidgetManager, id)
+                        }
+                    } catch (e: Exception) {
+                        // Widget update is best-effort; don't crash the refresh flow
+                        android.util.Log.w("HomeViewModel", "Classic widget update failed: ${e.message}")
+                    }
 
                     // KALIBRACJA: Sprawdź czy należy pokazać dialog feedbacku
                     val lastFeedback = prefs.lastFeedbackTimestamp
