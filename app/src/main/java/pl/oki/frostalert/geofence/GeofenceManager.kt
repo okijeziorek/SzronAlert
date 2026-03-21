@@ -4,13 +4,17 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import pl.oki.frostalert.receiver.GeofenceBroadcastReceiver
 import java.util.Locale
+
+private const val TAG = "GeofenceManager"
 
 class GeofenceManager(private val context: Context) {
     private val geofencingClient: GeofencingClient = LocationServices.getGeofencingClient(context)
@@ -68,20 +72,23 @@ class GeofenceManager(private val context: Context) {
             }
             geofencingClient.removeGeofences(geofencePendingIntent)
             geofencingClient.addGeofences(request, geofencePendingIntent)
-                .addOnSuccessListener { /* zarejestrowano */ }
-                .addOnFailureListener { /* loguj */ }
+                .addOnSuccessListener { Log.i(TAG, "Geofence registered: id=$requestId lat=$lat lon=$lon radius=$radiusMeters") }
+                .addOnFailureListener { e ->
+                    val code = if (e is ApiException) e.statusCode else -1
+                    Log.e(TAG, "Failed to register geofence id=$requestId code=$code: ${e.message}")
+                }
         } catch (e: SecurityException) {
-            // Brak permisji - loguj
+            Log.e(TAG, "SecurityException registering geofence: ${e.message}")
         }
     }
 
     fun unregisterGeofence() {
         try {
             geofencingClient.removeGeofences(geofencePendingIntent)
-                .addOnSuccessListener { /* usunięto */ }
-                .addOnFailureListener { /* loguj */ }
+                .addOnSuccessListener { Log.i(TAG, "Geofence unregistered") }
+                .addOnFailureListener { e -> Log.w(TAG, "Failed to unregister geofence: ${e.message}") }
         } catch (e: Exception) {
-            // log
+            Log.w(TAG, "Exception unregistering geofence: ${e.message}")
         }
     }
 }
