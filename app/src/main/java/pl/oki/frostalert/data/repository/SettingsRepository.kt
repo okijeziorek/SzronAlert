@@ -31,6 +31,7 @@ interface SettingsRepository {
     suspend fun updateGeofenceRadius(radiusMeters: Double)
     suspend fun updateTrendChangeNotificationsEnabled(isEnabled: Boolean)
     suspend fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?)
+    suspend fun updatePendingTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?)
 }
 
 class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) : SettingsRepository {
@@ -135,5 +136,9 @@ class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) :
 
     override suspend fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
         settingsDataStore.updateLastTrend(trend)
+    }
+
+    override suspend fun updatePendingTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
+        settingsDataStore.updatePendingTrend(trend)
     }
 }
