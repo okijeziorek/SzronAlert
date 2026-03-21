@@ -128,9 +128,14 @@ class HomeViewModel @Inject constructor(
                     val prefs = settingsDataStore.userPreferencesFlow.first()
                     val minTemp = WeatherCalculations.getNightMinTemp(weatherResult.data.hourly)
                     val hasRisk = WeatherCalculations.hasFrostRisk(
-                        minTemp, weatherResult.data.current.humidity, weatherResult.data.current.precipitation, 
-                        weatherResult.data.current.weatherCode, 1.0, 75.0, 0.2, 
-                        sensitivity = prefs.sensitivity, appMode = prefs.appMode
+                        minTemp, weatherResult.data.current.humidity, weatherResult.data.current.precipitation,
+                        weatherResult.data.current.weatherCode,
+                        if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                        if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
+                        if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                        sensitivity = prefs.sensitivity,
+                        windSpeed = weatherResult.data.current.windSpeed,
+                        appMode = prefs.appMode
                     )
                     
                     temperatureDao.insert(TemperatureRecord(

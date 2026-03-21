@@ -134,7 +134,8 @@ class FrostCheckWorker @AssistedInject constructor(
                                 NotificationHelper.sendNotification(
                                     applicationContext,
                                     "Zmiana trendu temperatury",
-                                    trendMessage
+                                    trendMessage,
+                                    isMataOptionEnabled = userPreferences.isMataOptionEnabled
                                 )
                             }
                             // Zaktualizuj ostatni trend
@@ -159,7 +160,8 @@ class FrostCheckWorker @AssistedInject constructor(
                                     val title = "⚠️ Wyższe ryzyko szronu w okolicy!"
                                     val message = "W kierunku $direction ryzyko jest o ${(riskIncrease * 100).toInt()}% wyższe. " +
                                                  "Aktualna prognoza: ${String.format(Locale.US, "%.1f", currentMinTemp)}°C."
-                                    NotificationHelper.sendNotification(applicationContext, title, message)
+                                    NotificationHelper.sendNotification(applicationContext, title, message,
+                                        isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                                 }
                                 is pl.oki.frostalert.data.repository.GeofencingResult.Error -> {
                                     Log.w(TAG, "Błąd sprawdzania geofencing: ${geofencingResult.message}")
@@ -199,7 +201,8 @@ class FrostCheckWorker @AssistedInject constructor(
                             NotificationHelper.createNotificationChannel(applicationContext)
                             val title = if (appMode == 1) "Ryzyko przymrozku w ogrodzie!" else "Ryzyko lodu na szybach!"
                             val message = "Prognozowane min: ${String.format(Locale.US, "%.1f", minTemp)}°C."
-                            NotificationHelper.sendNotification(applicationContext, title, message)
+                            NotificationHelper.sendNotification(applicationContext, title, message,
+                                isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                         }
                     } else {
                         val calendar = Calendar.getInstance()
@@ -209,7 +212,8 @@ class FrostCheckWorker @AssistedInject constructor(
                             if (hasRisk) {
                                 NotificationHelper.createNotificationChannel(applicationContext)
                                 val title = if (appMode == 1) "Uwaga na rośliny!" else "Uwaga, szron!"
-                                NotificationHelper.sendNotification(applicationContext, title, "Możliwy przymrozek w nocy.")
+                                NotificationHelper.sendNotification(applicationContext, title, "Możliwy przymrozek w nocy.",
+                                    isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                             }
                         }
                     }

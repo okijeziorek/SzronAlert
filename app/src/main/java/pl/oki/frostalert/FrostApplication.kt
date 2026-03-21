@@ -1,6 +1,7 @@
 package pl.oki.frostalert
 
 import android.app.Application
+import androidx.work.BackoffPolicy
 import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -44,6 +45,7 @@ class FrostApplication : Application(), Configuration.Provider {
             1, TimeUnit.HOURS
         )
             .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.MINUTES)
             .build()
 
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(

@@ -45,6 +45,7 @@ import pl.oki.frostalert.worker.FrostCheckWorker
 import pl.oki.frostalert.geofence.GeofenceRegistrar
 import pl.oki.frostalert.data.repository.GeofencingResult
 import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.BuildConfig
 import pl.oki.frostalert.widget.FrostGlanceWidget
 import pl.oki.frostalert.widget.FrostWidgetProvider
 import pl.oki.frostalert.widget.updateAppWidget
@@ -638,6 +639,24 @@ fun DebugScreen(
                                                 }
                                             }
                                         }
+                    }
+                }
+
+                // SEKCJA 10: WERSJA APLIKACJI
+                DebugSection("ℹ️ Wersja Aplikacji", Icons.Default.Info) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Wersja", style = MaterialTheme.typography.bodyMedium)
+                            Text("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", fontWeight = FontWeight.Bold)
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Build", style = MaterialTheme.typography.bodyMedium)
+                            Text(if (BuildConfig.DEBUG) "DEBUG" else "RELEASE", fontWeight = FontWeight.Bold)
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Application ID", style = MaterialTheme.typography.bodyMedium)
+                            Text(BuildConfig.APPLICATION_ID, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
             }

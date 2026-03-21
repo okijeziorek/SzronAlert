@@ -30,10 +30,13 @@ object NotificationHelper {
         }
     }
 
-    fun sendNotification(context: Context, title: String, message: String) {
-        val settingsDataStore = SettingsDataStore(context)
-        val prefs = runBlocking { settingsDataStore.userPreferencesFlow.first() }
-
+    /**
+     * Sends a frost alert notification.
+     *
+     * @param isMataOptionEnabled whether to show the "applied mat" action button.
+     *        Pass this from already-loaded preferences to avoid an extra DataStore read.
+     */
+    fun sendNotification(context: Context, title: String, message: String, isMataOptionEnabled: Boolean) {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -69,7 +72,7 @@ object NotificationHelper {
         builder.addAction(0, context.getString(R.string.action_snooze), snoozePendingIntent)
 
         // Przycisk "Zastosowałem matę" - jeśli włączony w ustawieniach
-        if (prefs.isMataOptionEnabled) {
+        if (isMataOptionEnabled) {
             val mataIntent = Intent(context, NotificationActionReceiver::class.java).apply {
                 action = "ACTION_MATA_APPLIED"
             }
@@ -81,5 +84,15 @@ object NotificationHelper {
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, builder.build())
+    }
+
+    /**
+     * Overload that reads preferences from DataStore when the caller does not already have them.
+     * Note: uses runBlocking — call only from a background thread or within a Worker.
+     */
+    fun sendNotification(context: Context, title: String, message: String) {
+        val settingsDataStore = SettingsDataStore(context)
+        val prefs = runBlocking { settingsDataStore.userPreferencesFlow.first() }
+        sendNotification(context, title, message, isMataOptionEnabled = prefs.isMataOptionEnabled)
     }
 }

@@ -39,7 +39,8 @@ class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
             }
 
             override fun onBillingServiceDisconnected() {
-                // Try to restart the connection on the next operation
+                // Retry connection on next opportunity
+                startConnection()
             }
         })
     }

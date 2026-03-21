@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import pl.oki.frostalert.BuildConfig
 import pl.oki.frostalert.R
 import pl.oki.frostalert.utils.NetworkMonitor
 
@@ -31,7 +32,7 @@ fun MainScreen(initialTab: Int = 0) {
     val networkMonitor = remember { NetworkMonitor(context) }
     val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
     
-    val pagerState = rememberPagerState(initialPage = initialTab) { 5 }
+    val pagerState = rememberPagerState(initialPage = initialTab) { if (BuildConfig.DEBUG) 5 else 4 }
     val scope = rememberCoroutineScope()
 
     // Optymalizacja: derivedStateOf zapobiega zbędnym przeliczeniom podczas swipowania
@@ -106,13 +107,15 @@ fun MainScreen(initialTab: Int = 0) {
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     tonalElevation = 0.dp
                 ) {
-                    val tabs = listOf(
-                        Triple(0, Icons.Default.Home, R.string.tab_home),
-                        Triple(1, Icons.Default.Settings, R.string.tab_settings),
-                        Triple(2, Icons.Default.History, R.string.tab_history),
-                        Triple(3, Icons.Default.ShowChart, R.string.trend_screen_title),
-                        Triple(4, Icons.Default.BugReport, R.string.tab_debug)
-                    )
+                    val tabs = buildList {
+                        add(Triple(0, Icons.Default.Home, R.string.tab_home))
+                        add(Triple(1, Icons.Default.Settings, R.string.tab_settings))
+                        add(Triple(2, Icons.Default.History, R.string.tab_history))
+                        add(Triple(3, Icons.Default.ShowChart, R.string.trend_screen_title))
+                        if (BuildConfig.DEBUG) {
+                            add(Triple(4, Icons.Default.BugReport, R.string.tab_debug))
+                        }
+                    }
 
                     tabs.forEach { (index, icon, labelRes) ->
                         NavigationBarItem(
