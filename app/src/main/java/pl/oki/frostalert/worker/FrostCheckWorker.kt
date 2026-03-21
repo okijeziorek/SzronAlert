@@ -118,30 +118,48 @@ class FrostCheckWorker @AssistedInject constructor(
                     pl.oki.frostalert.widget.FrostGlanceWidget().updateAll(applicationContext)
 
                     // SPRAWDŹ ZMIANĘ TRENDU
-                    if (userPreferences.isTrendChangeNotificationsEnabled) {
-                        try {
-                            val recordsAfterInsert = temperatureDao.getRecentRecords().first()
-                            val newTrend = TrendCalculations.calculateWeeklyTrend(recordsAfterInsert).trend
-                            val oldTrend = userPreferences.lastTrend
-                            if (newTrend != oldTrend && oldTrend != null) {
-                                // Trend się zmienił
-                                val trendMessage = when (newTrend) {
-                                    TrendCalculations.TrendDirection.UP -> "Robi się cieplej! 📈"
-                                    TrendCalculations.TrendDirection.DOWN -> "Robi się chłodniej! 📉"
-                                    TrendCalculations.TrendDirection.STABLE -> "Trend się ustabilizował ➡️"
-                                }
-                                NotificationHelper.createNotificationChannel(applicationContext)
-                                NotificationHelper.sendNotification(
-                                    applicationContext,
-                                    "Zmiana trendu temperatury",
-                                    trendMessage
-                                )
-                            }
-                            // Zaktualizuj ostatni trend
+                    try {
+                        val recordsAfterInsert = temperatureDao.getRecentRecords().first()
+                        val newTrend = TrendCalculations.calculateWeeklyTrend(recordsAfterInsert).trend
+                        val oldTrend = userPreferences.lastTrend
+                        val pendingTrend = userPreferences.pendingTrend
+
+                        if (oldTrend == null) {
+                            // Inicjalizacja – zapisz pierwszy wynik bez powiadomienia
                             settingsDataStore.updateLastTrend(newTrend)
-                        } catch (e: Exception) {
-                            Log.w(TAG, "Błąd sprawdzania zmiany trendu: ${e.message}")
+                        } else {
+                            when {
+                                newTrend == oldTrend -> {
+                                    // Trend stabilny – czyść kandydata jeśli istnieje
+                                    if (pendingTrend != null) settingsDataStore.updatePendingTrend(null)
+                                }
+                                newTrend == pendingTrend -> {
+                                    // Potwierdzona zmiana trendu (2 kolejne sprawdzenia) – wyślij powiadomienie
+                                    if (userPreferences.isTrendChangeNotificationsEnabled) {
+                                        val trendMessage = when (newTrend) {
+                                            TrendCalculations.TrendDirection.UP -> "Robi się cieplej! 📈"
+                                            TrendCalculations.TrendDirection.DOWN -> "Robi się chłodniej! 📉"
+                                            TrendCalculations.TrendDirection.STABLE -> "Trend się ustabilizował ➡️"
+                                        }
+                                        NotificationHelper.createNotificationChannel(applicationContext)
+                                        NotificationHelper.sendNotification(
+                                            applicationContext,
+                                            "Zmiana trendu temperatury",
+                                            trendMessage
+                                        )
+                                    }
+                                    // Zaktualizuj potwierdzony trend i wyczyść kandydata
+                                    settingsDataStore.updateLastTrend(newTrend)
+                                    settingsDataStore.updatePendingTrend(null)
+                                }
+                                else -> {
+                                    // Nowy kandydat na zmianę – czekaj na potwierdzenie w kolejnym sprawdzeniu
+                                    settingsDataStore.updatePendingTrend(newTrend)
+                                }
+                            }
                         }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Błąd sprawdzania zmiany trendu: ${e.message}")
                     }
 
                     // SPRAWDŹ GEOFENCING - czy użytkownik wjechał w rejon z wyższym ryzykiem

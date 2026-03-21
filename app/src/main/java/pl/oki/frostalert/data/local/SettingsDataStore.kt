@@ -1,6 +1,7 @@
 package pl.oki.frostalert.data.local
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
@@ -35,7 +36,8 @@ data class UserPreferences(
     
     // NOWE POLE DLA POWIADOMIEŃ O ZMIANIE TRENDU
     val isTrendChangeNotificationsEnabled: Boolean, // Czy włączyć powiadomienia o zmianie trendu
-    val lastTrend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?, // Ostatni obliczony trend
+    val lastTrend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?, // Ostatni potwierdzony trend
+    val pendingTrend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?, // Kandydat na zmianę trendu (debouncing)
     
     val theme: Int,
     val isManualLocationEnabled: Boolean,
@@ -78,6 +80,7 @@ class SettingsDataStore(private val context: Context) {
         // KLUCZ DO POWIADOMIEŃ O ZMIANIE TRENDU
         val IS_TREND_CHANGE_NOTIFICATIONS_ENABLED = booleanPreferencesKey("is_trend_change_notifications_enabled")
         val LAST_TREND = stringPreferencesKey("last_trend") // Zakładam, że TrendDirection można zapisać jako String
+        val PENDING_TREND = stringPreferencesKey("pending_trend") // Kandydat na zmianę trendu (debouncing)
         
         val THEME = intPreferencesKey("theme")
         val IS_MANUAL_LOCATION_ENABLED = booleanPreferencesKey("is_manual_location_enabled")
@@ -116,7 +119,20 @@ class SettingsDataStore(private val context: Context) {
                 
                 // DOMYŚLNE WARTOŚCI DLA POWIADOMIEŃ O ZMIANIE TRENDU
                 isTrendChangeNotificationsEnabled = preferences[Keys.IS_TREND_CHANGE_NOTIFICATIONS_ENABLED] ?: true,
-                lastTrend = preferences[Keys.LAST_TREND]?.let { pl.oki.frostalert.utils.TrendCalculations.TrendDirection.valueOf(it) }, // Parsowanie z String
+                lastTrend = preferences[Keys.LAST_TREND]?.let { name ->
+                    try { pl.oki.frostalert.utils.TrendCalculations.TrendDirection.valueOf(name) }
+                    catch (e: IllegalArgumentException) {
+                        Log.d("SettingsDataStore", "Nie udało się sparsować lastTrend: '$name'")
+                        null
+                    }
+                },
+                pendingTrend = preferences[Keys.PENDING_TREND]?.let { name ->
+                    try { pl.oki.frostalert.utils.TrendCalculations.TrendDirection.valueOf(name) }
+                    catch (e: IllegalArgumentException) {
+                        Log.d("SettingsDataStore", "Nie udało się sparsować pendingTrend: '$name'")
+                        null
+                    }
+                },
                 
                 theme = preferences[Keys.THEME] ?: 2,
                 isManualLocationEnabled = preferences[Keys.IS_MANUAL_LOCATION_ENABLED] ?: false,
@@ -237,6 +253,16 @@ class SettingsDataStore(private val context: Context) {
                 it[Keys.LAST_TREND] = trend.name
             } else {
                 it.remove(Keys.LAST_TREND)
+            }
+        }
+    }
+
+    suspend fun updatePendingTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
+        context.dataStore.edit {
+            if (trend != null) {
+                it[Keys.PENDING_TREND] = trend.name
+            } else {
+                it.remove(Keys.PENDING_TREND)
             }
         }
     }

@@ -5,7 +5,10 @@ import java.util.Calendar
 import java.util.Locale
 
 object TrendCalculations {
-    
+
+    /** Minimalna różnica średnich (°C) wymagana do uznania trendu za UP lub DOWN */
+    private const val TREND_DELTA_THRESHOLD_C = 2.0
+
     /**
      * Dane trendu na 7 dni (dzisiaj + 6 dni wstecz)
      */
@@ -78,8 +81,8 @@ object TrendCalculations {
             val delta = lastThreeAvg - firstThreeAvg
 
             when {
-                delta > 1.5 -> TrendDirection.UP
-                delta < -1.5 -> TrendDirection.DOWN
+                delta > TREND_DELTA_THRESHOLD_C -> TrendDirection.UP
+                delta < -TREND_DELTA_THRESHOLD_C -> TrendDirection.DOWN
                 else -> TrendDirection.STABLE
             }
         } else {
@@ -115,8 +118,9 @@ object TrendCalculations {
 
         // Znajdź indeks w hourly.time najbliższy do tomorrowStart
         var startIndex = 0
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.US)
         for (i in hourly.time.indices) {
-            val timeMillis = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault()).parse(hourly.time[i])?.time ?: 0
+            val timeMillis = sdf.parse(hourly.time[i])?.time ?: 0
             if (timeMillis >= tomorrowStart) {
                 startIndex = i
                 break
@@ -162,8 +166,8 @@ object TrendCalculations {
             val lastThreeAvg = trendPoints.takeLast(3).map { it.minTemp }.average()
 
             when {
-                lastThreeAvg > firstThreeAvg + 2.0 -> TrendDirection.UP
-                firstThreeAvg > lastThreeAvg + 2.0 -> TrendDirection.DOWN
+                lastThreeAvg > firstThreeAvg + TREND_DELTA_THRESHOLD_C -> TrendDirection.UP
+                firstThreeAvg > lastThreeAvg + TREND_DELTA_THRESHOLD_C -> TrendDirection.DOWN
                 else -> TrendDirection.STABLE
             }
         } else {
