@@ -1,6 +1,7 @@
 package pl.oki.frostalert.geofence
 
 import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -40,15 +41,22 @@ class GeofenceRegistrar(
     private var lastRegistered: RegisteredGeofence? = null
     private var running = false
 
+    companion object {
+        private const val TAG = "GeofenceRegistrar"
+    }
+
     override fun registerForCurrentLocation(locationRepo: LocationRepository) {
         scope.launch {
             try {
                 val prefs = settingsDataStore.userPreferencesFlow.first()
                 if (!prefs.isGeofencingEnabled) return@launch
-                val loc = locationRepo.getEffectiveLocation() ?: return@launch
+                val loc = locationRepo.getEffectiveLocation() ?: run {
+                    Log.w(TAG, "registerForCurrentLocation: location unavailable")
+                    return@launch
+                }
                 syncWith(enabled = true, location = loc, radius = prefs.geofenceRadiusMeters.toFloat())
-            } catch (_: Throwable) {
-                // best-effort only
+            } catch (e: Throwable) {
+                Log.w(TAG, "registerForCurrentLocation failed: ${e.message}")
             }
         }
     }
@@ -63,6 +71,7 @@ class GeofenceRegistrar(
     override fun start() {
         if (running) return
         running = true
+        Log.i(TAG, "start: beginning geofence observation")
 
         observeJob = scope.launch {
             settingsDataStore.userPreferencesFlow
@@ -71,8 +80,8 @@ class GeofenceRegistrar(
                     try {
                         val loc = locationRepository.getEffectiveLocation()
                         syncWith(prefs.isGeofencingEnabled, loc, prefs.geofenceRadiusMeters.toFloat())
-                    } catch (_: Throwable) {
-                        // log and continue
+                    } catch (e: Throwable) {
+                        Log.w(TAG, "Error syncing geofence on preferences change: ${e.message}")
                     }
                 }
                 .collect()
@@ -82,6 +91,7 @@ class GeofenceRegistrar(
     override fun stop() {
         if (!running) return
         running = false
+        Log.i(TAG, "stop: stopping geofence observation")
         observeJob?.cancel()
         observeJob = null
         scope.launch {
@@ -99,6 +109,7 @@ class GeofenceRegistrar(
         stateMutex.withLock {
             if (!enabled || location == null) {
                 if (lastRegistered != null) {
+                    Log.i(TAG, "syncWith: geofencing disabled or no location — unregistering")
                     geofenceManager.unregisterGeofence()
                     lastRegistered = null
                 }
@@ -109,9 +120,11 @@ class GeofenceRegistrar(
             if (!isSame(desired, lastRegistered)) {
                 try {
                     val id = makeId(desired.lat, desired.lon)
+                    Log.i(TAG, "syncWith: registering new geofence id=$id radius=$radius")
                     geofenceManager.registerGeofence(id, desired.lat, desired.lon, desired.radius)
                     lastRegistered = desired
-                } catch (_: Throwable) {
+                } catch (e: Throwable) {
+                    Log.e(TAG, "syncWith: registration failed, will retry on next emission: ${e.message}")
                     // will retry on next flow emission
                 }
             }
