@@ -45,5 +45,69 @@ class TrendCalculationsTest {
         val stats = TrendCalculations.calculateWeeklyTrend(records)
         assertEquals(TrendCalculations.TrendDirection.UP, stats.trend)
     }
-}
 
+    @Test
+    fun `calculateWeeklyTrend detects cooling trend`() {
+        val now = System.currentTimeMillis()
+        val day = 24 * 60 * 60 * 1000L
+        val temps = listOf(5.0, 4.0, 3.0, 0.0, -1.0, -3.0)
+
+        val records = temps.mapIndexed { index, temp ->
+            TemperatureRecord(
+                timestamp = now - day * (temps.size - 1L - index),
+                minTemp = temp,
+                hasRisk = temp <= 1.0
+            )
+        }
+
+        val stats = TrendCalculations.calculateWeeklyTrend(records)
+        assertEquals(TrendCalculations.TrendDirection.DOWN, stats.trend)
+    }
+
+    @Test
+    fun `calculateWeeklyTrend returns STABLE when delta is below 2 degrees threshold`() {
+        val now = System.currentTimeMillis()
+        val day = 24 * 60 * 60 * 1000L
+        // firstThreeAvg = (-2 + -1.5 + -1) / 3 = -1.5
+        // lastThreeAvg  = (0 + 0.5 + 0.75) / 3 ≈ 0.417
+        // delta ≈ 1.917 → below TREND_DELTA_THRESHOLD_C (2.0) → STABLE
+        val temps = listOf(-2.0, -1.5, -1.0, 0.0, 0.5, 0.75)
+
+        val records = temps.mapIndexed { index, temp ->
+            TemperatureRecord(
+                timestamp = now - day * (temps.size - 1L - index),
+                minTemp = temp,
+                hasRisk = temp <= 1.0
+            )
+        }
+
+        val stats = TrendCalculations.calculateWeeklyTrend(records)
+        assertEquals(TrendCalculations.TrendDirection.STABLE, stats.trend)
+    }
+
+    @Test
+    fun `calculateWeeklyTrend returns STABLE when fewer than 6 days of data`() {
+        val now = System.currentTimeMillis()
+        val day = 24 * 60 * 60 * 1000L
+        val temps = listOf(-5.0, -4.0, 0.0, 3.0, 5.0) // 5 days only
+
+        val records = temps.mapIndexed { index, temp ->
+            TemperatureRecord(
+                timestamp = now - day * (temps.size - 1L - index),
+                minTemp = temp,
+                hasRisk = temp <= 1.0
+            )
+        }
+
+        val stats = TrendCalculations.calculateWeeklyTrend(records)
+        assertEquals(TrendCalculations.TrendDirection.STABLE, stats.trend)
+    }
+
+    @Test
+    fun `calculateWeeklyTrend returns STABLE for empty records`() {
+        val stats = TrendCalculations.calculateWeeklyTrend(emptyList())
+        assertEquals(TrendCalculations.TrendDirection.STABLE, stats.trend)
+        assertEquals(0, stats.nightsWithFrostRisk)
+        assertEquals(0.0, stats.frostRiskPercentage, 0.001)
+    }
+}

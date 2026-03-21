@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
@@ -42,7 +43,6 @@ class FrostGlanceWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         var lastRecord: pl.oki.frostalert.data.local.TemperatureRecord? = null
-        var recordsCount = 0
         var useFahrenheit = false
 
         try {
@@ -51,10 +51,9 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 db.temperatureDao().getRecentRecords().first()
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to read recent records: ${e.message}")
-                emptyList()
+                emptyList<pl.oki.frostalert.data.local.TemperatureRecord>()
             }
             lastRecord = records.firstOrNull()
-            recordsCount = records.size
 
             try {
                 val settings = SettingsDataStore(context).userPreferencesFlow.first()
@@ -63,8 +62,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 Log.w(TAG, "Failed to read settings for widget: ${e.message}")
             }
 
-            // Diagnostic log
-            Log.i(TAG, "provideGlance: recordsCount=$recordsCount, lastRecordMin=${lastRecord?.minTemp}, lastHasRisk=${lastRecord?.hasRisk}, useFahrenheit=$useFahrenheit")
+            Log.i(TAG, "provideGlance: recordsCount=${records.size}, lastRecordMin=${lastRecord?.minTemp}, lastHasRisk=${lastRecord?.hasRisk}")
         } catch (e: Exception) {
             Log.w(TAG, "Error preparing widget data: ${e.message}")
         }
@@ -111,6 +109,8 @@ class FrostGlanceWidget : GlanceAppWidget() {
                     style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 13.sp)
                 )
             }
+
+            Spacer(modifier = GlanceModifier.padding(top = 4.dp))
             Button(
                 text = "Odśwież",
                 onClick = actionRunCallback<RefreshActionCallback>()

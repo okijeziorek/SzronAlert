@@ -5,13 +5,14 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
+import android.util.Log
 import android.widget.RemoteViews
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.R
@@ -20,6 +21,11 @@ import pl.oki.frostalert.worker.FrostCheckWorker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private const val TAG = "FrostWidgetProvider"
+
+// Application-level scope so widget updates are not tied to a single component lifecycle.
+private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 class FrostWidgetProvider : AppWidgetProvider() {
 
@@ -57,29 +63,19 @@ class FrostWidgetProvider : AppWidgetProvider() {
 
 internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
     val views = RemoteViews(context.packageName, R.layout.frost_widget_layout)
-    val scope = CoroutineScope(Dispatchers.IO)
 
-    // Tapping anywhere on the widget triggers a manual refresh via FrostCheckWorker
-    val refreshIntent = Intent(context, FrostWidgetProvider::class.java).apply {
-        action = FrostWidgetProvider.REFRESH_ACTION
-    }
-    val pendingIntent = PendingIntent.getBroadcast(
-        context, appWidgetId, refreshIntent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
-    views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
-
-    scope.launch {
+    widgetScope.launch {
         try {
             val db = FrostDatabase.getDatabase(context)
-            val records = try { db.temperatureDao().getRecentRecords().first() } catch (e: Exception) {
-                // log and fallback
-                android.util.Log.w("FrostWidgetProvider", "Failed to read recent records: ${e.message}")
+            val records = try {
+                db.temperatureDao().getRecentRecords().first()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to read recent records for widget $appWidgetId: ${e.message}")
                 emptyList()
             }
             val lastRecord = records.firstOrNull()
 
-            android.util.Log.i("FrostWidgetProvider", "updateAppWidget: appWidgetId=$appWidgetId, recordsCount=${records.size}, last=${lastRecord?.minTemp}")
+            Log.i(TAG, "updateAppWidget: id=$appWidgetId records=${records.size} lastTemp=${lastRecord?.minTemp}")
 
             if (lastRecord != null) {
                 val sdf = SimpleDateFormat("d MMM", Locale.getDefault())
@@ -102,10 +98,10 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
             try {
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
-                android.util.Log.w("FrostWidgetProvider", "Failed to updateAppWidget for $appWidgetId: ${e.message}")
+                Log.w(TAG, "Failed to push RemoteViews for widget $appWidgetId: ${e.message}")
             }
         } catch (e: Exception) {
-            android.util.Log.w("FrostWidgetProvider", "Error updating widget $appWidgetId: ${e.message}")
+            Log.e(TAG, "Error updating widget $appWidgetId: ${e.message}", e)
         }
     }
 }

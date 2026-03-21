@@ -1,5 +1,7 @@
 package pl.oki.frostalert.ui.screens
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.ViewModel
@@ -19,6 +21,7 @@ import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.widget.FrostGlanceWidget
 import pl.oki.frostalert.widget.FrostWidgetProvider
+import pl.oki.frostalert.widget.updateAppWidget
 import javax.inject.Inject
 import pl.oki.frostalert.data.local.CalibrationDao
 
@@ -129,9 +132,14 @@ class HomeViewModel @Inject constructor(
                     val prefs = settingsDataStore.userPreferencesFlow.first()
                     val minTemp = WeatherCalculations.getNightMinTemp(weatherResult.data.hourly)
                     val hasRisk = WeatherCalculations.hasFrostRisk(
-                        minTemp, weatherResult.data.current.humidity, weatherResult.data.current.precipitation, 
-                        weatherResult.data.current.weatherCode, 1.0, 75.0, 0.2, 
-                        sensitivity = prefs.sensitivity, appMode = prefs.appMode
+                        minTemp, weatherResult.data.current.humidity, weatherResult.data.current.precipitation,
+                        weatherResult.data.current.weatherCode,
+                        if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                        if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
+                        if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                        sensitivity = prefs.sensitivity,
+                        windSpeed = weatherResult.data.current.windSpeed,
+                        appMode = prefs.appMode
                     )
                     
                     temperatureDao.insert(TemperatureRecord(
@@ -139,8 +147,21 @@ class HomeViewModel @Inject constructor(
                         minTemp = minTemp,
                         hasRisk = hasRisk
                     ))
+                    // Update Glance widget
                     FrostGlanceWidget().updateAll(context)
-                    FrostWidgetProvider.updateAll(context)
+                    // Update classic AppWidget (RemoteViews) so it never shows stale "Brak danych"
+                    try {
+                        val appWidgetManager = AppWidgetManager.getInstance(context)
+                        val ids = appWidgetManager.getAppWidgetIds(
+                            ComponentName(context, FrostWidgetProvider::class.java)
+                        )
+                        for (id in ids) {
+                            updateAppWidget(context, appWidgetManager, id)
+                        }
+                    } catch (e: Exception) {
+                        // Widget update is best-effort; don't crash the refresh flow
+                        android.util.Log.w("HomeViewModel", "Classic widget update failed: ${e.message}")
+                    }
 
                     // KALIBRACJA: Sprawdź czy należy pokazać dialog feedbacku
                     val lastFeedback = prefs.lastFeedbackTimestamp

@@ -12,7 +12,6 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
-import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.local.TemperatureDao
@@ -24,7 +23,6 @@ import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.TrendCalculations
 import pl.oki.frostalert.widget.updateAppWidget
 import pl.oki.frostalert.widget.FrostWidgetProvider
-import pl.oki.frostalert.geofence.GeofenceManager
 import java.util.Calendar
 import java.util.Locale
 
@@ -36,14 +34,6 @@ class FrostCheckWorker @AssistedInject constructor(
     private val locationRepository: LocationRepository,
     private val temperatureDao: TemperatureDao
 ) : CoroutineWorker(appContext, params) {
-
-    constructor(appContext: Context, params: WorkerParameters) : this(
-        appContext = appContext,
-        params = params,
-        settingsDataStore = SettingsDataStore(appContext),
-        locationRepository = LocationRepository(appContext, SettingsDataStore(appContext)),
-        temperatureDao = FrostDatabase.getDatabase(appContext).temperatureDao()
-    )
 
     companion object {
         private const val TAG = "FrostCheckWorker"
@@ -80,14 +70,15 @@ class FrostCheckWorker @AssistedInject constructor(
         return try {
             val location = locationRepository.getEffectiveLocation()
             if (location == null) {
-                Log.w(TAG, "Nie udało się pobrać lokalizacji")
-                return Result.retry()
+                Log.w(TAG, "Location unavailable (attempt ${runAttemptCount + 1}/$MAX_RETRIES) — retrying")
+                return if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
             }
 
             val weatherResult = OpenMeteoApi.getWeather(location.latitude, location.longitude)
 
             when (weatherResult) {
                 is AppResult.Error -> {
+                    Log.w(TAG, "Weather fetch error (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${weatherResult.message}")
                     if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
                 }
                 is AppResult.Success -> {
@@ -118,30 +109,48 @@ class FrostCheckWorker @AssistedInject constructor(
                     pl.oki.frostalert.widget.FrostGlanceWidget().updateAll(applicationContext)
 
                     // SPRAWDŹ ZMIANĘ TRENDU
-                    if (userPreferences.isTrendChangeNotificationsEnabled) {
-                        try {
-                            val recordsAfterInsert = temperatureDao.getRecentRecords().first()
-                            val newTrend = TrendCalculations.calculateWeeklyTrend(recordsAfterInsert).trend
-                            val oldTrend = userPreferences.lastTrend
-                            if (newTrend != oldTrend && oldTrend != null) {
-                                // Trend się zmienił
-                                val trendMessage = when (newTrend) {
-                                    TrendCalculations.TrendDirection.UP -> "Robi się cieplej! 📈"
-                                    TrendCalculations.TrendDirection.DOWN -> "Robi się chłodniej! 📉"
-                                    TrendCalculations.TrendDirection.STABLE -> "Trend się ustabilizował ➡️"
-                                }
-                                NotificationHelper.createNotificationChannel(applicationContext)
-                                NotificationHelper.sendNotification(
-                                    applicationContext,
-                                    "Zmiana trendu temperatury",
-                                    trendMessage
-                                )
-                            }
-                            // Zaktualizuj ostatni trend
+                    try {
+                        val recordsAfterInsert = temperatureDao.getRecentRecords().first()
+                        val newTrend = TrendCalculations.calculateWeeklyTrend(recordsAfterInsert).trend
+                        val oldTrend = userPreferences.lastTrend
+                        val pendingTrend = userPreferences.pendingTrend
+
+                        if (oldTrend == null) {
+                            // Inicjalizacja – zapisz pierwszy wynik bez powiadomienia
                             settingsDataStore.updateLastTrend(newTrend)
-                        } catch (e: Exception) {
-                            Log.w(TAG, "Błąd sprawdzania zmiany trendu: ${e.message}")
+                        } else {
+                            when {
+                                newTrend == oldTrend -> {
+                                    // Trend stabilny – czyść kandydata jeśli istnieje
+                                    if (pendingTrend != null) settingsDataStore.updatePendingTrend(null)
+                                }
+                                newTrend == pendingTrend -> {
+                                    // Potwierdzona zmiana trendu (2 kolejne sprawdzenia) – wyślij powiadomienie
+                                    if (userPreferences.isTrendChangeNotificationsEnabled) {
+                                        val trendMessage = when (newTrend) {
+                                            TrendCalculations.TrendDirection.UP -> "Robi się cieplej! 📈"
+                                            TrendCalculations.TrendDirection.DOWN -> "Robi się chłodniej! 📉"
+                                            TrendCalculations.TrendDirection.STABLE -> "Trend się ustabilizował ➡️"
+                                        }
+                                        NotificationHelper.createNotificationChannel(applicationContext)
+                                        NotificationHelper.sendNotification(
+                                            applicationContext,
+                                            "Zmiana trendu temperatury",
+                                            trendMessage
+                                        )
+                                    }
+                                    // Zaktualizuj potwierdzony trend i wyczyść kandydata
+                                    settingsDataStore.updateLastTrend(newTrend)
+                                    settingsDataStore.updatePendingTrend(null)
+                                }
+                                else -> {
+                                    // Nowy kandydat na zmianę – czekaj na potwierdzenie w kolejnym sprawdzeniu
+                                    settingsDataStore.updatePendingTrend(newTrend)
+                                }
+                            }
                         }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Błąd sprawdzania zmiany trendu: ${e.message}")
                     }
 
                     // SPRAWDŹ GEOFENCING - czy użytkownik wjechał w rejon z wyższym ryzykiem
@@ -159,7 +168,8 @@ class FrostCheckWorker @AssistedInject constructor(
                                     val title = "⚠️ Wyższe ryzyko szronu w okolicy!"
                                     val message = "W kierunku $direction ryzyko jest o ${(riskIncrease * 100).toInt()}% wyższe. " +
                                                  "Aktualna prognoza: ${String.format(Locale.US, "%.1f", currentMinTemp)}°C."
-                                    NotificationHelper.sendNotification(applicationContext, title, message)
+                                    NotificationHelper.sendNotification(applicationContext, title, message,
+                                        isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                                 }
                                 is pl.oki.frostalert.data.repository.GeofencingResult.Error -> {
                                     Log.w(TAG, "Błąd sprawdzania geofencing: ${geofencingResult.message}")
@@ -192,7 +202,8 @@ class FrostCheckWorker @AssistedInject constructor(
                             NotificationHelper.createNotificationChannel(applicationContext)
                             val title = if (appMode == 1) "Ryzyko przymrozku w ogrodzie!" else "Ryzyko lodu na szybach!"
                             val message = "Prognozowane min: ${String.format(Locale.US, "%.1f", minTemp)}°C."
-                            NotificationHelper.sendNotification(applicationContext, title, message)
+                            NotificationHelper.sendNotification(applicationContext, title, message,
+                                isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                         }
                     } else {
                         val calendar = Calendar.getInstance()
@@ -202,7 +213,8 @@ class FrostCheckWorker @AssistedInject constructor(
                             if (hasRisk) {
                                 NotificationHelper.createNotificationChannel(applicationContext)
                                 val title = if (appMode == 1) "Uwaga na rośliny!" else "Uwaga, szron!"
-                                NotificationHelper.sendNotification(applicationContext, title, "Możliwy przymrozek w nocy.")
+                                NotificationHelper.sendNotification(applicationContext, title, "Możliwy przymrozek w nocy.",
+                                    isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                             }
                         }
                     }
@@ -210,6 +222,7 @@ class FrostCheckWorker @AssistedInject constructor(
                 }
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error in doWork (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${e.message}", e)
             if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
     }
