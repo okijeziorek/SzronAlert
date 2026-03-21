@@ -177,6 +177,11 @@ class HomeViewModel @Inject constructor(
             if (currentState is HomeUiState.Success) {
                 val weather = currentState.weather
                 val prefs = settingsDataStore.userPreferencesFlow.first()
+                val effectiveLocation = locationRepository.getEffectiveLocation()
+                val feedbackLat = effectiveLocation?.latitude
+                    ?: if (prefs.isManualLocationEnabled) prefs.manualLatitude else 0.0
+                val feedbackLon = effectiveLocation?.longitude
+                    ?: if (prefs.isManualLocationEnabled) prefs.manualLongitude else 0.0
                 
                 // Zapisz feedback do bazy danych
                 val feedback = pl.oki.frostalert.data.local.CalibrationFeedback(
@@ -186,8 +191,8 @@ class HomeViewModel @Inject constructor(
                     temperature = currentState.minTemp,
                     humidity = weather.current.humidity.toInt(),
                     weatherCode = weather.current.weatherCode,
-                    locationLat = 0.0, // TODO: pobrać z location
-                    locationLon = 0.0, // TODO: pobrać z location
+                    locationLat = feedbackLat,
+                    locationLon = feedbackLon,
                     appMode = prefs.appMode,
                     usedThreshold = if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
                     usedHumidityThreshold = if (prefs.isAutoModeEnabled) 75 else prefs.humidityThreshold,

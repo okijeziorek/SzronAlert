@@ -1,5 +1,7 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -19,18 +21,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.core.content.FileProvider
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import pl.oki.frostalert.R
-import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.utils.TrendCalculations
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.graphics.drawscope.*
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,26 +57,32 @@ fun TrendSummaryCard(stats: TrendCalculations.WeeklyTrendStats) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = TrendCalculations.getTrendDescription(stats),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = TrendCalculations.getTrendEmoji(stats.trend),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+                Spacer(Modifier.width(8.dp))
                 Text(
                     text = "${stats.frostRiskPercentage.toInt()}%",
                     style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
                 )
             }
 
-            Divider(modifier = Modifier.padding(vertical = 12.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
             // Szczegóły
             Row(
@@ -81,17 +91,17 @@ fun TrendSummaryCard(stats: TrendCalculations.WeeklyTrendStats) {
             ) {
                 TrendStatItem(
                     icon = Icons.Default.Bedtime,
-                    label = "Noce z ryzykiem",
+                    label = stringResource(R.string.trend_stat_nights_with_risk),
                     value = "${stats.nightsWithFrostRisk}/7"
                 )
                 TrendStatItem(
                     icon = Icons.Default.Thermostat,
-                    label = "Średnia min",
+                    label = stringResource(R.string.trend_stat_avg_min),
                     value = "${"%.1f".format(stats.averageMinTemp)}°C"
                 )
                 TrendStatItem(
                     icon = Icons.Default.AcUnit,
-                    label = "Najniższa",
+                    label = stringResource(R.string.trend_stat_lowest),
                     value = "${"%.1f".format(stats.lowestTemp)}°C"
                 )
             }
@@ -113,8 +123,20 @@ fun TrendStatItem(
             tint = MaterialTheme.colorScheme.primary
         )
         Spacer(Modifier.height(4.dp))
-        Text(text = label, style = MaterialTheme.typography.labelSmall, fontSize = 10.sp)
-        Text(text = value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -128,7 +150,7 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
                     .height(200.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Brak danych do wyświetlenia", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.trend_chart_no_data), style = MaterialTheme.typography.bodyMedium)
             }
         }
         return
@@ -137,20 +159,18 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Temperatura nocna (7 dni)",
+                stringResource(R.string.trend_chart_temperature_title),
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(16.dp))
 
-            // Znajdź zakres temperatur dla lepszej wizualizacji
             val minTemp = stats.trendPoints.minOf { it.minTemp }
             val maxTemp = stats.trendPoints.maxOf { it.minTemp }
-            val tempRange = maxOf(maxTemp - minTemp, 5.0) // Minimum 5°C zakresu dla czytelności
-
-            // Dodaj padding dla wartości ekstremalnych
-            val chartMin = minTemp - 2.0
-            val chartMax = maxTemp + 2.0
+            val chartMin = minTemp - 1.5
+            val chartMax = maxTemp + 1.5
             val chartRange = chartMax - chartMin
 
             // Oś Y z temperaturami
@@ -170,54 +190,35 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
                 ) {
                     // Wszystkie elementy wykresu w jednym Canvas
                     androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-                        // Linie siatki poziomej
+                        val topPadding = 12f
+                        val bottomPadding = 12f
+                        val leftPadding = 18f
+                        val rightPadding = 18f
+                        val plotHeight = size.height - topPadding - bottomPadding
+                        val plotWidth = size.width - leftPadding - rightPadding
+
                         val gridLines = 4
                         for (i in 0..gridLines) {
-                            val y = (i.toFloat() / gridLines) * 180f
+                            val y = topPadding + (i.toFloat() / gridLines) * plotHeight
                             drawLine(
                                 color = outlineColor,
-                                start = androidx.compose.ui.geometry.Offset(0f, y),
-                                end = androidx.compose.ui.geometry.Offset(size.width, y),
+                                start = androidx.compose.ui.geometry.Offset(leftPadding, y),
+                                end = androidx.compose.ui.geometry.Offset(size.width - rightPadding, y),
                                 strokeWidth = 1f
                             )
                         }
 
-                        // Punkty temperatury
-                        stats.trendPoints.forEachIndexed { index, point ->
-                            val x = (index.toFloat() / maxOf(stats.trendPoints.size - 1, 1)) * (size.width - 40f) + 20f
-                            val y = 160f - ((point.minTemp - chartMin) / chartRange * 140f).toFloat()
-
-                            // Punkt
-                            drawCircle(
-                                color = when {
-                                    point.minTemp < 0 -> errorColor
-                                    point.minTemp < 5 -> primaryColor
-                                    else -> secondaryColor
-                                },
-                                radius = 6f,
-                                center = androidx.compose.ui.geometry.Offset(x, y)
-                            )
-
-                            // Obrys punktu
-                            drawCircle(
-                                color = backgroundColor,
-                                radius = 8f,
-                                center = androidx.compose.ui.geometry.Offset(x, y),
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
-                            )
+                        val chartPoints = stats.trendPoints.mapIndexed { index, point ->
+                            val divisor = maxOf(stats.trendPoints.size - 1, 1)
+                            val x = leftPadding + (index.toFloat() / divisor) * plotWidth
+                            val normalized = ((point.minTemp - chartMin) / chartRange).coerceIn(0.0, 1.0)
+                            val y = topPadding + ((1 - normalized).toFloat() * plotHeight)
+                            androidx.compose.ui.geometry.Offset(x, y)
                         }
 
-                        // Linia łącząca punkty
                         val path = androidx.compose.ui.graphics.Path()
-                        stats.trendPoints.forEachIndexed { index, point ->
-                            val x = (index.toFloat() / maxOf(stats.trendPoints.size - 1, 1)) * (size.width - 40f) + 20f
-                            val y = 160f - ((point.minTemp - chartMin) / chartRange * 140f).toFloat()
-
-                            if (index == 0) {
-                                path.moveTo(x, y)
-                            } else {
-                                path.lineTo(x, y)
-                            }
+                        chartPoints.forEachIndexed { index, offset ->
+                            if (index == 0) path.moveTo(offset.x, offset.y) else path.lineTo(offset.x, offset.y)
                         }
 
                         drawPath(
@@ -225,6 +226,25 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
                             color = primaryColor,
                             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f)
                         )
+
+                        stats.trendPoints.forEachIndexed { index, point ->
+                            val offset = chartPoints[index]
+                            drawCircle(
+                                color = when {
+                                    point.minTemp < 0 -> errorColor
+                                    point.minTemp < 5 -> primaryColor
+                                    else -> secondaryColor
+                                },
+                                radius = 6f,
+                                center = offset
+                            )
+                            drawCircle(
+                                color = backgroundColor,
+                                radius = 8f,
+                                center = offset,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
+                            )
+                        }
                     }
                 }
             }
@@ -233,7 +253,11 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
 
             // Zakres temperatur
             Text(
-                text = "Zakres: ${"%.1f".format(minTemp)}°C - ${"%.1f".format(maxTemp)}°C",
+                text = stringResource(
+                    R.string.trend_chart_range,
+                    String.format(Locale.US, "%.1f", minTemp),
+                    String.format(Locale.US, "%.1f", maxTemp)
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -246,9 +270,11 @@ fun TrendNightsDetail(stats: TrendCalculations.WeeklyTrendStats) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Szczegóły nocy",
+                stringResource(R.string.trend_night_details_title),
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(12.dp))
 
@@ -268,7 +294,9 @@ fun TrendNightsDetail(stats: TrendCalculations.WeeklyTrendStats) {
                             Text(
                                 text = point.dayLabel,
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = TrendCalculations.getDayOfWeekShort(point.timestamp),
@@ -310,7 +338,7 @@ fun TrendNightsDetail(stats: TrendCalculations.WeeklyTrendStats) {
                         }
                     }
                     if (index < stats.trendPoints.size - 1) {
-                        Divider()
+                        HorizontalDivider()
                     }
                 }
             }
@@ -324,14 +352,17 @@ fun FutureTrendSection(
     futureTrendState: FutureTrendUiState,
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val userPrefs by settingsViewModel.userPreferences.collectAsState()
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Prognoza przyszłego trendu",
+                stringResource(R.string.trend_future_title),
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(12.dp))
 
@@ -344,7 +375,7 @@ fun FutureTrendSection(
                     onClick = { trendViewModel.loadFutureTrend(lat, lon) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Załaduj prognozę trendu")
+                    Text(stringResource(R.string.trend_future_load_button), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -358,20 +389,42 @@ fun FutureTrendSection(
                 }
                 futureTrendState.errorMessage != null -> {
                     Text(
-                        text = futureTrendState.errorMessage ?: "Nieznany błąd",
+                        text = futureTrendState.errorMessage ?: stringResource(R.string.trend_unknown_error),
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
                 futureTrendState.futureWeeklyStats != null -> {
                     val stats = futureTrendState.futureWeeklyStats!!
-                    // Wyświetl przyszły trend podobnie jak przeszły
-                    Text("Przyszły trend załadowany: ${stats.trend}")
+                    Text(
+                        text = stringResource(R.string.trend_future_loaded, stats.trend.name),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            exportTrendToCsv(
+                                context = context,
+                                stats = stats,
+                                fileName = "frost_alert_future_trend.csv",
+                                subject = context.getString(R.string.trend_export_future_subject),
+                                chooserTitle = context.getString(R.string.trend_export_future_chooser)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.trend_export_future_button), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
                 else -> {
                     Text(
-                        text = "Kliknij przycisk, aby załadować prognozę przyszłego trendu",
-                        style = MaterialTheme.typography.bodyMedium
+                        text = stringResource(R.string.trend_future_prompt),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -381,22 +434,27 @@ fun FutureTrendSection(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Suppress("DEPRECATION")
 fun TrendScreen(
     trendViewModel: TrendViewModel = hiltViewModel()
 ) {
     val trendState by trendViewModel.trendState.collectAsState()
     val futureTrendState by trendViewModel.futureTrendState.collectAsState()
-    val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
-    val db = FrostDatabase.getDatabase(ctx)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.trend_screen_title)) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.trend_screen_title),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = {
                     Icon(
-                        Icons.Default.TrendingUp,
+                            Icons.Default.ShowChart,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.primary
@@ -432,7 +490,7 @@ fun TrendScreen(
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            text = trendState.errorMessage ?: "Nieznany błąd",
+                            text = trendState.errorMessage ?: stringResource(R.string.trend_unknown_error),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -464,18 +522,68 @@ fun TrendScreen(
                     // SEKCJA 5: EKSPORT DANYCH
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Eksport danych trendu", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.trend_export_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                             Spacer(Modifier.height(8.dp))
                             Button(onClick = {
-                                // Eksportuj do CSV — prosty przykład tworzący CSV w pamięci i pokazujący toast
-                                Toast.makeText(ctx, "Eksport zapisany (funkcja demo)", Toast.LENGTH_SHORT).show()
+                                exportTrendToCsv(
+                                    context = ctx,
+                                    stats = stats,
+                                    fileName = "frost_alert_trend.csv",
+                                    subject = ctx.getString(R.string.trend_export_subject),
+                                    chooserTitle = ctx.getString(R.string.trend_export_chooser)
+                                )
                             }, modifier = Modifier.fillMaxWidth()) {
-                                Text("Eksportuj CSV")
+                                Text(stringResource(R.string.trend_export_button), maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+private fun exportTrendToCsv(
+    context: Context,
+    stats: TrendCalculations.WeeklyTrendStats,
+    fileName: String,
+    subject: String,
+    chooserTitle: String
+) {
+    val header = context.getString(R.string.trend_export_csv_header) + "\n"
+    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val body = stats.trendPoints.joinToString("\n") { point ->
+        val risk = if (point.hasFrostRisk) {
+            context.getString(R.string.trend_export_risk_yes)
+        } else {
+            context.getString(R.string.trend_export_risk_no)
+        }
+        val date = sdf.format(Date(point.timestamp))
+        "${point.dayLabel},$date,${String.format(Locale.US, "%.1f", point.minTemp)},$risk"
+    }
+
+    try {
+        val exportDir = File(context.filesDir, "exports")
+        if (!exportDir.exists()) exportDir.mkdirs()
+
+        val file = File(exportDir, fileName)
+        file.writeText(header + body)
+
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, chooserTitle))
+    } catch (e: Exception) {
+        Toast.makeText(context, context.getString(R.string.trend_export_error_with_reason, e.message ?: "?"), Toast.LENGTH_LONG).show()
     }
 }

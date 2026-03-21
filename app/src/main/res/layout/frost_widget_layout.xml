@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="12dp"
-    android:background="#2D2D2D">
+    android:background="#1F2937">
 
     <TextView
         android:id="@+id/widget_title"
@@ -15,16 +15,21 @@
         android:textColor="@android:color/white"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:gravity="center" />
+        android:gravity="center"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:singleLine="true" />
 
     <TextView
         android:id="@+id/widget_temp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="--"
+        android:text="Min: --"
         android:textColor="@android:color/white"
         android:textSize="14sp"
-        android:visibility="gone" />
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:singleLine="true" />
 
     <TextView
         android:id="@+id/widget_risk"
@@ -33,6 +38,8 @@
         android:text="Ryzyko: --"
         android:textColor="@android:color/white"
         android:textSize="14sp"
-        android:visibility="gone" />
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:singleLine="true" />
 
 </LinearLayout>

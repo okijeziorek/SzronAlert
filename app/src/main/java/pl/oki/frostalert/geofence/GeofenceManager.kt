@@ -10,12 +10,16 @@ import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import pl.oki.frostalert.receiver.GeofenceBroadcastReceiver
+import java.util.Locale
 
 class GeofenceManager(private val context: Context) {
     private val geofencingClient: GeofencingClient = LocationServices.getGeofencingClient(context)
+    private val geofencePendingIntent: PendingIntent by lazy { createGeofencePendingIntent() }
 
-    private fun getGeofencePendingIntent(): PendingIntent {
-        val intent = Intent(context, GeofenceBroadcastReceiver::class.java)
+    private fun createGeofencePendingIntent(): PendingIntent {
+        val intent = Intent(context, GeofenceBroadcastReceiver::class.java).apply {
+            action = "pl.oki.frostalert.ACTION_GEOFENCE"
+        }
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
@@ -26,8 +30,10 @@ class GeofenceManager(private val context: Context) {
             return
         }
 
+        val requestId = if (id.startsWith("geofence:")) id else "geofence:${"%.6f".format(Locale.US, lat)}:${"%.6f".format(Locale.US, lon)}"
+
         val builder = Geofence.Builder()
-            .setRequestId(id)
+            .setRequestId(requestId)
             .setCircularRegion(lat, lon, radiusMeters)
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
 
@@ -40,7 +46,16 @@ class GeofenceManager(private val context: Context) {
             builder.setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
         }
 
-        val geofence = builder.build()
+        val geofence = try {
+            builder.build()
+        } catch (_: IllegalArgumentException) {
+            Geofence.Builder()
+                .setRequestId(requestId)
+                .setCircularRegion(lat, lon, radiusMeters)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .build()
+        }
 
         val request = GeofencingRequest.Builder().apply {
             setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
@@ -51,7 +66,8 @@ class GeofenceManager(private val context: Context) {
             if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return
             }
-            geofencingClient.addGeofences(request, getGeofencePendingIntent())
+            geofencingClient.removeGeofences(geofencePendingIntent)
+            geofencingClient.addGeofences(request, geofencePendingIntent)
                 .addOnSuccessListener { /* zarejestrowano */ }
                 .addOnFailureListener { /* loguj */ }
         } catch (e: SecurityException) {
@@ -61,7 +77,7 @@ class GeofenceManager(private val context: Context) {
 
     fun unregisterGeofence() {
         try {
-            geofencingClient.removeGeofences(getGeofencePendingIntent())
+            geofencingClient.removeGeofences(geofencePendingIntent)
                 .addOnSuccessListener { /* usunięto */ }
                 .addOnFailureListener { /* loguj */ }
         } catch (e: Exception) {

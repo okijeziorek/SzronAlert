@@ -37,6 +37,12 @@
     <string name="manual_location_toggle">Ustaw lokalizację ręcznie</string>
     <string name="location_gps_auto">Używam GPS (automatycznie)</string>
     <string name="save_location">Zapisz lokalizację</string>
+    <string name="location_name_label">Nazwa miejscowości</string>
+    <string name="location_lat_label">Lat</string>
+    <string name="location_lon_label">Lon</string>
+    <string name="location_input_error">Błąd</string>
+    <string name="location_lat_range_error">Lat: -90 do 90</string>
+    <string name="location_lon_range_error">Lon: -180 do 180</string>
     <string name="section_appearance">Wygląd</string>
     <string name="theme_light">Jasny</string>
     <string name="theme_dark">Ciemny</string>
@@ -71,6 +77,11 @@
     <string name="section_geofencing">Geofencing (NOWOŚĆ)</string>
     <string name="geofencing_label">Powiadomienia geoprzestrzennych</string>
     <string name="geofencing_desc">Ostrzegaj gdy wjedziesz w rejon z wyższym ryzykiem szronu</string>
+    <string name="geofence_history_title">Historia Geofence</string>
+    <string name="geofence_history_empty">Brak zapisów geofence</string>
+    <string name="geofence_radius_title">Promień Geofence</string>
+    <string name="geofence_radius_save">Zapisz promień</string>
+    <string name="trend_change_notifications_label">Powiadomienia o zmianie trendu</string>
 
     <string name="section_calibration">Kalibracja Algorytmu</string>
     <string name="calibration_accuracy">Dokładność predykcji</string>
@@ -78,6 +89,11 @@
     <string name="calibration_apply_recommendations">Zastosuj rekomendacje</string>
     <string name="calibration_explanation">Algorytm uczy się z Twoich odpowiedzi, aby poprawić dokładność prognoz.</string>
     <string name="calibration_no_data">Brak danych - odpowiedz na pytania o pogodzie, aby pomóc w kalibracji.</string>
+    <string name="calibration_dialog_title">Kalibracja Algorytmu</string>
+    <string name="calibration_dialog_question">Czy w nocy wystąpił szron lub oblodzenie?</string>
+    <string name="calibration_dialog_help">Twoja odpowiedź pomoże ulepszyć dokładność prognoz.</string>
+    <string name="calibration_dialog_yes">TAK - Wystąpił szron</string>
+    <string name="calibration_dialog_no">NIE - Nie wystąpił</string>
 
     <string name="alert_start">Godzina rozpoczęcia alertów</string>
     <string name="alert_end">Godzina zakończenia alertów</string>
@@ -111,6 +127,29 @@
     <string name="trend_moderate_risk">⚡ Umiarkowane ryzyko szronu</string>
     <string name="trend_low_risk">🧊 Sporadyczne przymrozki</string>
     <string name="trend_no_risk">✅ Brak ryzyka szronu</string>
+    <string name="trend_stat_nights_with_risk">Noce z ryzykiem</string>
+    <string name="trend_stat_avg_min">Średnia min</string>
+    <string name="trend_stat_lowest">Najniższa</string>
+    <string name="trend_chart_no_data">Brak danych do wyświetlenia</string>
+    <string name="trend_chart_temperature_title">Temperatura nocna (7 dni)</string>
+    <string name="trend_chart_range">Zakres: %1$s°C - %2$s°C</string>
+    <string name="trend_night_details_title">Szczegóły nocy</string>
+    <string name="trend_future_title">Prognoza przyszłego trendu</string>
+    <string name="trend_future_load_button">Załaduj prognozę trendu</string>
+    <string name="trend_future_loaded">Przyszły trend załadowany: %1$s</string>
+    <string name="trend_future_prompt">Kliknij przycisk, aby załadować prognozę przyszłego trendu</string>
+    <string name="trend_unknown_error">Nieznany błąd</string>
+    <string name="trend_export_title">Eksport danych trendu</string>
+    <string name="trend_export_button">Eksportuj CSV</string>
+    <string name="trend_export_future_button">Eksportuj przyszły trend CSV</string>
+    <string name="trend_export_subject">Trend FrostAlert</string>
+    <string name="trend_export_future_subject">Przyszły trend FrostAlert</string>
+    <string name="trend_export_chooser">Udostępnij trend</string>
+    <string name="trend_export_future_chooser">Udostępnij przyszły trend</string>
+    <string name="trend_export_csv_header">Dzien,Data,MinTempC,RyzykoSzronu</string>
+    <string name="trend_export_risk_yes">TAK</string>
+    <string name="trend_export_risk_no">NIE</string>
+    <string name="trend_export_error_with_reason">Błąd eksportu: %1$s</string>
 
     <!-- Onboarding -->
     <string name="welcome_title">Witaj we FrostAlert</string>

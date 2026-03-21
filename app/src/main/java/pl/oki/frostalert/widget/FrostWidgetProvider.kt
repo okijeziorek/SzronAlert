@@ -43,25 +43,23 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
                 val date = sdf.format(Date(lastRecord.timestamp))
                 val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
 
-                // Compact the widget content so small widget sizes still show the important info
-                val compact = "Szron: ${String.format(Locale.US, "%.1f", lastRecord.minTemp)}°C • $riskText (${date})"
-                views.setTextViewText(R.id.widget_title, compact)
-                // Hide the secondary fields to avoid large empty areas on small widgets
-                views.setViewVisibility(R.id.widget_temp, android.view.View.GONE)
-                views.setViewVisibility(R.id.widget_risk, android.view.View.GONE)
+                views.setTextViewText(R.id.widget_title, "FrostAlert • $date")
+                views.setTextViewText(R.id.widget_temp, "Min: ${String.format(Locale.US, "%.1f", lastRecord.minTemp)}°C")
+                views.setTextViewText(R.id.widget_risk, "Ryzyko: $riskText")
+                views.setViewVisibility(R.id.widget_temp, android.view.View.VISIBLE)
+                views.setViewVisibility(R.id.widget_risk, android.view.View.VISIBLE)
             } else {
-                views.setTextViewText(R.id.widget_title, "Brak danych\nKliknij odśwież")
-                views.setViewVisibility(R.id.widget_temp, android.view.View.GONE)
-                views.setViewVisibility(R.id.widget_risk, android.view.View.GONE)
+                views.setTextViewText(R.id.widget_title, "FrostAlert")
+                views.setTextViewText(R.id.widget_temp, "Brak danych")
+                views.setTextViewText(R.id.widget_risk, "Uruchom odświeżenie")
+                views.setViewVisibility(R.id.widget_temp, android.view.View.VISIBLE)
+                views.setViewVisibility(R.id.widget_risk, android.view.View.VISIBLE)
             }
 
-            // Ensure widget update runs on main thread to avoid potential platform limitations
-            android.os.Handler(android.os.Looper.getMainLooper()).post {
-                try {
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                } catch (e: Exception) {
-                    android.util.Log.w("FrostWidgetProvider", "Failed to post updateAppWidget for $appWidgetId: ${e.message}")
-                }
+            try {
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+            } catch (e: Exception) {
+                android.util.Log.w("FrostWidgetProvider", "Failed to updateAppWidget for $appWidgetId: ${e.message}")
             }
         } catch (e: Exception) {
             android.util.Log.w("FrostWidgetProvider", "Error updating widget $appWidgetId: ${e.message}")

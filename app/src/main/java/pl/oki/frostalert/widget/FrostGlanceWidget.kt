@@ -81,7 +81,6 @@ class FrostGlanceWidget : GlanceAppWidget() {
 
     @androidx.compose.runtime.Composable
     private fun WidgetContent(lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?, useFahrenheit: Boolean, recordsCount: Int) {
-        // Compact single-line widget content to improve rendering across launchers and sizes
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -90,19 +89,30 @@ class FrostGlanceWidget : GlanceAppWidget() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val contentText = if (lastRecord != null) {
+            Text(
+                text = "FrostAlert",
+                style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            )
+
+            if (lastRecord != null) {
                 val date = try { SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(lastRecord.timestamp)) } catch (_: Exception) { "--" }
                 val tempText = try { WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit) } catch (_: Exception) { "--" }
                 val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
-                "Szron: $tempText • $riskText • $date"
-            } else {
-                "Brak danych ($recordsCount)"
-            }
 
-            Text(
-                text = contentText,
-                style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            )
+                Text(
+                    text = "Min: $tempText",
+                    style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 13.sp)
+                )
+                Text(
+                    text = "Ryzyko: $riskText ($date)",
+                    style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 12.sp)
+                )
+            } else {
+                Text(
+                    text = "Brak danych ($recordsCount)",
+                    style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 13.sp)
+                )
+            }
         }
     }
 }

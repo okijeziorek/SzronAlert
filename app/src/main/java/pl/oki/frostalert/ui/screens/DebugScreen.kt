@@ -1,30 +1,27 @@
 package pl.oki.frostalert.ui.screens
 
-import android.content.Context
+import android.location.Location
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Science
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.work.Data
@@ -46,16 +43,21 @@ import pl.oki.frostalert.utils.SummerCalculations
 import pl.oki.frostalert.utils.TrendCalculations
 import pl.oki.frostalert.worker.FrostCheckWorker
 import pl.oki.frostalert.geofence.GeofenceRegistrar
+import pl.oki.frostalert.data.repository.GeofencingResult
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.widget.FrostGlanceWidget
+import pl.oki.frostalert.widget.FrostWidgetProvider
+import pl.oki.frostalert.widget.updateAppWidget
 import java.util.Locale
 import java.util.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Suppress("DEPRECATION")
 fun DebugScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel(),
-    trendViewModel: TrendViewModel = hiltViewModel()
+    trendViewModel: TrendViewModel = hiltViewModel(),
+    onOpenTrendRequested: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -66,8 +68,15 @@ fun DebugScreen(
 
     // dodatkowe repo/registrar
     val locationRepo = remember { LocationRepository(context, settingsDataStore) }
-    var geofenceRegistrarRef = remember { mutableStateOf<GeofenceRegistrar?>(null) }
+    val geofenceRegistrarRef = remember { mutableStateOf<GeofenceRegistrar?>(null) }
     var geofenceRunning by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            geofenceRegistrarRef.value?.stop()
+            geofenceRegistrarRef.value = null
+        }
+    }
 
     // Stan dla symulatora
     var simTemp by remember { mutableStateOf(0.0f) }
@@ -76,7 +85,17 @@ fun DebugScreen(
     var simUv by remember { mutableStateOf(1.0f) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Laboratorium Dewelopera") }) }
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Laboratorium Dewelopera",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            )
+        }
     ) { padding ->
         if (userPrefs == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -172,7 +191,7 @@ fun DebugScreen(
                 }
 
                 // SEKCJA 3: TREND 7-DNIOWY
-                DebugSection("📈 Trend 7-dniowy", Icons.Default.TrendingUp) {
+                DebugSection("📈 Trend 7-dniowy", Icons.Default.ShowChart) {
                     if (trendState.weeklyStats != null) {
                         val stats = trendState.weeklyStats!!
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -182,9 +201,9 @@ fun DebugScreen(
                             Text("Najniższa: ${"%.1f".format(stats.lowestTemp)}°C")
                             Text("Trend: ${TrendCalculations.getTrendEmoji(stats.trend)}")
                             Button(
-                                onClick = {},
+                                onClick = { onOpenTrendRequested?.invoke() },
                                 modifier = Modifier.fillMaxWidth(),
-                                enabled = false
+                                enabled = onOpenTrendRequested != null
                             ) {
                                 Text("Otwórz ekran Trendu (4. tab)")
                             }
@@ -274,7 +293,7 @@ fun DebugScreen(
                             // Wymuś odświeżenie Glance widget
                             scope.launch(Dispatchers.IO) {
                                 try {
-                                    pl.oki.frostalert.widget.FrostGlanceWidget().updateAll(context)
+                                    FrostGlanceWidget().updateAll(context)
                                     withContext(Dispatchers.Main) {
                                         Toast.makeText(context, "Widget odświeżony", Toast.LENGTH_SHORT).show()
                                     }
@@ -296,10 +315,9 @@ fun DebugScreen(
                         onClick = {
                             scope.launch(Dispatchers.IO) {
                                 try {
-                                    val db = FrostDatabase.getDatabase(context)
-                                    val records = try { db.temperatureDao().getRecentRecords().first() } catch (e: Exception) { emptyList() }
+                                    val records = try { db.temperatureDao().getRecentRecords().first() } catch (_: Exception) { emptyList() }
                                     val last = records.firstOrNull()
-                                    val settings = try { SettingsDataStore(context).userPreferencesFlow.first() } catch (e: Exception) { null }
+                                    val settings = try { SettingsDataStore(context).userPreferencesFlow.first() } catch (_: Exception) { null }
                                     Log.i("WidgetDebug", "recordsCount=${records.size}, lastMin=${last?.minTemp}, lastHasRisk=${last?.hasRisk}, settings=${settings}")
                                     withContext(Dispatchers.Main) {
                                         Toast.makeText(context, "Zalogowano dane widgetu (sprawdź logcat)", Toast.LENGTH_SHORT).show()
@@ -320,9 +338,9 @@ fun DebugScreen(
                             scope.launch(Dispatchers.IO) {
                                 try {
                                     val appWidgetManager = AppWidgetManager.getInstance(context)
-                                    val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, pl.oki.frostalert.widget.FrostWidgetProvider::class.java))
+                                    val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, FrostWidgetProvider::class.java))
                                     for (id in ids) {
-                                        pl.oki.frostalert.widget.updateAppWidget(context, appWidgetManager, id)
+                                        updateAppWidget(context, appWidgetManager, id)
                                     }
                                     withContext(Dispatchers.Main) { Toast.makeText(context, "Wymuszono update klasycznych widgetów", Toast.LENGTH_SHORT).show() }
                                 } catch (e: Exception) {
@@ -342,15 +360,19 @@ fun DebugScreen(
                                 scope.launch(Dispatchers.IO) {
                                     if (!geofenceRunning) {
                                         val registrar = GeofenceRegistrar(context, settingsDataStore, locationRepo)
-                                        geofenceRegistrarRef.value = registrar
                                         registrar.start()
-                                        geofenceRunning = true
-                                        withContext(Dispatchers.Main) { Toast.makeText(context, "Geofence registrar uruchomiony", Toast.LENGTH_SHORT).show() }
+                                        withContext(Dispatchers.Main) {
+                                            geofenceRegistrarRef.value = registrar
+                                            geofenceRunning = true
+                                            Toast.makeText(context, "Geofence registrar uruchomiony", Toast.LENGTH_SHORT).show()
+                                        }
                                     } else {
                                         geofenceRegistrarRef.value?.stop()
-                                        geofenceRegistrarRef.value = null
-                                        geofenceRunning = false
-                                        withContext(Dispatchers.Main) { Toast.makeText(context, "Geofence registrar zatrzymany", Toast.LENGTH_SHORT).show() }
+                                        withContext(Dispatchers.Main) {
+                                            geofenceRegistrarRef.value = null
+                                            geofenceRunning = false
+                                            Toast.makeText(context, "Geofence registrar zatrzymany", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
                             },
@@ -414,17 +436,15 @@ fun DebugScreen(
                     var dbStats by remember { mutableStateOf<Map<String, Int>?>(null) }
 
                     LaunchedEffect(Unit) {
-                        scope.launch(Dispatchers.IO) {
+                        withContext(Dispatchers.IO) {
                             val tempCount = db.temperatureDao().getAllRecords().size
                             val feedbackCount = db.calibrationDao().getTotalFeedbackCount()
                             val riskCount = db.temperatureDao().getRiskCount()
-                            withContext(Dispatchers.Main) {
-                                dbStats = mapOf(
-                                    "Rekordów temp" to tempCount,
-                                    "Feedbacków" to feedbackCount,
-                                    "Ryzyk szronu" to riskCount
-                                )
-                            }
+                            dbStats = mapOf(
+                                "Rekordów temp" to tempCount,
+                                "Feedbacków" to feedbackCount,
+                                "Ryzyk szronu" to riskCount
+                            )
                         }
                     }
 
@@ -558,17 +578,16 @@ fun DebugScreen(
                             onClick = {
                                 scope.launch(Dispatchers.IO) {
                                     // Symuluj lokalizację (np. Warszawa)
-                                    val mockLocation = android.location.Location("mock").apply {
+                                    val mockLocation = Location("mock").apply {
                                         latitude = 52.2297
                                         longitude = 21.0122
                                     }
-                                    val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(context, settingsDataStore)
                                     val result = locationRepo.checkGeofencingRisk(mockLocation, prefs)
                                     withContext(Dispatchers.Main) {
                                         val msg = when (result) {
-                                            is pl.oki.frostalert.data.repository.GeofencingResult.NoRisk -> "Brak wyższego ryzyka w okolicy"
-                                            is pl.oki.frostalert.data.repository.GeofencingResult.HigherRiskNearby -> "Wyższe ryzyko w kierunku ${result.direction}: +${(result.riskIncrease * 100).toInt()}%"
-                                            is pl.oki.frostalert.data.repository.GeofencingResult.Error -> "Błąd: ${result.message}"
+                                            is GeofencingResult.NoRisk -> "Brak wyższego ryzyka w okolicy"
+                                            is GeofencingResult.HigherRiskNearby -> "Wyższe ryzyko w kierunku ${result.direction}: +${(result.riskIncrease * 100).toInt()}%"
+                                            is GeofencingResult.Error -> "Błąd: ${result.message}"
                                         }
                                         Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                                     }
@@ -583,17 +602,16 @@ fun DebugScreen(
                             onClick = {
                                 scope.launch(Dispatchers.IO) {
                                     // Symuluj inną lokalizację (np. Kraków)
-                                    val mockLocation = android.location.Location("mock").apply {
+                                    val mockLocation = Location("mock").apply {
                                         latitude = 50.0647
                                         longitude = 19.9450
                                     }
-                                    val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(context, settingsDataStore)
                                     val result = locationRepo.checkGeofencingRisk(mockLocation, prefs)
                                     withContext(Dispatchers.Main) {
                                         val msg = when (result) {
-                                            is pl.oki.frostalert.data.repository.GeofencingResult.NoRisk -> "Brak wyższego ryzyka w okolicy"
-                                            is pl.oki.frostalert.data.repository.GeofencingResult.HigherRiskNearby -> "Wyższe ryzyko w kierunku ${result.direction}: +${(result.riskIncrease * 100).toInt()}%"
-                                            is pl.oki.frostalert.data.repository.GeofencingResult.Error -> "Błąd: ${result.message}"
+                                            is GeofencingResult.NoRisk -> "Brak wyższego ryzyka w okolicy"
+                                            is GeofencingResult.HigherRiskNearby -> "Wyższe ryzyko w kierunku ${result.direction}: +${(result.riskIncrease * 100).toInt()}%"
+                                            is GeofencingResult.Error -> "Błąd: ${result.message}"
                                         }
                                         Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                                     }
@@ -645,7 +663,13 @@ fun DebugSection(title: String, icon: ImageVector, content: @Composable ColumnSc
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             Spacer(Modifier.height(16.dp))
             content()

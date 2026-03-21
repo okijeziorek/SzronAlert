@@ -37,6 +37,14 @@ class FrostCheckWorker @AssistedInject constructor(
     private val temperatureDao: TemperatureDao
 ) : CoroutineWorker(appContext, params) {
 
+    constructor(appContext: Context, params: WorkerParameters) : this(
+        appContext = appContext,
+        params = params,
+        settingsDataStore = SettingsDataStore(appContext),
+        locationRepository = LocationRepository(appContext, SettingsDataStore(appContext)),
+        temperatureDao = FrostDatabase.getDatabase(appContext).temperatureDao()
+    )
+
     companion object {
         private const val TAG = "FrostCheckWorker"
         private const val MAX_RETRIES = 3

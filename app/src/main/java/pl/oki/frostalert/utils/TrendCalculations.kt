@@ -49,26 +49,20 @@ object TrendCalculations {
             )
         }
 
-        // Grupuj rekordy po dniach (użyj początku dnia jako klucz)
-        val calendar = Calendar.getInstance()
-        val dailyRecords = records.groupBy { record ->
-            calendar.timeInMillis = record.timestamp
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            calendar.timeInMillis
-        }.mapValues { (_, dayRecords) ->
-            // Dla każdego dnia weź rekord z najniższą temperaturą (największe ryzyko)
-            dayRecords.minBy { it.minTemp }
-        }.values.sortedByDescending { it.timestamp }.take(7)
+        val dailySummaries = records
+            .groupBy { startOfDay(it.timestamp) }
+            .toList()
+            .sortedByDescending { it.first }
+            .take(7)
+            .sortedBy { it.first }
 
-        val trendPoints = dailyRecords.mapIndexed { index, record ->
+        val trendPoints = dailySummaries.map { (dayStart, dayRecords) ->
+            val minRecord = dayRecords.minBy { it.minTemp }
             DailyTrendPoint(
-                dayLabel = getDayLabel(index),
-                minTemp = record.minTemp,
-                hasFrostRisk = record.hasRisk,
-                timestamp = record.timestamp
+                dayLabel = getRelativeDayLabel(dayStart),
+                minTemp = minRecord.minTemp,
+                hasFrostRisk = dayRecords.any { it.hasRisk },
+                timestamp = dayStart
             )
         }
 
@@ -77,14 +71,15 @@ object TrendCalculations {
         val avgTemp = trendPoints.map { it.minTemp }.average()
         val lowestTemp = trendPoints.minOfOrNull { it.minTemp } ?: 0.0
 
-        // Określ trend: porównaj średnią pierwszych 3 dni vs ostatnich 3 dni
+        // Trend liczony od najstarszych punktów do najnowszych.
         val trend = if (trendPoints.size >= 6) {
             val firstThreeAvg = trendPoints.take(3).map { it.minTemp }.average()
             val lastThreeAvg = trendPoints.takeLast(3).map { it.minTemp }.average()
-            
+            val delta = lastThreeAvg - firstThreeAvg
+
             when {
-                lastThreeAvg > firstThreeAvg + 2.0 -> TrendDirection.UP      // Co najmniej 2°C cieplej
-                firstThreeAvg > lastThreeAvg + 2.0 -> TrendDirection.DOWN    // Co najmniej 2°C chłodniej
+                delta > 1.5 -> TrendDirection.UP
+                delta < -1.5 -> TrendDirection.DOWN
                 else -> TrendDirection.STABLE
             }
         } else {
@@ -209,16 +204,28 @@ object TrendCalculations {
     /**
      * Zwraca etykietę dnia (Dziś, Wczoraj, itd.)
      */
-    private fun getDayLabel(daysAgo: Int): String = when (daysAgo) {
-        0 -> "Dziś"
-        1 -> "Wczoraj"
-        2 -> "2 dni temu"
-        3 -> "3 dni temu"
-        4 -> "4 dni temu"
-        5 -> "5 dni temu"
-        6 -> "6 dni temu"
-        else -> "Starsze"
+    private fun getRelativeDayLabel(timestamp: Long): String {
+        val daysAgo = ((startOfDay(System.currentTimeMillis()) - startOfDay(timestamp)) / MILLIS_IN_DAY).toInt()
+        return when (daysAgo) {
+            0 -> "Dziś"
+            1 -> "Wczoraj"
+            in 2..6 -> "$daysAgo dni temu"
+            else -> getDayOfWeekShort(timestamp)
+        }
     }
+
+    private fun startOfDay(timestamp: Long): Long {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = timestamp
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return calendar.timeInMillis
+    }
+
+    private const val MILLIS_IN_DAY = 24 * 60 * 60 * 1000L
 
     /**
      * Zwraca etykietę przyszłego dnia (Jutro, Pojutrze, itd.)

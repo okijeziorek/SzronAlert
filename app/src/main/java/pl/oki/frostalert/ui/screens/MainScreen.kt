@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ import pl.oki.frostalert.R
 import pl.oki.frostalert.utils.NetworkMonitor
 
 @Composable
+@Suppress("DEPRECATION")
 fun MainScreen(initialTab: Int = 0) {
     val context = LocalContext.current
     val networkMonitor = remember { NetworkMonitor(context) }
@@ -91,7 +93,9 @@ fun MainScreen(initialTab: Int = 0) {
                             Text(
                                 text = "Brak połączenia",
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -106,14 +110,21 @@ fun MainScreen(initialTab: Int = 0) {
                         Triple(0, Icons.Default.Home, R.string.tab_home),
                         Triple(1, Icons.Default.Settings, R.string.tab_settings),
                         Triple(2, Icons.Default.History, R.string.tab_history),
-                        Triple(3, Icons.Default.TrendingUp, R.string.trend_screen_title),
+                        Triple(3, Icons.Default.ShowChart, R.string.trend_screen_title),
                         Triple(4, Icons.Default.BugReport, R.string.tab_debug)
                     )
 
                     tabs.forEach { (index, icon, labelRes) ->
                         NavigationBarItem(
                             icon = { Icon(icon, contentDescription = null) },
-                            label = { Text(stringResource(labelRes)) },
+                            label = {
+                                Text(
+                                    text = stringResource(labelRes),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    softWrap = false
+                                )
+                            },
                             selected = pagerState.currentPage == index,
                             onClick = {
                                 scope.launch { pagerState.animateScrollToPage(index) }
@@ -136,7 +147,11 @@ fun MainScreen(initialTab: Int = 0) {
                     1 -> SettingsScreen()
                     2 -> HistoryScreen()
                     3 -> TrendScreen()
-                    4 -> DebugScreen()
+                    4 -> DebugScreen(
+                        onOpenTrendRequested = {
+                            scope.launch { pagerState.animateScrollToPage(3) }
+                        }
+                    )
                 }
             }
         }

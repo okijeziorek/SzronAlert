@@ -14,9 +14,12 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -73,7 +76,17 @@ fun SettingsScreen(
         }
 
         Scaffold(
-            topBar = { CenterAlignedTopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.settings_title),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+            }
         ) { padding ->
             Column(
                 modifier = Modifier
@@ -88,7 +101,7 @@ fun SettingsScreen(
                             productDetails?.let { billingClient.launchPurchaseFlow(context as Activity, it) }
                         }
                     }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.buy_pro))
+                        SingleLineText(text = stringResource(R.string.buy_pro), style = MaterialTheme.typography.bodyLarge)
                     }
                     Spacer(Modifier.height(16.dp))
                 }
@@ -100,14 +113,14 @@ fun SettingsScreen(
                         onClick = { viewModel.updateAppMode(0) },
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Text(stringResource(R.string.profile_car))
+                        SingleLineText(text = stringResource(R.string.profile_car), style = MaterialTheme.typography.bodyMedium)
                     }
                     SegmentedButton(
                         selected = prefs.appMode == 1,
                         onClick = { viewModel.updateAppMode(1) },
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Text(stringResource(R.string.profile_garden))
+                        SingleLineText(text = stringResource(R.string.profile_garden), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 Text(
@@ -123,7 +136,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.manual_location_toggle), style = MaterialTheme.typography.bodyLarge)
+                    SingleLineText(text = stringResource(R.string.manual_location_toggle), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     Switch(
                         checked = prefs.isManualLocationEnabled,
                         onCheckedChange = { viewModel.updateManualLocation(it, prefs.manualLatitude, prefs.manualLongitude, prefs.manualLocationName) }
@@ -133,7 +146,7 @@ fun SettingsScreen(
                 Spacer(Modifier.height(12.dp))
                 var showGeofenceHistory by remember { mutableStateOf(false) }
                 Button(onClick = { showGeofenceHistory = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Historia Geofence")
+                    SingleLineText(text = stringResource(R.string.geofence_history_title), style = MaterialTheme.typography.bodyLarge)
                 }
 
                 if (showGeofenceHistory) {
@@ -148,7 +161,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = nameText,
                         onValueChange = { nameText = it },
-                        label = { Text("Nazwa miejscowości") },
+                        label = { Text(stringResource(R.string.location_name_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -159,12 +172,12 @@ fun SettingsScreen(
                                 latText = it
                                 val latValue = it.toDoubleOrNull()
                                 latError = when {
-                                    latValue == null -> "Błąd"
-                                    latValue < -90.0 || latValue > 90.0 -> "Lat: -90 do 90"
+                                    latValue == null -> context.getString(R.string.location_input_error)
+                                    latValue < -90.0 || latValue > 90.0 -> context.getString(R.string.location_lat_range_error)
                                     else -> null
                                 }
                             },
-                            label = { Text("Lat") },
+                            label = { Text(stringResource(R.string.location_lat_label)) },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
                             isError = latError != null
@@ -175,12 +188,12 @@ fun SettingsScreen(
                                 lonText = it
                                 val lonValue = it.toDoubleOrNull()
                                 lonError = when {
-                                    lonValue == null -> "Błąd"
-                                    lonValue < -180.0 || lonValue > 180.0 -> "Lon: -180 do 180"
+                                    lonValue == null -> context.getString(R.string.location_input_error)
+                                    lonValue < -180.0 || lonValue > 180.0 -> context.getString(R.string.location_lon_range_error)
                                     else -> null
                                 }
                             },
-                            label = { Text("Lon") },
+                            label = { Text(stringResource(R.string.location_lon_label)) },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
                             isError = lonError != null
@@ -194,7 +207,7 @@ fun SettingsScreen(
                         },
                         modifier = Modifier.align(Alignment.End).padding(top = 8.dp),
                         enabled = latError == null && lonError == null
-                    ) { Text(stringResource(R.string.save_location)) }
+                    ) { SingleLineText(text = stringResource(R.string.save_location), style = MaterialTheme.typography.bodyLarge) }
                 } else {
                     Text(stringResource(R.string.location_gps_auto), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 }
@@ -203,7 +216,7 @@ fun SettingsScreen(
                 HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
                 // Geofence radius setting
-                Text("Promień Geofence", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.geofence_radius_title), style = MaterialTheme.typography.titleMedium)
                 val radiusKm = prefs.geofenceRadiusMeters / 1000.0
                 var sliderRadius by remember { mutableStateOf(radiusKm.toFloat()) }
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -211,16 +224,16 @@ fun SettingsScreen(
                         sliderRadius = it
                     }, valueRange = 1f..100f, steps = 99)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("${String.format(Locale.US, "%.0f", sliderRadius)} km")
+                        SingleLineText(text = "${String.format(Locale.US, "%.0f", sliderRadius)} km", style = MaterialTheme.typography.bodyLarge)
                         Button(onClick = { viewModel.updateGeofenceRadius((sliderRadius * 1000.0)) }) {
-                            Text("Zapisz promień")
+                            SingleLineText(text = stringResource(R.string.geofence_radius_save), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { sliderRadius = 5f }) { Text("5 km") }
-                        Button(onClick = { sliderRadius = 10f }) { Text("10 km") }
-                        Button(onClick = { sliderRadius = 20f }) { Text("20 km") }
-                        Button(onClick = { sliderRadius = 50f }) { Text("50 km") }
+                        Button(onClick = { sliderRadius = 5f }) { SingleLineText(text = "5 km", style = MaterialTheme.typography.bodyMedium) }
+                        Button(onClick = { sliderRadius = 10f }) { SingleLineText(text = "10 km", style = MaterialTheme.typography.bodyMedium) }
+                        Button(onClick = { sliderRadius = 20f }) { SingleLineText(text = "20 km", style = MaterialTheme.typography.bodyMedium) }
+                        Button(onClick = { sliderRadius = 50f }) { SingleLineText(text = "50 km", style = MaterialTheme.typography.bodyMedium) }
                     }
                 }
 
@@ -230,7 +243,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.storm_alert_label), style = MaterialTheme.typography.bodyLarge)
+                    SingleLineText(text = stringResource(R.string.storm_alert_label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     Switch(
                         checked = prefs.isStormAlertEnabled,
                         onCheckedChange = { viewModel.updateStormAlertEnabled(it) }
@@ -243,7 +256,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.watering_reminder_label), style = MaterialTheme.typography.bodyLarge)
+                        SingleLineText(text = stringResource(R.string.watering_reminder_label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                         Switch(
                             checked = prefs.isWateringReminderEnabled,
                             onCheckedChange = { viewModel.updateWateringReminderEnabled(it) }
@@ -270,7 +283,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.mata_option_label), style = MaterialTheme.typography.bodyLarge)
+                    SingleLineText(text = stringResource(R.string.mata_option_label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     Switch(
                         checked = prefs.isMataOptionEnabled,
                         onCheckedChange = { viewModel.updateMataOptionEnabled(it) }
@@ -288,7 +301,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.use_fahrenheit_label), style = MaterialTheme.typography.bodyLarge)
+                    SingleLineText(text = stringResource(R.string.use_fahrenheit_label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     Switch(checked = prefs.useFahrenheit, onCheckedChange = { viewModel.updateUseFahrenheit(it) })
                 }
 
@@ -298,9 +311,9 @@ fun SettingsScreen(
 
                 SectionTitle(stringResource(R.string.section_appearance))
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(selected = prefs.theme == 0, onClick = { viewModel.updateTheme(0) }, shape = MaterialTheme.shapes.medium) { Text(stringResource(R.string.theme_light)) }
-                    SegmentedButton(selected = prefs.theme == 1, onClick = { viewModel.updateTheme(1) }, shape = MaterialTheme.shapes.medium) { Text(stringResource(R.string.theme_dark)) }
-                    SegmentedButton(selected = prefs.theme == 2, onClick = { viewModel.updateTheme(2) }, shape = MaterialTheme.shapes.medium) { Text(stringResource(R.string.theme_auto)) }
+                    SegmentedButton(selected = prefs.theme == 0, onClick = { viewModel.updateTheme(0) }, shape = MaterialTheme.shapes.medium) { SingleLineText(text = stringResource(R.string.theme_light), style = MaterialTheme.typography.bodyMedium) }
+                    SegmentedButton(selected = prefs.theme == 1, onClick = { viewModel.updateTheme(1) }, shape = MaterialTheme.shapes.medium) { SingleLineText(text = stringResource(R.string.theme_dark), style = MaterialTheme.typography.bodyMedium) }
+                    SegmentedButton(selected = prefs.theme == 2, onClick = { viewModel.updateTheme(2) }, shape = MaterialTheme.shapes.medium) { SingleLineText(text = stringResource(R.string.theme_auto), style = MaterialTheme.typography.bodyMedium) }
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -310,7 +323,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.auto_mode), style = MaterialTheme.typography.bodyLarge)
+                    SingleLineText(text = stringResource(R.string.auto_mode), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     Switch(checked = prefs.isAutoModeEnabled, onCheckedChange = { viewModel.updateAutoModeEnabled(it) })
                 }
                 
@@ -348,12 +361,16 @@ fun SettingsScreen(
                         Text(
                             text = stringResource(R.string.geofencing_label),
                             style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = stringResource(R.string.geofencing_desc),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     Switch(
@@ -378,7 +395,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Powiadomienia o zmianie trendu", style = MaterialTheme.typography.bodyLarge)
+                    SingleLineText(text = stringResource(R.string.trend_change_notifications_label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     Switch(
                         checked = prefs.isTrendChangeNotificationsEnabled,
                         onCheckedChange = { viewModel.updateTrendChangeNotificationsEnabled(it) }
@@ -392,7 +409,13 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.car_mode_desc), style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = stringResource(R.string.car_mode_desc),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Switch(
                         checked = prefs.isCarModeEnabled,
                         onCheckedChange = {
@@ -485,7 +508,7 @@ fun SettingsScreen(
                                 onClick = { calibrationViewModel.applyCalibrationRecommendations() },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(stringResource(R.string.calibration_apply_recommendations))
+                                SingleLineText(text = stringResource(R.string.calibration_apply_recommendations), style = MaterialTheme.typography.bodyLarge)
                             }
                         }
                     } ?: run {
@@ -522,7 +545,33 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionTitle(title: String) {
-    Text(text = title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+    SingleLineText(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
+}
+
+@Composable
+private fun SingleLineText(
+    text: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    color: Color = LocalContentColor.current,
+    fontWeight: FontWeight? = null
+) {
+    Text(
+        text = text,
+        style = style,
+        modifier = modifier,
+        color = color,
+        fontWeight = fontWeight,
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Ellipsis
+    )
 }
 
 private fun populateNativeAdView(nativeAd: NativeAd, adView: NativeAdView) {
@@ -542,8 +591,16 @@ private fun populateNativeAdView(nativeAd: NativeAd, adView: NativeAdView) {
 private fun SettingSlider(label: String, value: Float, onValueChange: (Float) -> Unit, range: ClosedFloatingPointRange<Float>, steps: Int, format: String, enabled: Boolean = true) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(label, style = MaterialTheme.typography.bodyLarge)
-            Text(String.format(Locale.US, format, value), style = MaterialTheme.typography.bodyLarge)
+            SingleLineText(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(8.dp))
+            SingleLineText(
+                text = String.format(Locale.US, format, value),
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
         Slider(value = value, onValueChange = onValueChange, valueRange = range, steps = steps, enabled = enabled)
     }

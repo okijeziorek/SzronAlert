@@ -35,9 +35,14 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 // Spróbujmy sparsować lat/lon z requestId jeśli dostępne: id = "lat:lon:dir" lub podobnie
 
                 val parts = requestId.split(":")
-                val lat = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
-                val lon = parts.getOrNull(1)?.toDoubleOrNull() ?: 0.0
-                val direction = parts.getOrNull(2)
+                val hasPrefix = parts.firstOrNull() == "geofence"
+                val latIndex = if (hasPrefix) 1 else 0
+                val lonIndex = if (hasPrefix) 2 else 1
+                val directionIndex = if (hasPrefix) 3 else 2
+
+                val lat = parts.getOrNull(latIndex)?.toDoubleOrNull() ?: 0.0
+                val lon = parts.getOrNull(lonIndex)?.toDoubleOrNull() ?: 0.0
+                val direction = parts.getOrNull(directionIndex)
 
                 val db = FrostDatabase.getDatabase(context)
                 val geofenceDao = db.run { this.geofenceDao() }

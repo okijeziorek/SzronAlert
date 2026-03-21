@@ -12,7 +12,7 @@
   - **Local DB**: Room database via `TemperatureDao` (stores 30-day history of frost risk records)
   - **Settings**: `SettingsDataStore` (DataStore preferences for user configuration)
 
-**Key Flow**: HomeViewModel requests location → LocationRepository gets GPS → OpenMeteoApi fetch → WeatherCalculations apply physics → save to DB → update Glance widget
+**Key Flow**: HomeViewModel requests location → LocationRepository gets GPS/manual location → OpenMeteoApi fetch → WeatherCalculations apply physics → save to DB → update Glance widget + classic AppWidget
 
 ### Spatial Data Boundaries
 - **Temperature Physics** (`utils/WeatherCalculations.kt`): Core frost risk algorithm—handles all meteorological math
@@ -42,13 +42,16 @@
 ### Frost Check Cycle
 - **Recurring Job**: `FrostCheckWorker` runs hourly (configured in `FrostApplication.kt`)
 - **Constraints**: Requires network connection
+- **Initialization**: `FrostApplication` implements `Configuration.Provider` with `HiltWorkerFactory` and manually initializes WorkManager config
 - **Logic Flow**:
   1. Get location (auto-detect or manual from settings)
   2. Fetch weather from Open-Meteo API
   3. Apply `WeatherCalculations.hasFrostRisk()` with user thresholds
   4. Save `TemperatureRecord` to database
   5. Send notification if risk detected (only between `alertStartHour` and `alertEndHour`)
-  6. Update Glance widget via `FrostGlanceWidget().updateAll(context)`
+  6. Update widgets via `FrostGlanceWidget().updateAll(context)` and `FrostWidgetProvider`
+  7. Optionally send trend-change notification when weekly trend direction changes
+  8. Optionally run geofencing risk check and send nearby higher-risk alert
 
 ### Notification Actions
 - **"Ignoruj dziś"** (Ignore Today): Sets `ignoreUntil` timestamp to 23:59 today
@@ -64,12 +67,12 @@
 ## 📊 Data Storage Pattern
 
 ### Room Database
-- Single entity: `TemperatureRecord` with timestamp, minTemp, hasRisk
-- Simple schema (version 1)
+- Multi-entity schema (version 3): `TemperatureRecord`, `CalibrationFeedback`, `GeofenceRecord`
 - Key queries in `TemperatureDao`:
   - `getRecentRecords()`: Last 30 records (reactive Flow for UI)
   - `getAllRecords()`: Full history for stats
   - `getAbsoluteMinTemp()`: Lowest temperature ever recorded
+- Additional DAOs: `CalibrationDao` (feedback calibration data), `GeofenceDao` (geofence event history)
 
 ### SettingsDataStore (Preferences)
 - Uses `DataStore<Preferences>` not Proto (easier for migrations)
@@ -78,6 +81,7 @@
   - Summer mode: `heatThreshold` (e.g., 30°C), `isStormAlertEnabled`, `isWateringReminderEnabled`
   - Time ranges: `alertStartHour`, `alertEndHour`, `carModeHour`
   - Feature flags: `isAutoModeEnabled`, `isMataOptionEnabled`, `isProForced`, `useFahrenheit`
+  - Geofencing/trend flags: `isGeofencingEnabled`, `geofenceRadiusMeters`, `isTrendChangeNotificationsEnabled`, `lastTrend`
   - Location: `manualLatitude`, `manualLongitude`, `manualLocationName`, `isManualLocationEnabled`
   - UI: `theme` (0=light, 1=dark, 2=system default), `isOnboardingCompleted`
 
@@ -127,6 +131,9 @@ File → Sync Now (or ./gradlew help)
 - **DebugScreen** (UI in dev build): Toggleable overlay with:
   - Frost risk simulator (adjust temp, humidity, wind)
   - Generate fake 14-day history
+  - Trend diagnostics + synthetic trend data generation
+  - Widget diagnostics/forced refresh (Glance + classic widget)
+  - Geofence controls (start/stop registrar, registration tests, nearby risk simulation)
   - Force PRO mode
   - Test notification buttons
   - Clear all database tables
@@ -188,15 +195,16 @@ File → Sync Now (or ./gradlew help)
 
 ### Adding Background Task
 1. Create new `CoroutineWorker` subclass with `@HiltWorker` annotation
-2. Define work request in caller (app init or on-demand)
-3. Use `WorkManager.getInstance(context).enqueue(request)` or `enqueueUniquePeriodicWork()`
-4. Return `Result.success()`, `Result.retry()`, or `Result.failure()`
+2. Ensure constructor uses `@Assisted` params and works with `HiltWorkerFactory`
+3. Define work request in caller (app init or on-demand)
+4. Use `WorkManager.getInstance(context).enqueue(request)` or `enqueueUniquePeriodicWork()`
+5. Return `Result.success()`, `Result.retry()`, or `Result.failure()`
 
 ### Expanding Database
 1. Add entity class with `@Entity` and `@PrimaryKey` annotations
 2. Add corresponding DAO interface with `@Query`, `@Insert` methods
 3. Add entity to `@Database` annotation in `FrostDatabase`
-4. Create migration if version change needed (not yet needed)
+4. Add explicit Room migration in `FrostDatabase` for each version bump
 
 ### Managing PRO Subscription & Billing
 1. Initialize `BillingClientWrapper` in SettingsViewModel or dependency injection
@@ -211,6 +219,9 @@ File → Sync Now (or ./gradlew help)
 - **Permissions**: App requires SCHEDULE_EXACT_ALARM and ACCESS_BACKGROUND_LOCATION (check AndroidManifest)
 - **Frost Window**: Hard-coded 20:00-08:00 in `WeatherCalculations.getNightMinTemp()` — change only if you understand impact on all screens
 - **Glance Widget**: Updates via `FrostGlanceWidget().updateAll(context)` after data changes, not automatic
+- **Two Widget Paths**: Project uses both Glance (`FrostGlanceWidgetReceiver`) and classic AppWidget (`FrostWidgetProvider`); keep both update paths in sync after data writes
+- **WorkManager Startup**: Manifest removes default `WorkManagerInitializer`; worker config is owned by `FrostApplication`
+- **Geofence Request ID Format**: Geofence IDs use `geofence:<lat>:<lon>` and are parsed in `GeofenceBroadcastReceiver`
 - **Settings Cache**: `SettingsDataStore` is singleton; changes propagate via Flow, no manual refresh needed
 - **Test Data**: DebugScreen generates fake records with fixed timestamps; real history uses system time
 
@@ -221,13 +232,17 @@ File → Sync Now (or ./gradlew help)
 | `WeatherCalculations.kt` | Physics engine for frost risk (dew point, surface cooling) |
 | `SummerCalculations.kt` | Heat risk, storm/hail detection (WMO 95/96/99), watering logic |
 | `FrostCheckWorker.kt` | Hourly background job (fetch weather, check risk, notify) |
+| `TrendCalculations.kt` | Weekly trend calculation (daily aggregation + direction detection) |
 | `HomeViewModel.kt` | Main screen state (weather data, refresh control) |
 | `HistoryViewModel.kt` | Stats screen state (monthly aggregations, trends) |
+| `GeofenceRegistrar.kt` | Reactive geofence sync with settings/location changes |
+| `GeofenceManager.kt` | Geofence registration/unregistration wrapper (Play Services) |
 | `NotificationHelper.kt` | Notification creation + action setup |
 | `LocationRepository.kt` | GPS + manual location fallback |
 | `SettingsDataStore.kt` | User preferences persistence (non-database) |
 | `OpenMeteoApi.kt` | HTTP client for weather forecast |
 | `FrostGlanceWidget.kt` | Modern glance widget (Material 3) |
+| `FrostWidgetProvider.kt` | Classic RemoteViews widget update path |
 | `BillingClientWrapper.kt` | Google Play Billing for PRO subscription |
 | `FrostTileService.kt` | Quick Settings Tile for one-tap frost check |
 

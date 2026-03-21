@@ -20,14 +20,19 @@ class FrostApplication : Application(), Configuration.Provider {
     lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
 
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
+        get() = createWorkManagerConfiguration()
 
     override fun onCreate() {
         super.onCreate()
         MobileAds.initialize(this)
+        WorkManager.initialize(this, createWorkManagerConfiguration())
         setupRecurringWork()
+    }
+
+    private fun createWorkManagerConfiguration(): Configuration {
+        return Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
     }
 
     private fun setupRecurringWork() {

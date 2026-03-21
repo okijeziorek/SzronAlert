@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -67,7 +68,17 @@ fun HistoryScreen(
         }
 
         Scaffold(
-            topBar = { CenterAlignedTopAppBar(title = { Text(stringResource(R.string.history_title)) }) }
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.history_title),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+            }
         ) { padding ->
             if (uiState.errorMessage != null) {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
@@ -92,7 +103,10 @@ fun HistoryScreen(
                         Text(
                             text = stringResource(R.string.stats_season),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         
                         if (records.isNotEmpty()) {
@@ -117,7 +131,11 @@ fun HistoryScreen(
                                 }
                                 Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text(stringResource(R.string.export_csv))
+                                Text(
+                                    text = stringResource(R.string.export_csv),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                     }
@@ -139,7 +157,11 @@ fun HistoryScreen(
                             text = stringResource(R.string.monthly_report_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.align(Alignment.Start).padding(bottom = 12.dp)
+                            modifier = Modifier
+                                .align(Alignment.Start)
+                                .padding(bottom = 12.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         
                         uiState.monthlyStats.forEach { stat ->
@@ -272,17 +294,31 @@ fun MonthlyStatItem(stat: pl.oki.frostalert.data.repository.MonthlyStat) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Text(stat.monthName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    text = stat.monthName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text(
                     stringResource(R.string.avg_min_label, String.format(Locale.US, "%.1f°C", stat.averageMinTemp)), 
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.AcUnit, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
                 Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.days_count_label, stat.riskDays), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.ExtraBold)
+                Text(
+                    text = stringResource(R.string.days_count_label, stat.riskDays),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -328,8 +364,21 @@ private fun StatCard(modifier: Modifier = Modifier, title: String, value: String
             Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = color)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold,
+                color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

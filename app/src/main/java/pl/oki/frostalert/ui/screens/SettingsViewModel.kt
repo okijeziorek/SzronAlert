@@ -18,6 +18,10 @@ class SettingsViewModel @Inject constructor(
     @javax.inject.Named("app_context") private val appContext: android.content.Context
 ) : ViewModel() {
 
+    init {
+        geofenceRegistrar.start()
+    }
+
     val userPreferences: StateFlow<UserPreferences?> = settingsRepository.userPreferencesFlow
         .stateIn(
             scope = viewModelScope,
@@ -136,11 +140,7 @@ class SettingsViewModel @Inject constructor(
     fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
         viewModelScope.launch {
             settingsRepository.updateManualLocation(isEnabled, lat, lon, name)
-            // Jeśli włączone geofencing, przerejestruj geofence dla nowej lokalizacji
-            try {
-                val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(appContext, pl.oki.frostalert.data.local.SettingsDataStore(appContext))
-                geofenceRegistrar.registerForCurrentLocation(locationRepo)
-            } catch (_: Exception) {}
+            registerGeofenceForCurrentSettings()
         }
     }
 
@@ -160,10 +160,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.updateGeofencingEnabled(isEnabled)
             if (isEnabled) {
-                try {
-                    val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(appContext, pl.oki.frostalert.data.local.SettingsDataStore(appContext))
-                    geofenceRegistrar.registerForCurrentLocation(locationRepo)
-                } catch (_: Exception) {}
+                registerGeofenceForCurrentSettings()
             } else {
                 geofenceRegistrar.unregister()
             }
@@ -185,6 +182,17 @@ class SettingsViewModel @Inject constructor(
     fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
         viewModelScope.launch {
             settingsRepository.updateLastTrend(trend)
+        }
+    }
+
+    private fun registerGeofenceForCurrentSettings() {
+        try {
+            val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(
+                appContext,
+                pl.oki.frostalert.data.local.SettingsDataStore(appContext)
+            )
+            geofenceRegistrar.registerForCurrentLocation(locationRepo)
+        } catch (_: Exception) {
         }
     }
 }

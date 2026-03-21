@@ -37,6 +37,12 @@
     <string name="manual_location_toggle">Set location manually</string>
     <string name="location_gps_auto">Using GPS (automatic)</string>
     <string name="save_location">Save Location</string>
+    <string name="location_name_label">Location name</string>
+    <string name="location_lat_label">Lat</string>
+    <string name="location_lon_label">Lon</string>
+    <string name="location_input_error">Invalid</string>
+    <string name="location_lat_range_error">Lat: -90 to 90</string>
+    <string name="location_lon_range_error">Lon: -180 to 180</string>
     <string name="section_appearance">Appearance</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -71,6 +77,11 @@
     <string name="section_geofencing">Geofencing (NEW)</string>
     <string name="geofencing_label">Geofencing alerts</string>
     <string name="geofencing_desc">Warn when you enter areas with higher frost risk</string>
+    <string name="geofence_history_title">Geofence History</string>
+    <string name="geofence_history_empty">No geofence records</string>
+    <string name="geofence_radius_title">Geofence radius</string>
+    <string name="geofence_radius_save">Save radius</string>
+    <string name="trend_change_notifications_label">Trend change notifications</string>
 
     <string name="section_calibration">Algorithm Calibration</string>
     <string name="calibration_accuracy">Prediction accuracy</string>
@@ -78,6 +89,11 @@
     <string name="calibration_apply_recommendations">Apply recommendations</string>
     <string name="calibration_explanation">The algorithm learns from your answers to improve forecast accuracy.</string>
     <string name="calibration_no_data">No data - answer weather questions to help calibrate the algorithm.</string>
+    <string name="calibration_dialog_title">Algorithm Calibration</string>
+    <string name="calibration_dialog_question">Was there frost or ice during the night?</string>
+    <string name="calibration_dialog_help">Your answer helps improve forecast accuracy.</string>
+    <string name="calibration_dialog_yes">YES - Frost occurred</string>
+    <string name="calibration_dialog_no">NO - No frost</string>
 
     <string name="car_mode_title">Car Mode (Ice on Windows)</string>
     <string name="car_mode_desc">Enable morning reminders</string>
@@ -109,6 +125,29 @@
     <string name="trend_moderate_risk">⚡ Moderate frost risk</string>
     <string name="trend_low_risk">🧊 Sporadic frosts</string>
     <string name="trend_no_risk">✅ No frost risk</string>
+    <string name="trend_stat_nights_with_risk">Risk nights</string>
+    <string name="trend_stat_avg_min">Avg min</string>
+    <string name="trend_stat_lowest">Lowest</string>
+    <string name="trend_chart_no_data">No data to display</string>
+    <string name="trend_chart_temperature_title">Night temperature (7 days)</string>
+    <string name="trend_chart_range">Range: %1$s°C - %2$s°C</string>
+    <string name="trend_night_details_title">Night details</string>
+    <string name="trend_future_title">Future trend forecast</string>
+    <string name="trend_future_load_button">Load trend forecast</string>
+    <string name="trend_future_loaded">Future trend loaded: %1$s</string>
+    <string name="trend_future_prompt">Tap the button to load the future trend forecast</string>
+    <string name="trend_unknown_error">Unknown error</string>
+    <string name="trend_export_title">Trend data export</string>
+    <string name="trend_export_button">Export CSV</string>
+    <string name="trend_export_future_button">Export future trend CSV</string>
+    <string name="trend_export_subject">FrostAlert trend</string>
+    <string name="trend_export_future_subject">FrostAlert future trend</string>
+    <string name="trend_export_chooser">Share trend</string>
+    <string name="trend_export_future_chooser">Share future trend</string>
+    <string name="trend_export_csv_header">Day,Date,MinTempC,FrostRisk</string>
+    <string name="trend_export_risk_yes">YES</string>
+    <string name="trend_export_risk_no">NO</string>
+    <string name="trend_export_error_with_reason">Export error: %1$s</string>
 
     <!-- Onboarding -->
     <string name="welcome_title">Welcome to FrostAlert</string>

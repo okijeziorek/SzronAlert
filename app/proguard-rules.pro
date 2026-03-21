@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# WorkManager + Hilt workers
+-keep class * extends androidx.work.ListenableWorker { *; }
+-keep class androidx.hilt.work.HiltWorkerFactory { *; }
+-keep @androidx.hilt.work.HiltWorker class * { *; }

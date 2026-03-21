@@ -32,25 +32,23 @@ class GeofenceRegistrar(
     private val debounceMs: Long = 2_000L
 ) : GeofenceRegistrarContract {
 
-    private val scopeJob: Job = SupervisorJob()
-    private val scope = CoroutineScope(scopeJob + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val stateMutex = Mutex()
+    private var observeJob: Job? = null
 
     // last registered state to avoid unnecessary registrations
     private var lastRegistered: RegisteredGeofence? = null
     private var running = false
 
     override fun registerForCurrentLocation(locationRepo: LocationRepository) {
-        // maintain backward compatibility: perform an immediate one-shot registration
         scope.launch {
-            val prefs = settingsDataStore.userPreferencesFlow.first()
-            if (!prefs.isGeofencingEnabled) return@launch
-            val loc = locationRepo.getEffectiveLocation()
-            if (loc != null) {
-                val radius = prefs.geofenceRadiusMeters.toFloat()
-                val id = makeId(loc.latitude, loc.longitude)
-                geofenceManager.registerGeofence(id, loc.latitude, loc.longitude, radius)
-                stateMutex.withLock { lastRegistered = RegisteredGeofence(loc.latitude, loc.longitude, radius) }
+            try {
+                val prefs = settingsDataStore.userPreferencesFlow.first()
+                if (!prefs.isGeofencingEnabled) return@launch
+                val loc = locationRepo.getEffectiveLocation() ?: return@launch
+                syncWith(enabled = true, location = loc, radius = prefs.geofenceRadiusMeters.toFloat())
+            } catch (_: Throwable) {
+                // best-effort only
             }
         }
     }
@@ -66,9 +64,7 @@ class GeofenceRegistrar(
         if (running) return
         running = true
 
-        // Combine user preferences and a location-emitting flow created by polling getEffectiveLocation
-        // We'll create a simple flow by mapping prefs -> location on each prefs emission.
-        scope.launch {
+        observeJob = scope.launch {
             settingsDataStore.userPreferencesFlow
                 .debounce(debounceMs)
                 .onEach { prefs ->
@@ -86,12 +82,14 @@ class GeofenceRegistrar(
     override fun stop() {
         if (!running) return
         running = false
-        // cancel ongoing coroutine scope job to stop collectors
-        scopeJob.cancel()
-        // optionally unregister geofence
+        observeJob?.cancel()
+        observeJob = null
         scope.launch {
-            geofenceManager.unregisterGeofence()
-            stateMutex.withLock { lastRegistered = null }
+            try {
+                geofenceManager.unregisterGeofence()
+            } finally {
+                stateMutex.withLock { lastRegistered = null }
+            }
         }
     }
 
@@ -109,13 +107,12 @@ class GeofenceRegistrar(
 
             val desired = RegisteredGeofence(location.latitude, location.longitude, radius)
             if (!isSame(desired, lastRegistered)) {
-                // register new
                 try {
                     val id = makeId(desired.lat, desired.lon)
                     geofenceManager.registerGeofence(id, desired.lat, desired.lon, desired.radius)
                     lastRegistered = desired
-                } catch (t: Throwable) {
-                    // log but don't crash; will retry on next emission
+                } catch (_: Throwable) {
+                    // will retry on next flow emission
                 }
             }
         }
