@@ -1,10 +1,15 @@
 package pl.oki.frostalert.widget
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import android.widget.RemoteViews
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -12,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.FrostDatabase
+import pl.oki.frostalert.worker.FrostCheckWorker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -22,9 +28,35 @@ private const val TAG = "FrostWidgetProvider"
 private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 class FrostWidgetProvider : AppWidgetProvider() {
+
+    companion object {
+        const val REFRESH_ACTION = "pl.oki.frostalert.action.WIDGET_REFRESH"
+
+        /** Updates every installed classic (RemoteViews) widget instance. */
+        fun updateAll(context: Context) {
+            val manager = AppWidgetManager.getInstance(context)
+            val ids = manager.getAppWidgetIds(ComponentName(context, FrostWidgetProvider::class.java))
+            for (id in ids) {
+                updateAppWidget(context, manager, id)
+            }
+        }
+    }
+
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
+        }
+    }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (intent.action == REFRESH_ACTION) {
+            val workRequest = OneTimeWorkRequestBuilder<FrostCheckWorker>().build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "manual_widget_refresh",
+                ExistingWorkPolicy.REPLACE,
+                workRequest
+            )
         }
     }
 }
