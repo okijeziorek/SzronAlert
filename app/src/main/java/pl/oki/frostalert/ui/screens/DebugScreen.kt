@@ -1,5 +1,9 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.location.Location
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -10,6 +14,7 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
@@ -38,6 +43,7 @@ import kotlinx.coroutines.withContext
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.local.SettingsDataStore
+import pl.oki.frostalert.utils.DiagnosticsHelper
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.SummerCalculations
 import pl.oki.frostalert.utils.TrendCalculations
@@ -638,6 +644,109 @@ fun DebugScreen(
                                                 }
                                             }
                                         }
+                    }
+                }
+                // SEKCJA 10: ZGŁOŚ PROBLEM (FEEDBACK TESTERA)
+                DebugSection("📋 Zgłoś Problem", Icons.Default.Send) {
+                    var issueDescription by remember { mutableStateOf("") }
+                    var reportPreview by remember { mutableStateOf<String?>(null) }
+                    var isGenerating by remember { mutableStateOf(false) }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "Opisz problem (opcjonalnie) i wygeneruj raport diagnostyczny z danymi kontekstowymi.",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+
+                        OutlinedTextField(
+                            value = issueDescription,
+                            onValueChange = { issueDescription = it },
+                            label = { Text("Opis problemu") },
+                            placeholder = { Text("np. Widget nie odświeżył się po restarcie...") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3,
+                            maxLines = 6
+                        )
+
+                        Button(
+                            onClick = {
+                                isGenerating = true
+                                scope.launch(Dispatchers.IO) {
+                                    val report = DiagnosticsHelper.buildReport(
+                                        context = context,
+                                        userDescription = issueDescription,
+                                        db = db,
+                                        settingsDataStore = settingsDataStore
+                                    )
+                                    withContext(Dispatchers.Main) {
+                                        reportPreview = report
+                                        isGenerating = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isGenerating
+                        ) {
+                            if (isGenerating) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(8.dp))
+                            }
+                            Text("Generuj raport diagnostyczny")
+                        }
+
+                        if (reportPreview != null) {
+                            val report = reportPreview ?: return@Column
+
+                            OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(
+                                        "Podgląd raportu:",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = report,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        val clipboard = context.getSystemService(ClipboardManager::class.java)
+                                        clipboard?.setPrimaryClip(ClipData.newPlainText("FrostAlert Diagnostics", report))
+                                        Toast.makeText(context, "Skopiowano do schowka", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                                ) {
+                                    Text("Kopiuj")
+                                }
+
+                                Button(
+                                    onClick = {
+                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_SUBJECT, "FrostAlert – Raport Diagnostyczny")
+                                            putExtra(Intent.EXTRA_TEXT, report)
+                                        }
+                                        context.startActivity(
+                                            Intent.createChooser(shareIntent, "Udostępnij raport").apply {
+                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Udostępnij")
+                                }
+                            }
+                        }
                     }
                 }
             }
