@@ -290,10 +290,11 @@ fun DebugScreen(
 
                     Button(
                         onClick = {
-                            // Wymuś odświeżenie Glance widget
+                            // Wymuś odświeżenie obu widgetów (Glance + klasyczny)
                             scope.launch(Dispatchers.IO) {
                                 try {
                                     FrostGlanceWidget().updateAll(context)
+                                    FrostWidgetProvider.updateAll(context)
                                     withContext(Dispatchers.Main) {
                                         Toast.makeText(context, "Widget odświeżony", Toast.LENGTH_SHORT).show()
                                     }

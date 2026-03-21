@@ -18,6 +18,7 @@ import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.widget.FrostGlanceWidget
+import pl.oki.frostalert.widget.FrostWidgetProvider
 import javax.inject.Inject
 import pl.oki.frostalert.data.local.CalibrationDao
 
@@ -139,6 +140,7 @@ class HomeViewModel @Inject constructor(
                         hasRisk = hasRisk
                     ))
                     FrostGlanceWidget().updateAll(context)
+                    FrostWidgetProvider.updateAll(context)
 
                     // KALIBRACJA: Sprawdź czy należy pokazać dialog feedbacku
                     val lastFeedback = prefs.lastFeedbackTimestamp

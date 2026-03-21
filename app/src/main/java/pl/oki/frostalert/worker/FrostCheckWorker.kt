@@ -182,13 +182,6 @@ class FrostCheckWorker @AssistedInject constructor(
                         for (appWidgetId in classicIds) {
                             updateAppWidget(applicationContext, appWidgetManager, appWidgetId)
                         }
-
-                        // update dla Glance receiver (jeśli widgety Glance są zainstalowane)
-                        val glanceIds = appWidgetManager.getAppWidgetIds(ComponentName(applicationContext, pl.oki.frostalert.widget.FrostGlanceWidgetReceiver::class.java))
-                        for (appWidgetId in glanceIds) {
-                            // fallback: we still call updateAppWidget for any classic instances; Glance.updateAll() was already called above
-                            updateAppWidget(applicationContext, appWidgetManager, appWidgetId)
-                        }
                     } catch (e: Exception) {
                         // Nie blokujemy pracy - logujemy i kontynuujemy
                         Log.w(TAG, "Nie udało się zaktualizować AppWidgetów: ${e.message}")

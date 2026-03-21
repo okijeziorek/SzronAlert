@@ -19,8 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
-import androidx.glance.layout.Row
-import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
@@ -74,13 +72,13 @@ class FrostGlanceWidget : GlanceAppWidget() {
         // Provide content directly (no try/catch around composable invocation)
         provideContent {
             GlanceTheme {
-                WidgetContent(lastRecord, useFahrenheit, recordsCount)
+                WidgetContent(lastRecord, useFahrenheit)
             }
         }
     }
 
     @androidx.compose.runtime.Composable
-    private fun WidgetContent(lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?, useFahrenheit: Boolean, recordsCount: Int) {
+    private fun WidgetContent(lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?, useFahrenheit: Boolean) {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -109,10 +107,14 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 )
             } else {
                 Text(
-                    text = "Brak danych ($recordsCount)",
+                    text = "Brak danych",
                     style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 13.sp)
                 )
             }
+            Button(
+                text = "Odśwież",
+                onClick = actionRunCallback<RefreshActionCallback>()
+            )
         }
     }
 }
