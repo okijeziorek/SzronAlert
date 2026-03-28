@@ -11,6 +11,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import pl.oki.frostalert.worker.FrostCheckWorker
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -20,6 +24,10 @@ class FrostApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
+
+    // Application-scoped coroutine scope for fire-and-forget background tasks.
+    // SupervisorJob ensures a child failure doesn't cancel the whole scope.
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     // WorkManager reads this lazily via Configuration.Provider — do NOT call
     // WorkManager.initialize() manually; that would trigger a double-init crash.
@@ -31,7 +39,9 @@ class FrostApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        MobileAds.initialize(this)
+        // Initialize AdMob off the main thread to reduce cold-start ANR risk.
+        // The SDK routes its completion callback back to main via Handler internally.
+        applicationScope.launch { MobileAds.initialize(this@FrostApplication) }
         setupRecurringWork()
     }
 
