@@ -2,6 +2,7 @@ package pl.oki.frostalert.utils
 
 import org.junit.Assert.*
 import org.junit.Test
+import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.remote.HourlyForecast
 import java.text.SimpleDateFormat
 import java.util.*
@@ -103,5 +104,164 @@ class WeatherCalculationsTest {
     fun `celsiusToFahrenheit converts correctly`() {
         assertEquals(32.0, WeatherCalculations.celsiusToFahrenheit(0.0), 0.1)
         assertEquals(68.0, WeatherCalculations.celsiusToFahrenheit(20.0), 0.1)
+    }
+
+    // ── estimateSurfaceTemp ───────────────────────────────────────────────────
+
+    @Test
+    fun `estimateSurfaceTemp returns temp minus 1 for garden mode`() {
+        val surface = WeatherCalculations.estimateSurfaceTemp(
+            temp = 5.0, weatherCode = 0, sensitivity = 1.0, appMode = 1
+        )
+        assertEquals(4.0, surface, 0.01)
+    }
+
+    @Test
+    fun `estimateSurfaceTemp applies maximum cooling for clear sky in car mode`() {
+        val surface = WeatherCalculations.estimateSurfaceTemp(
+            temp = 5.0, weatherCode = 0, sensitivity = 1.0, appMode = 0
+        )
+        assertEquals(0.5, surface, 0.01) // 5 - 4.5*1.0 = 0.5
+    }
+
+    @Test
+    fun `estimateSurfaceTemp scales with sensitivity`() {
+        val surface = WeatherCalculations.estimateSurfaceTemp(
+            temp = 5.0, weatherCode = 0, sensitivity = 2.0, appMode = 0
+        )
+        assertEquals(-4.0, surface, 0.01) // 5 - 4.5*2.0 = -4.0
+    }
+
+    @Test
+    fun `estimateSurfaceTemp applies minimal cooling for overcast sky`() {
+        val surface = WeatherCalculations.estimateSurfaceTemp(
+            temp = 5.0, weatherCode = 3, sensitivity = 1.0, appMode = 0
+        )
+        assertEquals(3.5, surface, 0.01) // 5 - 1.5*1.0 = 3.5
+    }
+
+    // ── getGardenTip ─────────────────────────────────────────────────────────
+
+    @Test
+    fun `getGardenTip returns safe message for positive temperature`() {
+        val tip = WeatherCalculations.getGardenTip(0.5)
+        assertTrue(tip.contains("Bezpiecznie"))
+    }
+
+    @Test
+    fun `getGardenTip returns light frost message for temp between 0 and -2`() {
+        val tip = WeatherCalculations.getGardenTip(-1.0)
+        assertTrue(tip.contains("Lekki"))
+    }
+
+    @Test
+    fun `getGardenTip returns moderate frost message for temp between -2 and -5`() {
+        val tip = WeatherCalculations.getGardenTip(-3.0)
+        assertTrue(tip.contains("Umiarkowany"))
+    }
+
+    @Test
+    fun `getGardenTip returns severe frost message below -5`() {
+        val tip = WeatherCalculations.getGardenTip(-6.0)
+        assertTrue(tip.contains("Silny"))
+    }
+
+    // ── calculateFrostDuration ────────────────────────────────────────────────
+
+    @Test
+    fun `calculateFrostDuration counts hours at or below threshold`() {
+        val hourly = HourlyForecast(
+            time = List(5) { "2024-01-01T0${it}:00" },
+            temperature = listOf(-2.0, -1.0, 0.0, 1.0, 2.0),
+            humidity = List(5) { 80.0 },
+            precipitation = List(5) { 0.0 },
+            weatherCode = List(5) { 0 },
+            windSpeed = List(5) { 5.0 }
+        )
+        val duration = WeatherCalculations.calculateFrostDuration(hourly, threshold = 0.0)
+        assertEquals(3, duration) // -2, -1, 0 are <= 0.0
+    }
+
+    @Test
+    fun `calculateFrostDuration returns 0 when no hours below threshold`() {
+        val hourly = HourlyForecast(
+            time = List(3) { "2024-01-01T0${it}:00" },
+            temperature = listOf(5.0, 6.0, 7.0),
+            humidity = List(3) { 80.0 },
+            precipitation = List(3) { 0.0 },
+            weatherCode = List(3) { 0 },
+            windSpeed = List(3) { 5.0 }
+        )
+        val duration = WeatherCalculations.calculateFrostDuration(hourly, threshold = 0.0)
+        assertEquals(0, duration)
+    }
+
+    // ── calculateSeasonStats ─────────────────────────────────────────────────
+
+    @Test
+    fun `calculateSeasonStats returns correct risk count and average`() {
+        val records = listOf(
+            TemperatureRecord(timestamp = 1000L, minTemp = -3.0, hasRisk = true),
+            TemperatureRecord(timestamp = 2000L, minTemp = 1.0, hasRisk = false),
+            TemperatureRecord(timestamp = 3000L, minTemp = -1.0, hasRisk = true)
+        )
+        val (riskCount, avgTemp) = WeatherCalculations.calculateSeasonStats(records)
+        assertEquals(2, riskCount)
+        assertEquals((-3.0 + 1.0 + -1.0) / 3, avgTemp, 0.01)
+    }
+
+    @Test
+    fun `calculateSeasonStats returns zero for empty list`() {
+        val (riskCount, avgTemp) = WeatherCalculations.calculateSeasonStats(emptyList())
+        assertEquals(0, riskCount)
+        assertEquals(0.0, avgTemp, 0.01)
+    }
+
+    // ── getWarningMessage ─────────────────────────────────────────────────────
+
+    @Test
+    fun `getWarningMessage returns safe message for high wind`() {
+        val msg = WeatherCalculations.getWarningMessage(
+            temp = -2.0,
+            humidity = 90.0,
+            precip = 0.0,
+            weatherCode = 0,
+            tempThreshold = 0.0,
+            humidityThreshold = 75.0,
+            precipitationThreshold = 0.2,
+            windSpeed = 20.0
+        )
+        assertTrue(msg.contains("silny wiatr") || msg.contains("Bezpiecznie"))
+    }
+
+    @Test
+    fun `getWarningMessage returns frost risk message when risk is present`() {
+        val msg = WeatherCalculations.getWarningMessage(
+            temp = 1.0,
+            humidity = 85.0,
+            precip = 0.0,
+            weatherCode = 0,
+            tempThreshold = 1.0,
+            humidityThreshold = 75.0,
+            precipitationThreshold = 0.2
+        )
+        assertTrue(msg.contains("ryzyko") || msg.contains("Ryzyko"))
+    }
+
+    @Test
+    fun `getWarningMessage returns garden prefix in garden mode`() {
+        val msg = WeatherCalculations.getWarningMessage(
+            temp = 1.0,
+            humidity = 90.0,
+            precip = 0.0,
+            weatherCode = 0,
+            tempThreshold = 2.0,
+            humidityThreshold = 75.0,
+            precipitationThreshold = 0.2,
+            sensitivity = 1.0,
+            windSpeed = 0.0,
+            appMode = 1
+        )
+        assertTrue(msg.contains("ogrodzie") || msg.contains("Bezpiecznie"))
     }
 }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Lint quality-gate rules for FrostAlert closed testing.
+    Enable this file once the CI lint classloader issue is resolved by removing
+    the lint task-disabling workaround in app/build.gradle.kts.
+-->
+<lint>
+    <!-- ── Crashes & correctness (P0) ──────────────────────────────────────── -->
+    <!-- Flag suspicious null dereferences promoted to errors -->
+    <issue id="NullDereference" severity="error" />
+    <!-- Catch unsafe implicit casts -->
+    <issue id="UnsafeDynamicallyLoadedCode" severity="error" />
+
+    <!-- ── Localisation (P1) ────────────────────────────────────────────────── -->
+    <!-- Any hardcoded text visible to users must be in strings.xml -->
+    <issue id="HardcodedText" severity="error" />
+    <!-- Every key present in the default locale must exist in all other locales -->
+    <issue id="MissingTranslation" severity="error" />
+
+    <!-- ── Accessibility ────────────────────────────────────────────────────── -->
+    <issue id="ContentDescription" severity="warning" />
+
+    <!-- ── Deprecations & best practices ────────────────────────────────────── -->
+    <issue id="Deprecated" severity="warning" />
+    <issue id="UnusedResources" severity="warning" />
+    <issue id="ObsoleteSdkInt" severity="warning" />
+
+    <!-- ── Performance ──────────────────────────────────────────────────────── -->
+    <issue id="WakelockTimeout" severity="error" />
+
+    <!-- ── Security ─────────────────────────────────────────────────────────── -->
+    <issue id="AllowAllHostnameVerifier" severity="error" />
+    <issue id="SSLCertificateSocketFactoryGetInsecure" severity="error" />
+    <issue id="TrustAllX509TrustManager" severity="error" />
+
+    <!-- ── Known false positives / environment quirks ───────────────────────── -->
+    <!-- Room schemas are generated; ignore Dao method naming warnings -->
+    <issue id="RoomWarnings" severity="ignore" />
+</lint>

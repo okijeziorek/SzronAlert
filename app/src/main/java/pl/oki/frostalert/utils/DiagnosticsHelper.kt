@@ -97,6 +97,25 @@ object DiagnosticsHelper {
         }
         sb.appendLine()
 
+        // Telemetry section
+        sb.appendLine("--- Telemetria Worker ---")
+        val successCount = AppTelemetry.getWorkerSuccessCount(context)
+        val retryCount = AppTelemetry.getWorkerRetryCount(context)
+        val failureCount = AppTelemetry.getWorkerFailureCount(context)
+        val lastRunMs = AppTelemetry.getLastWorkerRunMs(context)
+        val lastError = AppTelemetry.getLastErrorMessage(context)
+        sb.appendLine("Sukcesy: $successCount")
+        sb.appendLine("Ponowienia: $retryCount")
+        sb.appendLine("Błędy krytyczne: $failureCount")
+        val totalRuns = successCount + failureCount
+        if (totalRuns > 0) {
+            val successRate = (successCount.toDouble() / totalRuns * 100).toInt()
+            sb.appendLine("Skuteczność: $successRate%")
+        }
+        sb.appendLine("Ostatnie uruchomienie: ${if (lastRunMs > 0L) dateFormat.format(Date(lastRunMs)) else "brak danych"}")
+        if (lastError != null) sb.appendLine("Ostatni błąd: $lastError")
+        sb.appendLine()
+
         sb.appendLine("=== Koniec raportu ===")
         return sb.toString()
     }
