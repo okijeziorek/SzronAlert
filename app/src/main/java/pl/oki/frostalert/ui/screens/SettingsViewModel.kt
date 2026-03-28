@@ -1,12 +1,15 @@
 package pl.oki.frostalert.ui.screens
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import pl.oki.frostalert.billing.BillingManagerInterface
 import pl.oki.frostalert.data.local.UserPreferences
 import pl.oki.frostalert.data.repository.SettingsRepository
 import javax.inject.Inject
@@ -15,7 +18,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val geofenceRegistrar: pl.oki.frostalert.geofence.GeofenceRegistrarContract,
-    @javax.inject.Named("app_context") private val appContext: android.content.Context
+    @javax.inject.Named("app_context") private val appContext: android.content.Context,
+    private val billingManager: BillingManagerInterface
 ) : ViewModel() {
 
     init {
@@ -28,6 +32,38 @@ class SettingsViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
+
+    /** `true` when the user has an active PRO purchase OR the debug override is enabled. */
+    val isPro: StateFlow<Boolean> = combine(
+        billingManager.isPro,
+        settingsRepository.userPreferencesFlow
+    ) { billingPro, prefs ->
+        billingPro || (prefs?.isProForced == true)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+
+    /** Emits the last billing error message, or `null` when there is no error. */
+    val purchaseError: StateFlow<String?> = billingManager.purchaseError
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    /** Initiates the Play Billing purchase flow for PRO. */
+    fun launchPurchaseFlow(activity: Activity) {
+        billingManager.queryProductDetails { productDetails ->
+            productDetails?.let { billingManager.launchPurchaseFlow(activity, it) }
+        }
+    }
+
+    /** Clears the last purchase error (e.g. after showing a snackbar). */
+    fun clearPurchaseError() {
+        billingManager.clearError()
+    }
 
     fun updateLastFeedbackTimestamp(timestamp: Long) {
         viewModelScope.launch {

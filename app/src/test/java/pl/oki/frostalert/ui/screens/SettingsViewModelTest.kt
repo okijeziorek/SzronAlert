@@ -3,6 +3,7 @@ package pl.oki.frostalert.ui.screens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -10,6 +11,7 @@ import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import pl.oki.frostalert.billing.BillingManagerInterface
 import pl.oki.frostalert.data.local.UserPreferences
 import pl.oki.frostalert.data.repository.SettingsRepository
 
@@ -68,9 +70,19 @@ class SettingsViewModelTest {
             override fun isRunning(): Boolean = false
         }
 
+        class FakeBillingManager : BillingManagerInterface {
+            override val isPro: StateFlow<Boolean> = MutableStateFlow(false)
+            override val purchaseError: StateFlow<String?> = MutableStateFlow(null)
+            override fun queryProductDetails(onDetailsReady: (com.android.billingclient.api.ProductDetails?) -> Unit) {}
+            override fun launchPurchaseFlow(activity: android.app.Activity, productDetails: com.android.billingclient.api.ProductDetails) {}
+            override fun clearError() {}
+            override fun disconnect() {}
+        }
+
         val geofenceRegistrar = FakeRegistrar()
+        val billingManager = FakeBillingManager()
         val appContext: android.content.Context = mock()
-        viewModel = SettingsViewModel(repository, geofenceRegistrar, appContext)
+        viewModel = SettingsViewModel(repository, geofenceRegistrar, appContext, billingManager)
     }
 
     @After

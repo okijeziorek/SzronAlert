@@ -7,6 +7,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Named
 import dagger.hilt.components.SingletonComponent
+import pl.oki.frostalert.billing.BillingClientWrapper
+import pl.oki.frostalert.billing.BillingManagerInterface
 import pl.oki.frostalert.data.local.CalibrationDao
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.SettingsDataStore
@@ -94,5 +96,11 @@ object AppModule {
     @Provides
     fun provideCalibrationDao(database: FrostDatabase): CalibrationDao {
         return database.calibrationDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideBillingManager(@ApplicationContext context: Context): BillingManagerInterface {
+        return BillingClientWrapper(context)
     }
 }

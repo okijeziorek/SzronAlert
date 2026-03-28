@@ -28,7 +28,6 @@ import co.yml.charts.axis.AxisData
 import co.yml.charts.common.model.Point
 import co.yml.charts.ui.linechart.LineChart
 import co.yml.charts.ui.linechart.model.*
-import com.android.billingclient.api.ProductDetails
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -36,7 +35,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.oki.frostalert.R
-import pl.oki.frostalert.billing.BillingClientWrapper
 import pl.oki.frostalert.data.local.TemperatureRecord
 import java.io.File
 import java.text.SimpleDateFormat
@@ -50,20 +48,10 @@ fun HistoryScreen(
 ) {
     val context = LocalContext.current
     val uiState by historyViewModel.uiState.collectAsState()
-    val userPrefsState by settingsViewModel.userPreferences.collectAsState()
     val scope = rememberCoroutineScope()
-    val billingClient = remember { BillingClientWrapper(context) }
-    val isProActual by billingClient.isPro.collectAsState()
+    val isPro by settingsViewModel.isPro.collectAsState()
 
-    if (userPrefsState == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else {
-        val prefs = userPrefsState!!
-        val isPro = isProActual || prefs.isProForced
-
-        LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) {
             historyViewModel.refreshStats()
         }
 
@@ -116,13 +104,7 @@ fun HistoryScreen(
                                         exportToCsv(context, records)
                                     }
                                 } else {
-                                    billingClient.queryProductDetails { productDetails: ProductDetails? ->
-                                        productDetails?.let {
-                                            billingClient.launchPurchaseFlow(context as Activity, it)
-                                        } ?: run {
-                                            Toast.makeText(context, "Sklep niedostępny", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
+                                    settingsViewModel.launchPurchaseFlow(context as Activity)
                                 }
                             }) {
                                 if (!isPro) {
@@ -269,7 +251,7 @@ fun HistoryScreen(
                             factory = { context ->
                                 AdView(context).apply {
                                     setAdSize(AdSize.BANNER)
-                                    adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                                    adUnitId = context.getString(R.string.admob_banner_unit_id)
                                     loadAd(AdRequest.Builder().build())
                                 }
                             }
@@ -278,7 +260,6 @@ fun HistoryScreen(
                 }
             }
         }
-    }
 }
 
 @Composable
