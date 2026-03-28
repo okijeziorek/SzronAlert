@@ -11,6 +11,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.HiltAndroidApp
+import pl.oki.frostalert.geofence.GeofenceRegistrarContract
 import pl.oki.frostalert.worker.FrostCheckWorker
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -20,6 +21,9 @@ class FrostApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
+
+    @Inject
+    lateinit var geofenceRegistrar: GeofenceRegistrarContract
 
     // WorkManager reads this lazily via Configuration.Provider — do NOT call
     // WorkManager.initialize() manually; that would trigger a double-init crash.
@@ -33,6 +37,9 @@ class FrostApplication : Application(), Configuration.Provider {
         super.onCreate()
         MobileAds.initialize(this)
         setupRecurringWork()
+        // Start reactive geofence observer so geofences are kept in sync with
+        // user settings and location changes from app startup onwards.
+        geofenceRegistrar.start()
     }
 
     private fun setupRecurringWork() {
