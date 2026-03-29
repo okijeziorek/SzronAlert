@@ -21,16 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import co.yml.charts.axis.AxisData
 import co.yml.charts.common.model.Point
 import co.yml.charts.ui.linechart.LineChart
 import co.yml.charts.ui.linechart.model.*
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -152,6 +148,11 @@ fun HistoryScreen(
                         }
                     }
 
+                    if (!isPro) {
+                        Spacer(Modifier.height(20.dp))
+                        MonetizationBanner()
+                    }
+
                     Spacer(Modifier.height(32.dp))
 
                     if (records.size < 2) {
@@ -244,19 +245,6 @@ fun HistoryScreen(
                     }
 
                     Spacer(Modifier.height(40.dp))
-
-                    if (!isPro) {
-                        AndroidView(
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                            factory = { context ->
-                                AdView(context).apply {
-                                    setAdSize(AdSize.BANNER)
-                                    adUnitId = context.getString(R.string.admob_banner_unit_id)
-                                    loadAd(AdRequest.Builder().build())
-                                }
-                            }
-                        )
-                    }
                 }
             }
         }

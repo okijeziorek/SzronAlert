@@ -105,6 +105,16 @@ fun SettingsScreen(
                     }, modifier = Modifier.fillMaxWidth()) {
                         SingleLineText(text = stringResource(R.string.buy_pro), style = MaterialTheme.typography.bodyLarge)
                     }
+
+                    Spacer(Modifier.height(16.dp))
+                    nativeAd?.let { ad ->
+                        AndroidView(
+                            modifier = Modifier.fillMaxWidth(),
+                            factory = { ctx -> LayoutInflater.from(ctx).inflate(R.layout.native_ad_layout, FrameLayout(ctx), false) as NativeAdView },
+                            update = { adView -> populateNativeAdView(ad, adView) }
+                        )
+                    }
+
                     Spacer(Modifier.height(16.dp))
                 }
 
@@ -530,16 +540,7 @@ fun SettingsScreen(
                     )
                 }
 
-                if (!isPro) {
-                    Spacer(Modifier.height(24.dp))
-                    nativeAd?.let { ad ->
-                        AndroidView(
-                            modifier = Modifier.fillMaxWidth(),
-                            factory = { ctx -> LayoutInflater.from(ctx).inflate(R.layout.native_ad_layout, FrameLayout(ctx), false) as NativeAdView },
-                            update = { adView -> populateNativeAdView(ad, adView) }
-                        )
-                    }
-                }
+                // Native ad is intentionally shown near PRO CTA at the top for better visibility.
             }
         }
     }

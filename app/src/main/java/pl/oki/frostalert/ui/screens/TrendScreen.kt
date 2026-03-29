@@ -456,10 +456,12 @@ fun FutureTrendSection(
 @Composable
 @Suppress("DEPRECATION")
 fun TrendScreen(
-    trendViewModel: TrendViewModel = hiltViewModel()
+    trendViewModel: TrendViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val trendState by trendViewModel.trendState.collectAsState()
     val futureTrendState by trendViewModel.futureTrendState.collectAsState()
+    val isPro by settingsViewModel.isPro.collectAsState()
     val ctx = LocalContext.current
 
     Scaffold(
@@ -529,6 +531,10 @@ fun TrendScreen(
                 ) {
                     // SEKCJA 1: STATYSTYKA OGÓLNA
                     TrendSummaryCard(stats)
+
+                    if (!isPro) {
+                        MonetizationBanner()
+                    }
 
                     // SEKCJA 2: WYKRES TEMPERATURY
                     TrendTemperatureChart(stats)

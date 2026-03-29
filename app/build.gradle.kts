@@ -7,6 +7,8 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 // Workaround: in some CI or local environments lint analysis can crash due to classloader issues.
 // Disable lint tasks here to allow builds/tests to proceed; re-enable lint checks in CI where environment is stable.
 tasks.matching { it.name.startsWith("lint") }.configureEach {
@@ -48,8 +50,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
