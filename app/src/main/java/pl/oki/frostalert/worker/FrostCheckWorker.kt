@@ -15,6 +15,7 @@ import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
+import pl.oki.frostalert.utils.NetworkMonitor
 import pl.oki.frostalert.utils.NotificationHelper
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.TrendCalculations
@@ -28,7 +29,8 @@ class FrostCheckWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val settingsDataStore: SettingsDataStore,
     private val locationRepository: LocationRepository,
-    private val temperatureDao: TemperatureDao
+    private val temperatureDao: TemperatureDao,
+    private val networkMonitor: NetworkMonitor
 ) : CoroutineWorker(appContext, params) {
 
     companion object {
@@ -47,6 +49,15 @@ class FrostCheckWorker @AssistedInject constructor(
                 "To jest testowe powiadomienie o ryzyku szronu."
             )
             return Result.success()
+        }
+
+        // Explicit network guard — WorkManager's CONNECTED constraint is enforced at scheduling
+        // time, but connectivity can drop before the coroutine actually runs.  Bail early with
+        // retry so the exponential backoff kicks in rather than burning a network call that will
+        // fail anyway.
+        if (!networkMonitor.isCurrentlyOnline()) {
+            Log.w(TAG, "Network unavailable at runtime (attempt ${runAttemptCount + 1}/$MAX_RETRIES) — retrying")
+            return if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
 
         val userPreferences = settingsDataStore.userPreferencesFlow.first()
