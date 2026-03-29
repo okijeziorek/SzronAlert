@@ -15,6 +15,7 @@ import pl.oki.frostalert.data.repository.HistoryRepository
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.data.repository.SettingsRepository
 import pl.oki.frostalert.data.repository.SettingsRepositoryImpl
+import pl.oki.frostalert.utils.NetworkMonitor
 import javax.inject.Singleton
 
 @Module
@@ -94,5 +95,11 @@ object AppModule {
     @Provides
     fun provideCalibrationDao(database: FrostDatabase): CalibrationDao {
         return database.calibrationDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
+        return NetworkMonitor(context)
     }
 }
