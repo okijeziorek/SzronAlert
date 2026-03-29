@@ -143,7 +143,7 @@ class LocationRepository(private val context: Context, private val settingsDataS
                         humidityThreshold = userPrefs.humidityThreshold.toDouble(),
                         precipitationThreshold = userPrefs.precipitationThreshold,
                         sensitivity = userPrefs.sensitivity,
-                        windSpeed = 0.0, // Zakładamy brak wiatru dla uproszczenia
+                        windSpeed = weather.current.windSpeed,
                         appMode = userPrefs.appMode
                     )
 

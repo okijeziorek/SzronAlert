@@ -43,6 +43,9 @@ class FrostApplication : Application(), Configuration.Provider {
         // The SDK routes its completion callback back to main via Handler internally.
         applicationScope.launch { MobileAds.initialize(this@FrostApplication) }
         setupRecurringWork()
+        // Start reactive geofence observer so geofences are kept in sync with
+        // user settings and location changes from app startup onwards.
+        geofenceRegistrar.start()
     }
 
     private fun setupRecurringWork() {

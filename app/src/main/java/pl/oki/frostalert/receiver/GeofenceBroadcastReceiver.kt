@@ -8,6 +8,7 @@ import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.GeofenceRecord
@@ -49,6 +50,11 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
+                        // Load user preferences so risk assessment uses their configured thresholds,
+                        // reducing false-positive geofence alerts.
+                        val prefs = pl.oki.frostalert.data.local.SettingsDataStore(context)
+                            .userPreferencesFlow.first()
+
                         // Pobierz bieżące warunki pogodowe dla punktu
                         val weatherResult = pl.oki.frostalert.data.remote.OpenMeteoApi.getWeather(lat, lon)
                         var minTemp = 0.0
@@ -59,18 +65,18 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                         if (weatherResult is pl.oki.frostalert.utils.AppResult.Success) {
                             val weather = weatherResult.data
                             minTemp = pl.oki.frostalert.utils.WeatherCalculations.getNightMinTemp(weather.hourly)
-                            // Używamy uproszczonych domyślnych wartości, bo mamy ograniczony dostęp do prefs tutaj
                             hasRisk = pl.oki.frostalert.utils.WeatherCalculations.hasFrostRisk(
                                 temp = minTemp,
                                 humidity = weather.current.humidity,
                                 precip = weather.current.precipitation,
                                 weatherCode = weather.current.weatherCode,
-                                tempThreshold = 1.0,
-                                humidityThreshold = 75.0,
-                                precipitationThreshold = 0.2,
-                                sensitivity = 1.0,
+                                // 1.0°C is the auto-mode default threshold (matches SettingsDataStore default).
+                                tempThreshold = if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                                humidityThreshold = prefs.humidityThreshold.toDouble(),
+                                precipitationThreshold = prefs.precipitationThreshold,
+                                sensitivity = prefs.sensitivity,
                                 windSpeed = weather.current.windSpeed,
-                                appMode = 0
+                                appMode = prefs.appMode
                             )
                             riskLevel = when {
                                 hasRisk && minTemp < -5 -> 1.0
