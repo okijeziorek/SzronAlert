@@ -61,6 +61,10 @@ android {
         checkReleaseBuilds = false
         // reduce strictness for now; we still want reports during development
         checkAllWarnings = false
+        // Quality-gate rules defined in app/lint.xml (active once classloader issue is resolved)
+        lintConfig = file("lint.xml")
+        // Generate HTML report for developer review
+        htmlReport = true
     }
 }
 
