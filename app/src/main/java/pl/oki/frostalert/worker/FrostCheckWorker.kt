@@ -15,6 +15,7 @@ import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
+import pl.oki.frostalert.utils.AppTelemetry
 import pl.oki.frostalert.utils.NetworkMonitor
 import pl.oki.frostalert.utils.NotificationHelper
 import pl.oki.frostalert.utils.WeatherCalculations

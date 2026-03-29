@@ -26,6 +26,12 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideBillingManager(billingClientWrapper: BillingClientWrapper): BillingManagerInterface {
+        return billingClientWrapper
+    }
+
+    @Provides
+    @Singleton
     fun provideSettingsDataStore(@ApplicationContext context: Context): SettingsDataStore {
         return SettingsDataStore(context)
     }

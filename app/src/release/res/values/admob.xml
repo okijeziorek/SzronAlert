@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Production AdMob IDs — replace with real values from AdMob console before publishing. -->
 <resources>
-    <string name="admob_app_id" translatable="false">ca-app-pub-REPLACE_WITH_REAL_APP_ID</string>
-    <string name="admob_native_unit_id" translatable="false">ca-app-pub-REPLACE_WITH_REAL_NATIVE_UNIT_ID</string>
-    <string name="admob_banner_unit_id" translatable="false">ca-app-pub-REPLACE_WITH_REAL_BANNER_UNIT_ID</string>
+    <string name="admob_app_id" translatable="false">ca-app-pub-9015745896160670~8413321683</string>
+    <string name="admob_banner_unit_id" translatable="false">ca-app-pub-9015745896160670/7552282108</string>
+    <string name="admob_native_unit_id" translatable="false">ca-app-pub-9015745896160670/8304058742</string>
 </resources>
+

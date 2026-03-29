@@ -143,6 +143,13 @@ File → Sync Now (or ./gradlew help)
 - **ViewModel Tests**: Inject mocks, verify repository calls
 - **Physics Tests**: Calculate dew points, verify frost risk logic with edge cases (wind >15 km/h cancels risk)
 
+### Active Delivery Plan (Closed Testing)
+- **Phase 1 (P0) — Background/Data Stability**: Harden `FrostCheckWorker`, `FrostApplication`, Room migrations, and offline/retry behavior. Success metrics: crash-free users >= 99.5%, worker cycle success >= 95%.
+- **Phase 2 (P0) — Widget + Geofencing Reliability**: Keep Glance/classic widget update paths in sync and make geofence updates reactive to settings/location changes. Success metrics: stale widget rate < 2%, geofence false-positive rate < 10%.
+- **Phase 3 (P1) — 7-Day Trend Quality**: Improve trend consistency and edge-case behavior (`UP/DOWN/STABLE`) in `TrendCalculations` and trend screens. Success metrics: < 5% trend-quality complaints in tester feedback.
+- **Phase 4 (P0) — Monetization Hardening**: Finalize production AdMob/Billing integration (`BillingClientWrapper`, ad unit wiring, PRO gating) and remove test-only purchase assumptions.
+- **Phase 5 (P1) — Closed Testing Readiness**: Add telemetry for worker/geofence/widget/billing outcomes, restore meaningful lint gates gradually, and run full regression before wider rollout.
+
 ## 📋 Project-Specific Conventions
 
 ### Naming & Package Structure
@@ -255,4 +262,3 @@ File → Sync Now (or ./gradlew help)
 5. Check `app/build.gradle.kts` for all dependencies
 6. Tests: `./gradlew test`
 7. Add feature: Follow package structure above + dependency injection pattern
-

@@ -1,0 +1,11 @@
+# Cline Rules - FrostAlert
+
+Authoritative docs:
+- `AGENTS.md`
+- `DEVELOPMENT_PLAN.md`
+
+Do not bypass project patterns:
+- Keep WorkManager + Hilt worker wiring correct.
+- Keep DB migrations explicit.
+- Keep localized strings in resources.
+

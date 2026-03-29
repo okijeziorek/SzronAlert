@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import pl.oki.frostalert.geofence.GeofenceRegistrarContract
 import pl.oki.frostalert.worker.FrostCheckWorker
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -24,6 +25,9 @@ class FrostApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
+
+    @Inject
+    lateinit var geofenceRegistrar: GeofenceRegistrarContract
 
     // Application-scoped coroutine scope for fire-and-forget background tasks.
     // SupervisorJob ensures a child failure doesn't cancel the whole scope.

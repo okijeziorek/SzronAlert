@@ -1,0 +1,10 @@
+# Windsurf Rules - FrostAlert
+
+Follow:
+- `AGENTS.md`
+- `DEVELOPMENT_PLAN.md`
+
+Operational focus:
+- P0 stability first (worker, db, widget, geofence).
+- Then trend quality and monetization hardening.
+

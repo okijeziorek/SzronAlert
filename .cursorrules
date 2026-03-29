@@ -1,0 +1,12 @@
+# Cursor Rules - FrostAlert
+
+- Main guidance: `AGENTS.md`
+- Delivery roadmap: `DEVELOPMENT_PLAN.md`
+
+Project-specific reminders:
+- Keep UI -> ViewModel -> Repository -> Data layering.
+- Use `SettingsDataStore` for preferences, not ad-hoc storage.
+- Keep widget updates in sync across `FrostGlanceWidget` and `FrostWidgetProvider`.
+- Add/maintain Room migrations for every schema version bump.
+- Prefer Flow/StateFlow reactive updates over manual refresh flags.
+
