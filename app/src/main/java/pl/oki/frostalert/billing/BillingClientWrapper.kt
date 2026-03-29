@@ -13,13 +13,30 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
+@Singleton
+class BillingClientWrapper @Inject constructor(
+    @ApplicationContext context: Context
+) : BillingManagerInterface, PurchasesUpdatedListener {
+
+    companion object {
+        /** Production in-app product ID registered in Google Play Console. */
+        const val PRO_PRODUCT_ID = "frostalert_pro"
+        private const val MAX_RETRY_ATTEMPTS = 3
+    }
 
     private val _isPro = MutableStateFlow(false)
-    val isPro = _isPro.asStateFlow()
+    override val isPro = _isPro.asStateFlow()
+
+    private val _purchaseError = MutableStateFlow<String?>(null)
+    override val purchaseError = _purchaseError.asStateFlow()
+
+    private var retryCount = 0
 
     private val billingClient = BillingClient.newBuilder(context)
         .setListener(this)
@@ -31,25 +48,28 @@ class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
         .build()
 
     init {
-        startConnection()
+        connectWithRetry()
     }
 
-    private fun startConnection() {
+    private fun connectWithRetry() {
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
+                retryCount = 0
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     queryPurchases()
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                // Retry connection on next opportunity
-                startConnection()
+                if (retryCount < MAX_RETRY_ATTEMPTS) {
+                    retryCount++
+                    connectWithRetry()
+                }
             }
         })
     }
 
-    fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails) {
+    override fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails) {
         val productDetailsParamsList = listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder()
                 .setProductDetails(productDetails)
@@ -61,10 +81,10 @@ class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
         billingClient.launchBillingFlow(activity, billingFlowParams)
     }
 
-    fun queryProductDetails(onDetailsReady: (ProductDetails?) -> Unit) {
+    override fun queryProductDetails(onDetailsReady: (ProductDetails?) -> Unit) {
         val productList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
-                .setProductId("android.test.purchased") // Correct test product ID
+                .setProductId(PRO_PRODUCT_ID)
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         )
@@ -88,21 +108,28 @@ class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
             .build()
         billingClient.queryPurchasesAsync(params) { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                for (purchase in purchases) {
-                    if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && purchase.isAcknowledged) {
-                        _isPro.value = true
-                    }
+                val hasPro = purchases.any { purchase ->
+                    purchase.purchaseState == Purchase.PurchaseState.PURCHASED && purchase.isAcknowledged
                 }
+                _isPro.value = hasPro
             }
         }
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            for (purchase in purchases) {
-                if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                    acknowledgePurchase(purchase)
+        when (billingResult.responseCode) {
+            BillingClient.BillingResponseCode.OK -> {
+                purchases?.forEach { purchase ->
+                    if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+                        acknowledgePurchase(purchase)
+                    }
                 }
+            }
+            BillingClient.BillingResponseCode.USER_CANCELED -> {
+                // User dismissed the purchase sheet — not an error, no action needed.
+            }
+            else -> {
+                _purchaseError.value = billingResult.debugMessage
             }
         }
     }
@@ -115,8 +142,19 @@ class BillingClientWrapper(context: Context) : PurchasesUpdatedListener {
             billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     _isPro.value = true
+                } else {
+                    _purchaseError.value = billingResult.debugMessage
                 }
             }
         }
     }
+
+    override fun clearError() {
+        _purchaseError.value = null
+    }
+
+    override fun disconnect() {
+        billingClient.endConnection()
+    }
 }
+

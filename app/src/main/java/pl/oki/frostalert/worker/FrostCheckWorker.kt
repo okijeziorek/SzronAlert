@@ -1,11 +1,8 @@
 package pl.oki.frostalert.worker
 
 import android.annotation.SuppressLint
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import android.util.Log
-import androidx.glance.appwidget.updateAll
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -18,12 +15,11 @@ import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
-import pl.oki.frostalert.utils.AppTelemetry
+import pl.oki.frostalert.utils.NetworkMonitor
 import pl.oki.frostalert.utils.NotificationHelper
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.TrendCalculations
-import pl.oki.frostalert.widget.updateAppWidget
-import pl.oki.frostalert.widget.FrostWidgetProvider
+import pl.oki.frostalert.widget.WidgetSyncHelper
 import java.util.Calendar
 import java.util.Locale
 
@@ -33,7 +29,8 @@ class FrostCheckWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val settingsDataStore: SettingsDataStore,
     private val locationRepository: LocationRepository,
-    private val temperatureDao: TemperatureDao
+    private val temperatureDao: TemperatureDao,
+    private val networkMonitor: NetworkMonitor
 ) : CoroutineWorker(appContext, params) {
 
     companion object {
@@ -52,6 +49,15 @@ class FrostCheckWorker @AssistedInject constructor(
                 "To jest testowe powiadomienie o ryzyku szronu."
             )
             return Result.success()
+        }
+
+        // Explicit network guard — WorkManager's CONNECTED constraint is enforced at scheduling
+        // time, but connectivity can drop before the coroutine actually runs.  Bail early with
+        // retry so the exponential backoff kicks in rather than burning a network call that will
+        // fail anyway.
+        if (!networkMonitor.isCurrentlyOnline()) {
+            Log.w(TAG, "Network unavailable at runtime (attempt ${runAttemptCount + 1}/$MAX_RETRIES) — retrying")
+            return if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
 
         val userPreferences = settingsDataStore.userPreferencesFlow.first()
@@ -117,9 +123,6 @@ class FrostCheckWorker @AssistedInject constructor(
                         hasRisk = hasRisk
                     )
                     temperatureDao.insert(record)
-
-                    // Aktualizuj Glance widget
-                    pl.oki.frostalert.widget.FrostGlanceWidget().updateAll(applicationContext)
 
                     // SPRAWDŹ ZMIANĘ TRENDU
                     try {
@@ -196,18 +199,11 @@ class FrostCheckWorker @AssistedInject constructor(
                         }
                     }
 
-                    // Odświeżanie widgetów
-                    // Aktualizuj zarówno Glance (updateAll) jak i tradycyjny AppWidget (RemoteViews)
+                    // Odświeżanie widgetów — aktualizuj oba ścieżki atomowo przez WidgetSyncHelper
                     try {
-                        val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
-                        // update dla klasy FrostWidgetProvider (jeśli ktoś używa RemoteViews widget)
-                        val classicIds = appWidgetManager.getAppWidgetIds(ComponentName(applicationContext, FrostWidgetProvider::class.java))
-                        for (appWidgetId in classicIds) {
-                            updateAppWidget(applicationContext, appWidgetManager, appWidgetId)
-                        }
+                        WidgetSyncHelper.updateAll(applicationContext)
                     } catch (e: Exception) {
-                        // Nie blokujemy pracy - logujemy i kontynuujemy
-                        Log.w(TAG, "Nie udało się zaktualizować AppWidgetów: ${e.message}")
+                        Log.w(TAG, "Nie udało się zaktualizować widgetów: ${e.message}")
                     }
 
                     if (isCarMode) {

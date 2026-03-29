@@ -6,8 +6,11 @@ import java.util.Locale
 
 object TrendCalculations {
 
-    /** Minimalna różnica średnich (°C) wymagana do uznania trendu za UP lub DOWN */
+    /** Minimalna różnica median (°C) wymagana do uznania trendu za UP lub DOWN */
     private const val TREND_DELTA_THRESHOLD_C = 2.0
+
+    /** Minimalna liczba punktów dziennych wymagana do obliczenia kierunku trendu */
+    private const val MIN_POINTS_FOR_TREND = 4
 
     /**
      * Dane trendu na 7 dni (dzisiaj + 6 dni wstecz)
@@ -74,28 +77,13 @@ object TrendCalculations {
         val avgTemp = trendPoints.map { it.minTemp }.average()
         val lowestTemp = trendPoints.minOfOrNull { it.minTemp } ?: 0.0
 
-        // Trend liczony od najstarszych punktów do najnowszych.
-        val trend = if (trendPoints.size >= 6) {
-            val firstThreeAvg = trendPoints.take(3).map { it.minTemp }.average()
-            val lastThreeAvg = trendPoints.takeLast(3).map { it.minTemp }.average()
-            val delta = lastThreeAvg - firstThreeAvg
-
-            when {
-                delta > TREND_DELTA_THRESHOLD_C -> TrendDirection.UP
-                delta < -TREND_DELTA_THRESHOLD_C -> TrendDirection.DOWN
-                else -> TrendDirection.STABLE
-            }
-        } else {
-            TrendDirection.STABLE
-        }
-
         return WeeklyTrendStats(
             trendPoints = trendPoints,
             nightsWithFrostRisk = nightsWithRisk,
             frostRiskPercentage = percentage,
             averageMinTemp = avgTemp,
             lowestTemp = lowestTemp,
-            trend = trend
+            trend = computeTrendDirection(trendPoints)
         )
     }
 
@@ -160,27 +148,13 @@ object TrendCalculations {
         val avgTemp = trendPoints.map { it.minTemp }.average()
         val lowestTemp = trendPoints.minOfOrNull { it.minTemp } ?: 0.0
 
-        // Określ trend: porównaj średnią pierwszych 3 dni vs ostatnich 3 dni
-        val trend = if (trendPoints.size >= 6) {
-            val firstThreeAvg = trendPoints.take(3).map { it.minTemp }.average()
-            val lastThreeAvg = trendPoints.takeLast(3).map { it.minTemp }.average()
-
-            when {
-                lastThreeAvg > firstThreeAvg + TREND_DELTA_THRESHOLD_C -> TrendDirection.UP
-                firstThreeAvg > lastThreeAvg + TREND_DELTA_THRESHOLD_C -> TrendDirection.DOWN
-                else -> TrendDirection.STABLE
-            }
-        } else {
-            TrendDirection.STABLE
-        }
-
         return WeeklyTrendStats(
             trendPoints = trendPoints,
             nightsWithFrostRisk = nightsWithRisk,
             frostRiskPercentage = percentage,
             averageMinTemp = avgTemp,
             lowestTemp = lowestTemp,
-            trend = trend
+            trend = computeTrendDirection(trendPoints)
         )
     }
 
@@ -203,6 +177,40 @@ object TrendCalculations {
         TrendDirection.UP -> "📈 Robi się cieplej"
         TrendDirection.DOWN -> "📉 Robi się chłodniej"
         TrendDirection.STABLE -> "➡️ Brak zmian"
+    }
+
+    /**
+     * Wyznacza kierunek trendu temperaturowego na podstawie listy punktów dziennych.
+     *
+     * Algorytm:
+     * - Mniej niż [MIN_POINTS_FOR_TREND] punktów → STABLE (za mało danych)
+     * - 4–5 punktów → mediana pierwszych 2 vs mediana ostatnich 2
+     * - 6+ punktów → mediana pierwszych 3 vs mediana ostatnich 3
+     *
+     * Użycie mediany zamiast średniej zapewnia odporność na jednorazowe skoki
+     * temperatury (np. nagły mróz w ciepłym tygodniu lub odwrotnie).
+     */
+    private fun computeTrendDirection(points: List<DailyTrendPoint>): TrendDirection {
+        if (points.size < MIN_POINTS_FOR_TREND) return TrendDirection.STABLE
+
+        val groupSize = if (points.size >= 6) 3 else 2
+        val firstMedian = medianOf(points.take(groupSize).map { it.minTemp })
+        val lastMedian = medianOf(points.takeLast(groupSize).map { it.minTemp })
+        val delta = lastMedian - firstMedian
+
+        return when {
+            delta > TREND_DELTA_THRESHOLD_C -> TrendDirection.UP
+            delta < -TREND_DELTA_THRESHOLD_C -> TrendDirection.DOWN
+            else -> TrendDirection.STABLE
+        }
+    }
+
+    /** Zwraca medianę listy wartości. Lista musi być niepusta. */
+    private fun medianOf(values: List<Double>): Double {
+        require(values.isNotEmpty()) { "Values list must not be empty" }
+        val sorted = values.sorted()
+        val mid = sorted.size / 2
+        return if (sorted.size % 2 == 0) (sorted[mid - 1] + sorted[mid]) / 2.0 else sorted[mid]
     }
 
     /**

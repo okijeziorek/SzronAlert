@@ -92,7 +92,7 @@ fun TrendSummaryCard(stats: TrendCalculations.WeeklyTrendStats) {
                 TrendStatItem(
                     icon = Icons.Default.Bedtime,
                     label = stringResource(R.string.trend_stat_nights_with_risk),
-                    value = "${stats.nightsWithFrostRisk}/7"
+                    value = "${stats.nightsWithFrostRisk}/${stats.trendPoints.size}"
                 )
                 TrendStatItem(
                     icon = Icons.Default.Thermostat,
@@ -249,7 +249,27 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
+
+            // Oś X – etykiety dni
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                stats.trendPoints.forEach { point ->
+                    Text(
+                        text = point.dayLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
 
             // Zakres temperatur
             Text(
@@ -399,7 +419,7 @@ fun FutureTrendSection(
                 futureTrendState.futureWeeklyStats != null -> {
                     val stats = futureTrendState.futureWeeklyStats!!
                     Text(
-                        text = stringResource(R.string.trend_future_loaded, stats.trend.name),
+                        text = stringResource(R.string.trend_future_loaded, TrendCalculations.getTrendEmoji(stats.trend)),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

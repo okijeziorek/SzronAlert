@@ -23,13 +23,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.android.billingclient.api.ProductDetails
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import pl.oki.frostalert.R
-import pl.oki.frostalert.billing.BillingClientWrapper
 import pl.oki.frostalert.receiver.CarModeReceiver
 import java.util.Locale
 
@@ -41,9 +39,16 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val userPreferences by viewModel.userPreferences.collectAsState()
-    val billingClient = remember { BillingClientWrapper(context) }
-    val isProActual by billingClient.isPro.collectAsState()
+    val isPro by viewModel.isPro.collectAsState()
+    val purchaseError by viewModel.purchaseError.collectAsState()
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+
+    purchaseError?.let { error ->
+        LaunchedEffect(error) {
+            android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
+            viewModel.clearPurchaseError()
+        }
+    }
 
     if (userPreferences == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -51,7 +56,6 @@ fun SettingsScreen(
         }
     } else {
         val prefs = userPreferences!!
-        val isPro = isProActual || prefs.isProForced
 
         // Stan dla pól tekstowych lokalizacji
         var latText by remember(prefs.manualLatitude) { mutableStateOf(prefs.manualLatitude.toString()) }
@@ -64,7 +68,7 @@ fun SettingsScreen(
 
         if (!isPro) {
             val adLoader = remember(context) {
-                AdLoader.Builder(context, "ca-app-pub-3940256099942544/2247696110")
+                AdLoader.Builder(context, context.getString(R.string.admob_native_unit_id))
                     .forNativeAd { ad: NativeAd ->
                         nativeAd?.destroy()
                         nativeAd = ad
@@ -97,9 +101,7 @@ fun SettingsScreen(
             ) {
                 if (!isPro) {
                     Button(onClick = {
-                        billingClient.queryProductDetails { productDetails: ProductDetails? ->
-                            productDetails?.let { billingClient.launchPurchaseFlow(context as Activity, it) }
-                        }
+                        viewModel.launchPurchaseFlow(context as Activity)
                     }, modifier = Modifier.fillMaxWidth()) {
                         SingleLineText(text = stringResource(R.string.buy_pro), style = MaterialTheme.typography.bodyLarge)
                     }
