@@ -68,7 +68,7 @@ class FrostCheckWorker @AssistedInject constructor(
         val sensitivity = userPreferences.sensitivity
         val appMode = userPreferences.appMode
 
-        return try {
+        try {
             val location = locationRepository.getEffectiveLocation()
             if (location == null) {
                 Log.w(TAG, "Location unavailable (attempt ${runAttemptCount + 1}/$MAX_RETRIES) — retrying")
@@ -86,7 +86,7 @@ class FrostCheckWorker @AssistedInject constructor(
             when (weatherResult) {
                 is AppResult.Error -> {
                     Log.w(TAG, "Weather fetch error (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${weatherResult.error.message}")
-                    if (runAttemptCount < MAX_RETRIES) {
+                    return if (runAttemptCount < MAX_RETRIES) {
                         AppTelemetry.recordWorkerRetry(applicationContext, weatherResult.error.message)
                         Result.retry()
                     } else {
@@ -232,12 +232,12 @@ class FrostCheckWorker @AssistedInject constructor(
                         }
                     }
                     AppTelemetry.recordWorkerSuccess(applicationContext)
-                    Result.success()
+                    return Result.success()
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error in doWork (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${e.message}", e)
-            if (runAttemptCount < MAX_RETRIES) {
+            return if (runAttemptCount < MAX_RETRIES) {
                 AppTelemetry.recordWorkerRetry(applicationContext, e.message)
                 Result.retry()
             } else {
