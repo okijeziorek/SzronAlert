@@ -39,7 +39,7 @@ class NetworkMonitor(context: Context) {
         }
     }.distinctUntilChanged()
 
-    private fun isCurrentlyOnline(): Boolean {
+    fun isCurrentlyOnline(): Boolean {
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)

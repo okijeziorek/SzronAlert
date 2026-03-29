@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.FrostDatabase
+import pl.oki.frostalert.data.local.SettingsDataStore
+import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.worker.FrostCheckWorker
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -76,15 +78,23 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
             }
             val lastRecord = records.firstOrNull()
 
-            Log.i(TAG, "updateAppWidget: id=$appWidgetId records=${records.size} lastTemp=${lastRecord?.minTemp}")
+            val useFahrenheit = try {
+                SettingsDataStore(context).userPreferencesFlow.first().useFahrenheit
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to read useFahrenheit for widget $appWidgetId: ${e.message}")
+                false
+            }
+
+            Log.i(TAG, "updateAppWidget: id=$appWidgetId records=${records.size} lastTemp=${lastRecord?.minTemp} useFahrenheit=$useFahrenheit")
 
             if (lastRecord != null) {
                 val sdf = SimpleDateFormat("d MMM", Locale.getDefault())
                 val date = sdf.format(Date(lastRecord.timestamp))
                 val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
+                val tempText = WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit)
 
                 views.setTextViewText(R.id.widget_title, "FrostAlert • $date")
-                views.setTextViewText(R.id.widget_temp, "Min: ${String.format(Locale.US, "%.1f", lastRecord.minTemp)}°C")
+                views.setTextViewText(R.id.widget_temp, "Min: $tempText")
                 views.setTextViewText(R.id.widget_risk, "Ryzyko: $riskText")
                 views.setViewVisibility(R.id.widget_temp, android.view.View.VISIBLE)
                 views.setViewVisibility(R.id.widget_risk, android.view.View.VISIBLE)

@@ -17,6 +17,7 @@ import pl.oki.frostalert.data.repository.HistoryRepository
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.data.repository.SettingsRepository
 import pl.oki.frostalert.data.repository.SettingsRepositoryImpl
+import pl.oki.frostalert.utils.NetworkMonitor
 import javax.inject.Singleton
 
 @Module
@@ -100,7 +101,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideBillingManager(@ApplicationContext context: Context): BillingManagerInterface {
-        return BillingClientWrapper(context)
+    fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
+        return NetworkMonitor(context)
     }
 }

@@ -19,7 +19,7 @@ abstract class FrostDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: FrostDatabase? = null
 
-        private val MIGRATION_1_2 = object : Migration(1, 2) {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("""
                     CREATE TABLE IF NOT EXISTS `calibration_feedback` (
@@ -41,7 +41,7 @@ abstract class FrostDatabase : RoomDatabase() {
             }
         }
 
-        private val MIGRATION_2_3 = object : Migration(2, 3) {
+        val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("""
                     CREATE TABLE IF NOT EXISTS `geofence_record` (
@@ -67,7 +67,9 @@ abstract class FrostDatabase : RoomDatabase() {
                     "frost_database"
                 )
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-                .fallbackToDestructiveMigration()
+                // Do NOT add fallbackToDestructiveMigration — explicit migrations are defined
+                // for every version bump; a missing migration should surface as a hard error,
+                // not silently delete user data.
                 .build()
                 INSTANCE = instance
                 instance
