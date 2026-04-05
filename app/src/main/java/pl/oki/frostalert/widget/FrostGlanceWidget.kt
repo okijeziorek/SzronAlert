@@ -119,11 +119,11 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 val riskText = if (lastRecord.hasRisk) riskHighLabel else riskLowLabel
 
                 Text(
-                    text = tempLabelFormat.format(tempText),
+                    text = String.format(tempLabelFormat, tempText),
                     style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 13.sp)
                 )
                 Text(
-                    text = riskLabelFormat.format(riskText) + " ($date)",
+                    text = String.format(riskLabelFormat, riskText) + " ($date)",
                     style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 12.sp)
                 )
             } else {
