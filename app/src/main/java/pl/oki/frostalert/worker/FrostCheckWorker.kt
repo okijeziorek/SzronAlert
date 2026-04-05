@@ -21,8 +21,8 @@ import pl.oki.frostalert.utils.NotificationHelper
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.TrendCalculations
 import pl.oki.frostalert.widget.WidgetSyncHelper
+import pl.oki.frostalert.R
 import java.util.Calendar
-import java.util.Locale
 
 @HiltWorker
 class FrostCheckWorker @AssistedInject constructor(
@@ -46,8 +46,8 @@ class FrostCheckWorker @AssistedInject constructor(
             NotificationHelper.createNotificationChannel(applicationContext)
             NotificationHelper.sendNotification(
                 applicationContext,
-                "Testowe powiadomienie",
-                "To jest testowe powiadomienie o ryzyku szronu."
+                applicationContext.getString(R.string.notification_test_title),
+                applicationContext.getString(R.string.notification_test_message)
             )
             return Result.success()
         }
@@ -145,14 +145,14 @@ class FrostCheckWorker @AssistedInject constructor(
                                     // Potwierdzona zmiana trendu (2 kolejne sprawdzenia) – wyślij powiadomienie
                                     if (userPreferences.isTrendChangeNotificationsEnabled) {
                                         val trendMessage = when (newTrend) {
-                                            TrendCalculations.TrendDirection.UP -> "Robi się cieplej! 📈"
-                                            TrendCalculations.TrendDirection.DOWN -> "Robi się chłodniej! 📉"
-                                            TrendCalculations.TrendDirection.STABLE -> "Trend się ustabilizował ➡️"
+                                            TrendCalculations.TrendDirection.UP -> applicationContext.getString(R.string.notification_trend_warming)
+                                            TrendCalculations.TrendDirection.DOWN -> applicationContext.getString(R.string.notification_trend_cooling)
+                                            TrendCalculations.TrendDirection.STABLE -> applicationContext.getString(R.string.notification_trend_stable)
                                         }
                                         NotificationHelper.createNotificationChannel(applicationContext)
                                         NotificationHelper.sendNotification(
                                             applicationContext,
-                                            "Zmiana trendu temperatury",
+                                            applicationContext.getString(R.string.notification_trend_title),
                                             trendMessage
                                         )
                                     }
@@ -182,9 +182,13 @@ class FrostCheckWorker @AssistedInject constructor(
                                     val currentMinTemp = geofencingResult.currentRisk.minTemp
 
                                     NotificationHelper.createNotificationChannel(applicationContext)
-                                    val title = "⚠️ Wyższe ryzyko szronu w okolicy!"
-                                    val message = "W kierunku $direction ryzyko jest o ${(riskIncrease * 100).toInt()}% wyższe. " +
-                                                 "Aktualna prognoza: ${String.format(Locale.US, "%.1f", currentMinTemp)}°C."
+                                    val title = applicationContext.getString(R.string.notification_geofence_title)
+                                    val message = applicationContext.getString(
+                                        R.string.notification_geofence_message,
+                                        direction,
+                                        (riskIncrease * 100).toInt(),
+                                        currentMinTemp
+                                    )
                                     NotificationHelper.sendNotification(applicationContext, title, message,
                                         isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                                 }
@@ -210,8 +214,8 @@ class FrostCheckWorker @AssistedInject constructor(
                     if (isCarMode) {
                         if (hasRisk) {
                             NotificationHelper.createNotificationChannel(applicationContext)
-                            val title = if (appMode == 1) "Ryzyko przymrozku w ogrodzie!" else "Ryzyko lodu na szybach!"
-                            val message = "Prognozowane min: ${String.format(Locale.US, "%.1f", minTemp)}°C."
+                            val title = if (appMode == 1) applicationContext.getString(R.string.notification_frost_garden_title) else applicationContext.getString(R.string.notification_frost_car_title)
+                            val message = applicationContext.getString(R.string.notification_frost_forecast_message, minTemp)
                             NotificationHelper.sendNotification(applicationContext, title, message,
                                 isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                         }
@@ -222,8 +226,8 @@ class FrostCheckWorker @AssistedInject constructor(
                         if (currentHour >= userPreferences.alertStartHour || currentHour < userPreferences.alertEndHour) {
                             if (hasRisk) {
                                 NotificationHelper.createNotificationChannel(applicationContext)
-                                val title = if (appMode == 1) "Uwaga na rośliny!" else "Uwaga, szron!"
-                                NotificationHelper.sendNotification(applicationContext, title, "Możliwy przymrozek w nocy.",
+                                val title = if (appMode == 1) applicationContext.getString(R.string.notification_frost_garden_alert_title) else applicationContext.getString(R.string.notification_frost_car_alert_title)
+                                NotificationHelper.sendNotification(applicationContext, title, applicationContext.getString(R.string.notification_frost_night_message),
                                     isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                             }
                         }

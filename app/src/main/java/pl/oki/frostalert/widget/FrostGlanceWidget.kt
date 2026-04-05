@@ -33,6 +33,7 @@ import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.worker.FrostCheckWorker
+import pl.oki.frostalert.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -67,16 +68,38 @@ class FrostGlanceWidget : GlanceAppWidget() {
             Log.w(TAG, "Error preparing widget data: ${e.message}")
         }
 
+        val riskHighLabel = context.getString(R.string.widget_risk_high_short)
+        val riskLowLabel = context.getString(R.string.widget_risk_low_short)
+        val noDataLabel = context.getString(R.string.widget_no_data)
+        val tempLabelFormat = context.getString(R.string.widget_temp_label)
+        val riskLabelFormat = context.getString(R.string.widget_risk_label)
+
         // Provide content directly (no try/catch around composable invocation)
         provideContent {
             GlanceTheme {
-                WidgetContent(lastRecord, useFahrenheit)
+                WidgetContent(
+                    lastRecord = lastRecord,
+                    useFahrenheit = useFahrenheit,
+                    riskHighLabel = riskHighLabel,
+                    riskLowLabel = riskLowLabel,
+                    noDataLabel = noDataLabel,
+                    tempLabelFormat = tempLabelFormat,
+                    riskLabelFormat = riskLabelFormat
+                )
             }
         }
     }
 
     @androidx.compose.runtime.Composable
-    private fun WidgetContent(lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?, useFahrenheit: Boolean) {
+    private fun WidgetContent(
+        lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?,
+        useFahrenheit: Boolean,
+        riskHighLabel: String,
+        riskLowLabel: String,
+        noDataLabel: String,
+        tempLabelFormat: String,
+        riskLabelFormat: String
+    ) {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -93,19 +116,19 @@ class FrostGlanceWidget : GlanceAppWidget() {
             if (lastRecord != null) {
                 val date = try { SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(lastRecord.timestamp)) } catch (_: Exception) { "--" }
                 val tempText = try { WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit) } catch (_: Exception) { "--" }
-                val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
+                val riskText = if (lastRecord.hasRisk) riskHighLabel else riskLowLabel
 
                 Text(
-                    text = "Min: $tempText",
+                    text = tempLabelFormat.format(tempText),
                     style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 13.sp)
                 )
                 Text(
-                    text = "Ryzyko: $riskText ($date)",
+                    text = riskLabelFormat.format(riskText) + " ($date)",
                     style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 12.sp)
                 )
             } else {
                 Text(
-                    text = "Brak danych",
+                    text = noDataLabel,
                     style = TextStyle(color = ColorProvider(day = Color.Black, night = Color.White), fontSize = 13.sp)
                 )
             }

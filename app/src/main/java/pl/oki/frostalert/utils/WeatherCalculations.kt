@@ -1,5 +1,6 @@
 package pl.oki.frostalert.utils
 
+import android.util.Log
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.remote.HourlyForecast
 import java.text.SimpleDateFormat
@@ -9,6 +10,8 @@ import java.util.Locale
 import kotlin.math.ln
 
 object WeatherCalculations {
+
+    private const val TAG = "WeatherCalculations"
     
     fun calculateDewPoint(temp: Double, humidity: Double): Double {
         val a = 17.27
@@ -142,11 +145,14 @@ object WeatherCalculations {
         val nightTemps = mutableListOf<Double>()
         hourly.time.forEachIndexed { index, timeStr ->
             try {
+                if (index >= hourly.temperature.size) return@forEachIndexed
                 val time = sdf.parse(timeStr)?.time ?: 0L
                 if (time in startTime..endTime) {
                     nightTemps.add(hourly.temperature[index])
                 }
-            } catch (e: Exception) {}
+            } catch (e: Exception) {
+                Log.w(TAG, "Error parsing time entry at index $index: ${e.message}")
+            }
         }
         
         return nightTemps.minOrNull() ?: hourly.temperature.take(12).minOrNull() ?: 0.0

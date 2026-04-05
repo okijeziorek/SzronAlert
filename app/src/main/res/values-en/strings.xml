@@ -174,4 +174,32 @@
     <string name="error_icon_description">Error icon</string>
     <string name="retry_button">Try again</string>
     <string name="no_forecast_data">No forecast data</string>
+
+    <!-- Home ViewModel -->
+    <string name="home_pull_to_refresh">Pull to refresh data.</string>
+
+    <!-- Widget labels -->
+    <string name="widget_risk_high_short">High</string>
+    <string name="widget_risk_low_short">Low</string>
+    <string name="widget_no_data">No data</string>
+    <string name="widget_tap_to_refresh">Tap to refresh</string>
+    <string name="widget_temp_label">Min: %s</string>
+    <string name="widget_risk_label">Risk: %s</string>
+    <string name="widget_title_with_date">FrostAlert • %s</string>
+
+    <!-- Notification titles and messages -->
+    <string name="notification_test_title">Test notification</string>
+    <string name="notification_test_message">This is a test frost risk notification.</string>
+    <string name="notification_trend_title">Temperature trend change</string>
+    <string name="notification_trend_warming">Getting warmer! 📈</string>
+    <string name="notification_trend_cooling">Getting cooler! 📉</string>
+    <string name="notification_trend_stable">Trend stabilized ➡️</string>
+    <string name="notification_geofence_title">⚠️ Higher frost risk nearby!</string>
+    <string name="notification_geofence_message">In direction %1$s risk is %2$d%% higher. Forecast: %3$.1f°C.</string>
+    <string name="notification_frost_car_title">Ice on windows risk!</string>
+    <string name="notification_frost_garden_title">Garden frost risk!</string>
+    <string name="notification_frost_car_alert_title">Warning, frost!</string>
+    <string name="notification_frost_garden_alert_title">Watch your plants!</string>
+    <string name="notification_frost_forecast_message">Forecast min: %.1f°C.</string>
+    <string name="notification_frost_night_message">Possible frost tonight.</string>
 </resources>
