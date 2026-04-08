@@ -155,7 +155,13 @@ object WeatherCalculations {
             }
         }
         
-        return nightTemps.minOrNull() ?: hourly.temperature.take(12).minOrNull() ?: 0.0
+        val fallback = hourly.temperature.take(12).minOrNull()
+        if (fallback == null) {
+            Log.w(TAG, "getNightMinTemp: no temperature data available in forecast, returning 0.0")
+        } else if (nightTemps.isEmpty()) {
+            Log.w(TAG, "getNightMinTemp: no data in night window, using first 12 hours fallback=$fallback")
+        }
+        return nightTemps.minOrNull() ?: fallback ?: 0.0
     }
 
     fun calculateSeasonStats(records: List<TemperatureRecord>): Pair<Int, Double> {

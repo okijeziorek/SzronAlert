@@ -73,6 +73,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
         val noDataLabel = context.getString(R.string.widget_no_data)
         val tempLabelFormat = context.getString(R.string.widget_temp_label)
         val riskLabelFormat = context.getString(R.string.widget_risk_label)
+        val refreshLabel = context.getString(R.string.widget_refresh_button)
 
         // Provide content directly (no try/catch around composable invocation)
         provideContent {
@@ -84,7 +85,8 @@ class FrostGlanceWidget : GlanceAppWidget() {
                     riskLowLabel = riskLowLabel,
                     noDataLabel = noDataLabel,
                     tempLabelFormat = tempLabelFormat,
-                    riskLabelFormat = riskLabelFormat
+                    riskLabelFormat = riskLabelFormat,
+                    refreshLabel = refreshLabel
                 )
             }
         }
@@ -98,7 +100,8 @@ class FrostGlanceWidget : GlanceAppWidget() {
         riskLowLabel: String,
         noDataLabel: String,
         tempLabelFormat: String,
-        riskLabelFormat: String
+        riskLabelFormat: String,
+        refreshLabel: String
     ) {
         Column(
             modifier = GlanceModifier
@@ -135,7 +138,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
 
             Spacer(modifier = GlanceModifier.padding(top = 4.dp))
             Button(
-                text = "Odśwież",
+                text = refreshLabel,
                 onClick = actionRunCallback<RefreshActionCallback>()
             )
         }

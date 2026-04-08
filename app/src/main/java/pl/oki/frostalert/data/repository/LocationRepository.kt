@@ -3,6 +3,7 @@ package pl.oki.frostalert.data.repository
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
+import android.util.Log
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -15,17 +16,39 @@ import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.GeofenceRateLimiter
 import pl.oki.frostalert.utils.WeatherCalculations
 import kotlin.coroutines.resume
-import kotlin.math.abs
 
 class LocationRepository(private val context: Context, private val settingsDataStore: SettingsDataStore) {
+
+    companion object {
+        private const val TAG = "LocationRepository"
+
+        /** Maximum age of a cached GPS fix before requesting a fresh one (20 minutes). */
+        private const val LOCATION_MAX_AGE_MS = 20 * 60 * 1000L
+
+        // Approximate degree offsets for nearby-location checks (~20 km at mid-latitudes).
+        /** Offset in degrees for cardinal directions (N/S/E/W ≈ 20 km). */
+        private const val NEARBY_OFFSET_DEG = 0.18
+        /** Offset in degrees for diagonal directions (≈ 20 km / √2 ≈ 14 km). */
+        private const val NEARBY_DIAGONAL_OFFSET_DEG = 0.127
+
+        /** Minimum risk-level increase (0–1 scale) to consider a nearby location "riskier". */
+        private const val RISK_INCREASE_THRESHOLD = 0.3
+    }
 
     suspend fun getEffectiveLocation(): Location? {
         val prefs = settingsDataStore.userPreferencesFlow.first()
         
         return if (prefs.isManualLocationEnabled) {
-            Location("manual").apply {
-                latitude = prefs.manualLatitude
-                longitude = prefs.manualLongitude
+            val lat = prefs.manualLatitude
+            val lon = prefs.manualLongitude
+            if (!isValidCoordinate(lat, lon)) {
+                Log.w(TAG, "Invalid manual coordinates: lat=$lat lon=$lon")
+                null
+            } else {
+                Location("manual").apply {
+                    latitude = lat
+                    longitude = lon
+                }
             }
         } else {
             getCurrentGpsLocation()
@@ -38,18 +61,18 @@ class LocationRepository(private val context: Context, private val settingsDataS
         
         return suspendCancellableCoroutine { continuation ->
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                // Jeśli ostatnia lokalizacja jest świeża (np. młodsza niż 20 min), używamy jej
-                if (location != null && (System.currentTimeMillis() - location.time) < 20 * 60 * 1000) {
+                if (location != null && (System.currentTimeMillis() - location.time) < LOCATION_MAX_AGE_MS) {
                     continuation.resume(location)
                 } else {
-                    // W przeciwnym razie żądamy nowej, ale z balansem energii
                     val cts = CancellationTokenSource()
+                    continuation.invokeOnCancellation { cts.cancel() }
                     fusedLocationClient.getCurrentLocation(
                         Priority.PRIORITY_BALANCED_POWER_ACCURACY,
                         cts.token
                     ).addOnSuccessListener { freshLocation ->
                         continuation.resume(freshLocation)
                     }.addOnFailureListener {
+                        cts.cancel()
                         continuation.resume(null)
                     }
                 }
@@ -60,14 +83,8 @@ class LocationRepository(private val context: Context, private val settingsDataS
     }
 
     /**
-     * Sprawdza czy użytkownik wjechał w rejon z wyższym ryzykiem szronu
+     * Sprawdza czy użytkownik wjechał w rejon z wyższym ryzykiem szronu.
      * Porównuje aktualną lokalizację z sąsiednimi punktami geograficznymi.
-     *
-     * @param currentLocation the user's current location
-     * @param userPrefs user preferences (thresholds, modes)
-     * @param currentWeather optional pre-fetched weather for [currentLocation]; when
-     *        provided the method skips the redundant API call for the current location,
-     *        keeping total API calls at [GeofenceRateLimiter.MAX_CALLS_PER_TRIGGER] (8).
      */
     suspend fun checkGeofencingRisk(
         currentLocation: Location,
@@ -78,7 +95,14 @@ class LocationRepository(private val context: Context, private val settingsDataS
             return GeofencingResult.NoRisk
         }
 
-        val rateLimiter = GeofenceRateLimiter()
+        if (!isValidCoordinate(currentLocation.latitude, currentLocation.longitude)) {
+            return GeofencingResult.Error("Nieprawidłowe współrzędne lokalizacji")
+        }
+
+        val currentRisk = getFrostRiskForLocation(currentLocation.latitude, currentLocation.longitude, userPrefs)
+        if (currentRisk is AppResult.Error) {
+            return GeofencingResult.Error("Błąd pobierania danych pogodowych")
+        }
 
         // Sprawdź ryzyko w aktualnej lokalizacji — reuse pre-fetched data when available
         val currentRiskData = if (currentWeather != null) {
@@ -95,26 +119,16 @@ class LocationRepository(private val context: Context, private val settingsDataS
             (currentRisk as AppResult.Success).data
         }
 
-        // Sprawdź ryzyko w sąsiednich lokalizacjach (w promieniu ~20km)
-        // Używamy 0.18 dla przesunięć N/S/E/W (~20km), a dla diagonalnych przesunięć ~0.127 (0.18/sqrt(2))
-        val d = 0.18
-        val dDiag = 0.127
+        val d = NEARBY_OFFSET_DEG
+        val dDiag = NEARBY_DIAGONAL_OFFSET_DEG
         val nearbyLocations = listOf(
-            // 0 N
             Pair(Location("").apply { latitude = currentLocation.latitude + d; longitude = currentLocation.longitude }, "północ"),
-            // 1 S
             Pair(Location("").apply { latitude = currentLocation.latitude - d; longitude = currentLocation.longitude }, "południe"),
-            // 2 E
             Pair(Location("").apply { latitude = currentLocation.latitude; longitude = currentLocation.longitude + d }, "wschód"),
-            // 3 W
             Pair(Location("").apply { latitude = currentLocation.latitude; longitude = currentLocation.longitude - d }, "zachód"),
-            // 4 NE
             Pair(Location("").apply { latitude = currentLocation.latitude + dDiag; longitude = currentLocation.longitude + dDiag }, "północny-wschód"),
-            // 5 SE
             Pair(Location("").apply { latitude = currentLocation.latitude - dDiag; longitude = currentLocation.longitude + dDiag }, "południowy-wschód"),
-            // 6 NW
             Pair(Location("").apply { latitude = currentLocation.latitude + dDiag; longitude = currentLocation.longitude - dDiag }, "północny-zachód"),
-            // 7 SW
             Pair(Location("").apply { latitude = currentLocation.latitude - dDiag; longitude = currentLocation.longitude - dDiag }, "południowy-zachód")
         )
 
@@ -127,7 +141,7 @@ class LocationRepository(private val context: Context, private val settingsDataS
             val nearbyRisk = getFrostRiskForLocation(nearbyLoc.latitude, nearbyLoc.longitude, userPrefs)
             if (nearbyRisk is AppResult.Success) {
                 val nearbyRiskData = nearbyRisk.data
-                if (nearbyRiskData.riskLevel > currentRiskData.riskLevel + 0.3) { // Co najmniej 30% wyższe ryzyko
+                if (nearbyRiskData.riskLevel > currentRiskData.riskLevel + RISK_INCREASE_THRESHOLD) {
                     if (nearbyRiskData.riskLevel > maxNearbyRisk) {
                         maxNearbyRisk = nearbyRiskData.riskLevel
                         riskierDirection = dir
@@ -208,13 +222,12 @@ class LocationRepository(private val context: Context, private val settingsDataS
                         appMode = userPrefs.appMode
                     )
 
-                    // Oblicz poziom ryzyka (0.0 - 1.0)
                     val riskLevel = when {
-                        hasRisk && minTemp < -5 -> 1.0  // Bardzo wysokie ryzyko
-                        hasRisk && minTemp < 0 -> 0.7   // Wysokie ryzyko
-                        hasRisk -> 0.5                  // Umiarkowane ryzyko
-                        minTemp < 2 -> 0.2              // Niskie ryzyko
-                        else -> 0.0                     // Brak ryzyka
+                        hasRisk && minTemp < -5 -> 1.0
+                        hasRisk && minTemp < 0 -> 0.7
+                        hasRisk -> 0.5
+                        minTemp < 2 -> 0.2
+                        else -> 0.0
                     }
 
                     AppResult.Success(FrostRiskData(
@@ -231,11 +244,13 @@ class LocationRepository(private val context: Context, private val settingsDataS
         }
     }
 
-    /**
-     * Prosta funkcja do określenia nazwy lokalizacji (można rozszerzyć o reverse geocoding)
-     */
     private fun getLocationName(lat: Double, lon: Double): String {
         return "%.2f, %.2f".format(lat, lon)
+    }
+
+    /** Returns true if latitude is in [-90, 90] and longitude is in [-180, 180]. */
+    private fun isValidCoordinate(lat: Double, lon: Double): Boolean {
+        return lat in -90.0..90.0 && lon in -180.0..180.0
     }
 }
 

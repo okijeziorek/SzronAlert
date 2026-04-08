@@ -62,6 +62,8 @@ class HomeViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "HomeViewModel"
+        /** Minimum hours between calibration feedback prompts. */
+        private const val MIN_HOURS_BETWEEN_FEEDBACK = 12
     }
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -158,7 +160,7 @@ class HomeViewModel @Inject constructor(
                     val currentTime = System.currentTimeMillis()
                     val hoursSinceLastFeedback = (currentTime - lastFeedback) / (1000 * 60 * 60)
 
-                    if (hoursSinceLastFeedback >= 12) { // Co najmniej 12 godzin od ostatniego feedbacku
+                    if (hoursSinceLastFeedback >= MIN_HOURS_BETWEEN_FEEDBACK) {
                         // Pokaż dialog kalibracji w następnym cyklu życia UI
                         // Ustawimy flagę, która zostanie sprawdzona w UI
                         viewModelScope.launch {
