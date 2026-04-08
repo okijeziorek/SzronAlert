@@ -8,7 +8,6 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.receiver.NotificationActionReceiver
@@ -55,7 +54,7 @@ object NotificationHelper {
 
         // Przycisk "Ignoruj dziś"
         val ignoreIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-            action = "ACTION_IGNORE_TODAY"
+            action = NotificationActionReceiver.ACTION_IGNORE_TODAY
         }
         val ignorePendingIntent = PendingIntent.getBroadcast(
             context, 1, ignoreIntent, PendingIntent.FLAG_IMMUTABLE
@@ -64,7 +63,7 @@ object NotificationHelper {
 
         // Przycisk "Snooze" (Przypomnij za 2h)
         val snoozeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-            action = "ACTION_SNOOZE_2H"
+            action = NotificationActionReceiver.ACTION_SNOOZE_2H
         }
         val snoozePendingIntent = PendingIntent.getBroadcast(
             context, 3, snoozeIntent, PendingIntent.FLAG_IMMUTABLE
@@ -74,7 +73,7 @@ object NotificationHelper {
         // Przycisk "Zastosowałem matę" - jeśli włączony w ustawieniach
         if (isMataOptionEnabled) {
             val mataIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-                action = "ACTION_MATA_APPLIED"
+                action = NotificationActionReceiver.ACTION_MATA_APPLIED
             }
             val mataPendingIntent = PendingIntent.getBroadcast(
                 context, 2, mataIntent, PendingIntent.FLAG_IMMUTABLE
@@ -88,11 +87,11 @@ object NotificationHelper {
 
     /**
      * Overload that reads preferences from DataStore when the caller does not already have them.
-     * Note: uses runBlocking — call only from a background thread or within a Worker.
+     * This is a suspend function — call from a coroutine (Worker, viewModelScope, etc.).
      */
-    fun sendNotification(context: Context, title: String, message: String) {
+    suspend fun sendNotification(context: Context, title: String, message: String) {
         val settingsDataStore = SettingsDataStore(context)
-        val prefs = runBlocking { settingsDataStore.userPreferencesFlow.first() }
+        val prefs = settingsDataStore.userPreferencesFlow.first()
         sendNotification(context, title, message, isMataOptionEnabled = prefs.isMataOptionEnabled)
     }
 }

@@ -147,7 +147,7 @@ class SettingsDataStore(private val context: Context) {
         }
 
     suspend fun updateHeatThreshold(value: Double) {
-        context.dataStore.edit { it[Keys.HEAT_THRESHOLD] = value }
+        context.dataStore.edit { it[Keys.HEAT_THRESHOLD] = value.coerceIn(20.0, 50.0) }
     }
 
     suspend fun updateStormAlertEnabled(isEnabled: Boolean) {
@@ -175,7 +175,7 @@ class SettingsDataStore(private val context: Context) {
     }
 
     suspend fun updateAppMode(mode: Int) {
-        context.dataStore.edit { it[Keys.APP_MODE] = mode }
+        context.dataStore.edit { it[Keys.APP_MODE] = mode.coerceIn(0, 1) }
     }
 
     suspend fun updateCarModeEnabled(isEnabled: Boolean) {
@@ -183,27 +183,27 @@ class SettingsDataStore(private val context: Context) {
     }
 
     suspend fun updateTempThreshold(value: Double) {
-        context.dataStore.edit { it[Keys.TEMP_THRESHOLD] = value }
+        context.dataStore.edit { it[Keys.TEMP_THRESHOLD] = value.coerceIn(-30.0, 15.0) }
     }
 
     suspend fun updateHumidityThreshold(value: Int) {
-        context.dataStore.edit { it[Keys.HUMIDITY_THRESHOLD] = value }
+        context.dataStore.edit { it[Keys.HUMIDITY_THRESHOLD] = value.coerceIn(0, 100) }
     }
 
     suspend fun updatePrecipitationThreshold(value: Double) {
-        context.dataStore.edit { it[Keys.PRECIPITATION_THRESHOLD] = value }
+        context.dataStore.edit { it[Keys.PRECIPITATION_THRESHOLD] = value.coerceIn(0.0, 50.0) }
     }
 
     suspend fun updateSensitivity(value: Double) {
-        context.dataStore.edit { it[Keys.SENSITIVITY] = value }
+        context.dataStore.edit { it[Keys.SENSITIVITY] = value.coerceIn(0.1, 3.0) }
     }
 
     suspend fun updateAlertStartHour(value: Int) {
-        context.dataStore.edit { it[Keys.ALERT_START_HOUR] = value }
+        context.dataStore.edit { it[Keys.ALERT_START_HOUR] = value.coerceIn(0, 23) }
     }
 
     suspend fun updateAlertEndHour(value: Int) {
-        context.dataStore.edit { it[Keys.ALERT_END_HOUR] = value }
+        context.dataStore.edit { it[Keys.ALERT_END_HOUR] = value.coerceIn(0, 23) }
     }
 
     suspend fun updateIgnoreUntil(timestamp: Long) {
@@ -211,18 +211,18 @@ class SettingsDataStore(private val context: Context) {
     }
 
     suspend fun updateCarModeHour(value: Int) {
-        context.dataStore.edit { it[Keys.CAR_MODE_HOUR] = value }
+        context.dataStore.edit { it[Keys.CAR_MODE_HOUR] = value.coerceIn(0, 23) }
     }
 
     suspend fun updateTheme(value: Int) {
-        context.dataStore.edit { it[Keys.THEME] = value }
+        context.dataStore.edit { it[Keys.THEME] = value.coerceIn(0, 2) }
     }
 
     suspend fun updateManualLocation(isEnabled: Boolean, lat: Double, lon: Double, name: String) {
         context.dataStore.edit { settings ->
             settings[Keys.IS_MANUAL_LOCATION_ENABLED] = isEnabled
-            settings[Keys.MANUAL_LATITUDE] = lat
-            settings[Keys.MANUAL_LONGITUDE] = lon
+            settings[Keys.MANUAL_LATITUDE] = lat.coerceIn(-90.0, 90.0)
+            settings[Keys.MANUAL_LONGITUDE] = lon.coerceIn(-180.0, 180.0)
             settings[Keys.MANUAL_LOCATION_NAME] = name
         }
     }
@@ -240,7 +240,7 @@ class SettingsDataStore(private val context: Context) {
     }
 
     suspend fun updateGeofenceRadius(radiusMeters: Double) {
-        context.dataStore.edit { it[Keys.GEOFENCE_RADIUS] = radiusMeters }
+        context.dataStore.edit { it[Keys.GEOFENCE_RADIUS] = radiusMeters.coerceIn(1000.0, 100_000.0) }
     }
 
     suspend fun updateTrendChangeNotificationsEnabled(isEnabled: Boolean) {

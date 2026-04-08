@@ -17,7 +17,7 @@ class SettingsViewModelFactory(private val context: Context) : ViewModelProvider
             val geofenceRegistrar: pl.oki.frostalert.geofence.GeofenceRegistrarContract = pl.oki.frostalert.geofence.GeofenceRegistrar(context, settingsDataStore, locationRepo)
             val billingManager = BillingClientWrapper(context)
             @Suppress("UNCHECKED_CAST")
-            return SettingsViewModel(settingsRepository, geofenceRegistrar, context, billingManager) as T
+            return SettingsViewModel(settingsRepository, geofenceRegistrar, locationRepo, billingManager) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

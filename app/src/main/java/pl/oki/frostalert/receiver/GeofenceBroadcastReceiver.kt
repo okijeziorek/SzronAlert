@@ -14,14 +14,21 @@ import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.GeofenceRecord
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
+
+    companion object {
+        private const val TAG = "GeofenceReceiver"
+        /** Prefix used when constructing geofence request IDs. */
+        private const val GEOFENCE_ID_PREFIX = "geofence"
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         val geofencingEvent = GeofencingEvent.fromIntent(intent) ?: run {
-            Log.w("GeofenceReceiver", "GeofencingEvent null")
+            Log.w(TAG, "GeofencingEvent null")
             return
         }
 
         if (geofencingEvent.hasError()) {
-            Log.w("GeofenceReceiver", "Geofencing error: ${geofencingEvent.errorCode}")
+            Log.w(TAG, "Geofencing error: ${geofencingEvent.errorCode}")
             return
         }
 
@@ -30,32 +37,26 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             val triggeringGeofences = geofencingEvent.triggeringGeofences
             val geofence = triggeringGeofences?.firstOrNull()
             if (geofence != null) {
-                // W tym prostym podejściu zapisujemy tylko współrzędne geofencu
                 val requestId = geofence.requestId
-                // requestId może zawierać informacje o lat/lon jeśli zarejestrowano w tym formacie
-                // Spróbujmy sparsować lat/lon z requestId jeśli dostępne: id = "lat:lon:dir" lub podobnie
 
-                val parts = requestId.split(":")
-                val hasPrefix = parts.firstOrNull() == "geofence"
-                val latIndex = if (hasPrefix) 1 else 0
-                val lonIndex = if (hasPrefix) 2 else 1
-                val directionIndex = if (hasPrefix) 3 else 2
+                // Parse lat/lon from requestId format "geofence:<lat>:<lon>"
+                val parsed = parseGeofenceId(requestId)
+                if (parsed == null) {
+                    Log.w(TAG, "Could not parse geofence requestId: $requestId")
+                    return
+                }
+                val (lat, lon) = parsed
 
-                val lat = parts.getOrNull(latIndex)?.toDoubleOrNull() ?: 0.0
-                val lon = parts.getOrNull(lonIndex)?.toDoubleOrNull() ?: 0.0
-                val direction = parts.getOrNull(directionIndex)
-
+                // goAsync() keeps the receiver alive while the coroutine runs.
+                val pendingResult = goAsync()
                 val db = FrostDatabase.getDatabase(context)
-                val geofenceDao = db.run { this.geofenceDao() }
+                val geofenceDao = db.geofenceDao()
 
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        // Load user preferences so risk assessment uses their configured thresholds,
-                        // reducing false-positive geofence alerts.
                         val prefs = pl.oki.frostalert.data.local.SettingsDataStore(context)
                             .userPreferencesFlow.first()
 
-                        // Pobierz bieżące warunki pogodowe dla punktu
                         val weatherResult = pl.oki.frostalert.data.remote.OpenMeteoApi.getWeather(lat, lon)
                         var minTemp = 0.0
                         var hasRisk = false
@@ -70,7 +71,6 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                                 humidity = weather.current.humidity,
                                 precip = weather.current.precipitation,
                                 weatherCode = weather.current.weatherCode,
-                                // 1.0°C is the auto-mode default threshold (matches SettingsDataStore default).
                                 tempThreshold = if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
                                 humidityThreshold = prefs.humidityThreshold.toDouble(),
                                 precipitationThreshold = prefs.precipitationThreshold,
@@ -92,7 +92,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                             timestamp = System.currentTimeMillis(),
                             latitude = lat,
                             longitude = lon,
-                            direction = direction,
+                            direction = null,
                             minTemp = minTemp,
                             hasRisk = hasRisk,
                             riskLevel = riskLevel,
@@ -100,11 +100,26 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                         )
                         geofenceDao.insert(record)
                     } catch (e: Exception) {
-                        Log.w("GeofenceReceiver", "DB insert failed: ${e.message}")
+                        Log.w(TAG, "DB insert failed: ${e.message}")
+                    } finally {
+                        pendingResult.finish()
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Parses a geofence request ID in the format "geofence:<lat>:<lon>" and returns (lat, lon).
+     * Returns null if the format is invalid or coordinates cannot be parsed.
+     */
+    private fun parseGeofenceId(requestId: String): Pair<Double, Double>? {
+        val parts = requestId.split(":")
+        if (parts.size < 3 || parts[0] != GEOFENCE_ID_PREFIX) return null
+        val lat = parts[1].toDoubleOrNull() ?: return null
+        val lon = parts[2].toDoubleOrNull() ?: return null
+        if (lat !in -90.0..90.0 || lon !in -180.0..180.0) return null
+        return lat to lon
     }
 }
 

@@ -18,7 +18,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val geofenceRegistrar: pl.oki.frostalert.geofence.GeofenceRegistrarContract,
-    @javax.inject.Named("app_context") private val appContext: android.content.Context,
+    private val locationRepository: pl.oki.frostalert.data.repository.LocationRepository,
     private val billingManager: BillingManagerInterface
 ) : ViewModel() {
 
@@ -223,11 +223,7 @@ class SettingsViewModel @Inject constructor(
 
     private fun registerGeofenceForCurrentSettings() {
         try {
-            val locationRepo = pl.oki.frostalert.data.repository.LocationRepository(
-                appContext,
-                pl.oki.frostalert.data.local.SettingsDataStore(appContext)
-            )
-            geofenceRegistrar.registerForCurrentLocation(locationRepo)
+            geofenceRegistrar.registerForCurrentLocation(locationRepository)
         } catch (_: Exception) {
         }
     }

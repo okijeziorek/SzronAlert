@@ -5,7 +5,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Named
 import dagger.hilt.components.SingletonComponent
 import pl.oki.frostalert.billing.BillingClientWrapper
 import pl.oki.frostalert.billing.BillingManagerInterface
@@ -95,10 +94,6 @@ object AppModule {
     ): pl.oki.frostalert.geofence.GeofenceRegistrarContract {
         return pl.oki.frostalert.geofence.GeofenceRegistrar(context, settingsDataStore, locationRepository, geofenceManager)
     }
-
-    @Provides
-    @Named("app_context")
-    fun provideAppContext(@ApplicationContext context: Context): Context = context
 
     @Provides
     fun provideCalibrationDao(database: FrostDatabase): CalibrationDao {

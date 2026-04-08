@@ -13,6 +13,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -29,6 +30,10 @@ private const val TAG = "FrostWidgetProvider"
 
 // Application-level scope so widget updates are not tied to a single component lifecycle.
 private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+// Tracks the currently running update job so we can cancel it before starting a new one,
+// preventing many parallel coroutines from accumulating when widgets refresh frequently.
+private var currentWidgetJob: Job? = null
 
 class FrostWidgetProvider : AppWidgetProvider() {
 
@@ -67,7 +72,9 @@ class FrostWidgetProvider : AppWidgetProvider() {
 internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
     val views = RemoteViews(context.packageName, R.layout.frost_widget_layout)
 
-    widgetScope.launch {
+    // Cancel any in-flight update to avoid accumulating parallel coroutines.
+    currentWidgetJob?.cancel()
+    currentWidgetJob = widgetScope.launch {
         try {
             val db = FrostDatabase.getDatabase(context)
             val records = try {
