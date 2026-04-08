@@ -2,6 +2,7 @@ package pl.oki.frostalert.ui.screens
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.util.Log
 import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,6 +20,7 @@ import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.widget.WidgetSyncHelper
+import pl.oki.frostalert.R
 import javax.inject.Inject
 import pl.oki.frostalert.data.local.CalibrationDao
 
@@ -58,6 +60,10 @@ class HomeViewModel @Inject constructor(
     private val calibrationDao: CalibrationDao
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "HomeViewModel"
+    }
+
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
@@ -74,7 +80,7 @@ class HomeViewModel @Inject constructor(
         _showCalibrationDialog
     ) { prefs, weather, refreshing, showDialog ->
         if (weather == null) {
-            if (refreshing) HomeUiState.Loading else HomeUiState.Error("Pociągnij, aby odświeżyć dane.")
+            if (refreshing) HomeUiState.Loading else HomeUiState.Error(context.getString(R.string.home_pull_to_refresh))
         } else {
             val minTemp = WeatherCalculations.getNightMinTemp(weather.hourly)
             val hasRisk = WeatherCalculations.hasFrostRisk(
@@ -163,6 +169,7 @@ class HomeViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Error refreshing weather data: ${e.message}", e)
             } finally {
                 _isRefreshing.value = false
             }

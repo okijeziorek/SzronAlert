@@ -90,18 +90,18 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
             if (lastRecord != null) {
                 val sdf = SimpleDateFormat("d MMM", Locale.getDefault())
                 val date = sdf.format(Date(lastRecord.timestamp))
-                val riskText = if (lastRecord.hasRisk) "Wysokie" else "Niskie"
+                val riskText = if (lastRecord.hasRisk) context.getString(R.string.widget_risk_high_short) else context.getString(R.string.widget_risk_low_short)
                 val tempText = WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit)
 
-                views.setTextViewText(R.id.widget_title, "FrostAlert • $date")
-                views.setTextViewText(R.id.widget_temp, "Min: $tempText")
-                views.setTextViewText(R.id.widget_risk, "Ryzyko: $riskText")
+                views.setTextViewText(R.id.widget_title, context.getString(R.string.widget_title_with_date, date))
+                views.setTextViewText(R.id.widget_temp, context.getString(R.string.widget_temp_label, tempText))
+                views.setTextViewText(R.id.widget_risk, context.getString(R.string.widget_risk_label, riskText))
                 views.setViewVisibility(R.id.widget_temp, android.view.View.VISIBLE)
                 views.setViewVisibility(R.id.widget_risk, android.view.View.VISIBLE)
             } else {
-                views.setTextViewText(R.id.widget_title, "FrostAlert")
-                views.setTextViewText(R.id.widget_temp, "Brak danych")
-                views.setTextViewText(R.id.widget_risk, "Dotknij, aby odświeżyć")
+                views.setTextViewText(R.id.widget_title, context.getString(R.string.app_name))
+                views.setTextViewText(R.id.widget_temp, context.getString(R.string.widget_no_data))
+                views.setTextViewText(R.id.widget_risk, context.getString(R.string.widget_tap_to_refresh))
                 views.setViewVisibility(R.id.widget_temp, android.view.View.VISIBLE)
                 views.setViewVisibility(R.id.widget_risk, android.view.View.VISIBLE)
             }

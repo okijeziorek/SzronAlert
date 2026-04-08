@@ -176,4 +176,32 @@
     <string name="error_icon_description">Ikona błędu</string>
     <string name="retry_button">Spróbuj ponownie</string>
     <string name="no_forecast_data">Brak danych prognozy</string>
+
+    <!-- Home ViewModel -->
+    <string name="home_pull_to_refresh">Pociągnij, aby odświeżyć dane.</string>
+
+    <!-- Widget labels -->
+    <string name="widget_risk_high_short">Wysokie</string>
+    <string name="widget_risk_low_short">Niskie</string>
+    <string name="widget_no_data">Brak danych</string>
+    <string name="widget_tap_to_refresh">Dotknij, aby odświeżyć</string>
+    <string name="widget_temp_label">Min: %s</string>
+    <string name="widget_risk_label">Ryzyko: %s</string>
+    <string name="widget_title_with_date">FrostAlert • %s</string>
+
+    <!-- Notification titles and messages -->
+    <string name="notification_test_title">Testowe powiadomienie</string>
+    <string name="notification_test_message">To jest testowe powiadomienie o ryzyku szronu.</string>
+    <string name="notification_trend_title">Zmiana trendu temperatury</string>
+    <string name="notification_trend_warming">Robi się cieplej! 📈</string>
+    <string name="notification_trend_cooling">Robi się chłodniej! 📉</string>
+    <string name="notification_trend_stable">Trend się ustabilizował ➡️</string>
+    <string name="notification_geofence_title">⚠️ Wyższe ryzyko szronu w okolicy!</string>
+    <string name="notification_geofence_message">W kierunku %1$s ryzyko jest o %2$d%% wyższe. Aktualna prognoza: %3$.1f°C.</string>
+    <string name="notification_frost_car_title">Ryzyko lodu na szybach!</string>
+    <string name="notification_frost_garden_title">Ryzyko przymrozku w ogrodzie!</string>
+    <string name="notification_frost_car_alert_title">Uwaga, szron!</string>
+    <string name="notification_frost_garden_alert_title">Uwaga na rośliny!</string>
+    <string name="notification_frost_forecast_message">Prognozowane min: %.1f°C.</string>
+    <string name="notification_frost_night_message">Możliwy przymrozek w nocy.</string>
 </resources>
