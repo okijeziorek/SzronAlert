@@ -10,9 +10,11 @@ plugins {
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // Workaround: in some CI or local environments lint analysis can crash due to classloader issues.
-// Disable lint tasks here to allow builds/tests to proceed; re-enable lint checks in CI where environment is stable.
+// Disable lint tasks here by default; re-enable by passing -PlintEnabled=true on the command line
+// once the classloader issue is resolved in CI.
+val lintEnabled = findProperty("lintEnabled")?.toString()?.toBoolean() ?: false
 tasks.matching { it.name.startsWith("lint") }.configureEach {
-    enabled = false
+    enabled = lintEnabled
 }
 
 android {
@@ -141,6 +143,7 @@ dependencies {
     testImplementation("androidx.test:core:1.5.0")
     testImplementation("org.robolectric:robolectric:4.10.3")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    testImplementation("androidx.work:work-testing:2.10.0")
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

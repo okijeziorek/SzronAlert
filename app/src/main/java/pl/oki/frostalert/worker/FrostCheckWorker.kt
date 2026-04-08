@@ -174,7 +174,7 @@ class FrostCheckWorker @AssistedInject constructor(
                     if (!isCarMode && userPreferences.isGeofencingEnabled) {
                         try {
 
-                            val geofencingResult = locationRepository.checkGeofencingRisk(location, userPreferences)
+                            val geofencingResult = locationRepository.checkGeofencingRisk(location, userPreferences, currentWeather = weather)
                             when (geofencingResult) {
                                 is pl.oki.frostalert.data.repository.GeofencingResult.HigherRiskNearby -> {
                                     val direction = geofencingResult.direction

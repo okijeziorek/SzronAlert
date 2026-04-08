@@ -13,6 +13,19 @@ import kotlinx.coroutines.launch
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.GeofenceRecord
 
+/**
+ * Parsed components of a geofence request ID.
+ *
+ * Supports two formats:
+ * - `"geofence:<lat>:<lon>"` or `"geofence:<lat>:<lon>:<direction>"` (prefixed)
+ * - `"<lat>:<lon>"` or `"<lat>:<lon>:<direction>"` (bare)
+ */
+data class ParsedGeofenceId(
+    val latitude: Double,
+    val longitude: Double,
+    val direction: String?
+)
+
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
     companion object {
@@ -122,4 +135,3 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         return lat to lon
     }
 }
-
