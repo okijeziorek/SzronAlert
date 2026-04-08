@@ -13,15 +13,61 @@ import kotlinx.coroutines.launch
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.GeofenceRecord
 
+/**
+ * Parsed components of a geofence request ID.
+ *
+ * Supports two formats:
+ * - `"geofence:<lat>:<lon>"` or `"geofence:<lat>:<lon>:<direction>"` (prefixed)
+ * - `"<lat>:<lon>"` or `"<lat>:<lon>:<direction>"` (bare)
+ */
+data class ParsedGeofenceId(
+    val latitude: Double,
+    val longitude: Double,
+    val direction: String?
+)
+
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
+
+    companion object {
+        private const val TAG = "GeofenceReceiver"
+
+        /**
+         * Parses a geofence request ID into its lat/lon/direction components.
+         *
+         * @return [ParsedGeofenceId] with extracted coordinates, or `null` if the
+         *         [requestId] is blank, has too few parts, or contains non-numeric
+         *         latitude/longitude values.
+         */
+        fun parseRequestId(requestId: String?): ParsedGeofenceId? {
+            if (requestId.isNullOrBlank()) return null
+
+            val parts = requestId.split(":")
+            if (parts.size < 2) return null
+
+            val hasPrefix = parts.firstOrNull() == "geofence"
+            val latIndex = if (hasPrefix) 1 else 0
+            val lonIndex = if (hasPrefix) 2 else 1
+            val directionIndex = if (hasPrefix) 3 else 2
+
+            // Must have at least lat + lon parts
+            if (parts.size <= lonIndex) return null
+
+            val lat = parts.getOrNull(latIndex)?.toDoubleOrNull() ?: return null
+            val lon = parts.getOrNull(lonIndex)?.toDoubleOrNull() ?: return null
+            val direction = parts.getOrNull(directionIndex)?.takeIf { it.isNotBlank() }
+
+            return ParsedGeofenceId(lat, lon, direction)
+        }
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         val geofencingEvent = GeofencingEvent.fromIntent(intent) ?: run {
-            Log.w("GeofenceReceiver", "GeofencingEvent null")
+            Log.w(TAG, "GeofencingEvent null")
             return
         }
 
         if (geofencingEvent.hasError()) {
-            Log.w("GeofenceReceiver", "Geofencing error: ${geofencingEvent.errorCode}")
+            Log.w(TAG, "Geofencing error: ${geofencingEvent.errorCode}")
             return
         }
 
@@ -30,20 +76,10 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             val triggeringGeofences = geofencingEvent.triggeringGeofences
             val geofence = triggeringGeofences?.firstOrNull()
             if (geofence != null) {
-                // W tym prostym podejściu zapisujemy tylko współrzędne geofencu
-                val requestId = geofence.requestId
-                // requestId może zawierać informacje o lat/lon jeśli zarejestrowano w tym formacie
-                // Spróbujmy sparsować lat/lon z requestId jeśli dostępne: id = "lat:lon:dir" lub podobnie
-
-                val parts = requestId.split(":")
-                val hasPrefix = parts.firstOrNull() == "geofence"
-                val latIndex = if (hasPrefix) 1 else 0
-                val lonIndex = if (hasPrefix) 2 else 1
-                val directionIndex = if (hasPrefix) 3 else 2
-
-                val lat = parts.getOrNull(latIndex)?.toDoubleOrNull() ?: 0.0
-                val lon = parts.getOrNull(lonIndex)?.toDoubleOrNull() ?: 0.0
-                val direction = parts.getOrNull(directionIndex)
+                val parsed = parseRequestId(geofence.requestId)
+                val lat = parsed?.latitude ?: 0.0
+                val lon = parsed?.longitude ?: 0.0
+                val direction = parsed?.direction
 
                 val db = FrostDatabase.getDatabase(context)
                 val geofenceDao = db.run { this.geofenceDao() }
@@ -100,11 +136,10 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                         )
                         geofenceDao.insert(record)
                     } catch (e: Exception) {
-                        Log.w("GeofenceReceiver", "DB insert failed: ${e.message}")
+                        Log.w(TAG, "DB insert failed: ${e.message}")
                     }
                 }
             }
         }
     }
 }
-

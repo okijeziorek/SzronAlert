@@ -3,6 +3,7 @@ package pl.oki.frostalert.utils
 import pl.oki.frostalert.data.local.TemperatureRecord
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 object TrendCalculations {
 
@@ -41,9 +42,16 @@ object TrendCalculations {
     }
 
     /**
-     * Wylicza trend 7-dniowy na podstawie ostatnich rekordów
+     * Wylicza trend 7-dniowy na podstawie ostatnich rekordów.
+     *
+     * @param timeZone timezone used for day-boundary calculations; defaults to
+     *        the system default timezone. Pass an explicit timezone to get
+     *        deterministic results independent of the device's locale.
      */
-    fun calculateWeeklyTrend(records: List<TemperatureRecord>): WeeklyTrendStats {
+    fun calculateWeeklyTrend(
+        records: List<TemperatureRecord>,
+        timeZone: TimeZone = TimeZone.getDefault()
+    ): WeeklyTrendStats {
         if (records.isEmpty()) {
             return WeeklyTrendStats(
                 trendPoints = emptyList(),
@@ -56,7 +64,7 @@ object TrendCalculations {
         }
 
         val dailySummaries = records
-            .groupBy { startOfDay(it.timestamp) }
+            .groupBy { startOfDay(it.timestamp, timeZone) }
             .toList()
             .sortedByDescending { it.first }
             .take(7)
@@ -65,7 +73,7 @@ object TrendCalculations {
         val trendPoints = dailySummaries.map { (dayStart, dayRecords) ->
             val minRecord = dayRecords.minBy { it.minTemp }
             DailyTrendPoint(
-                dayLabel = getRelativeDayLabel(dayStart),
+                dayLabel = getRelativeDayLabel(dayStart, timeZone),
                 minTemp = minRecord.minTemp,
                 hasFrostRisk = dayRecords.any { it.hasRisk },
                 timestamp = dayStart
@@ -88,12 +96,20 @@ object TrendCalculations {
     }
 
     /**
-     * Wylicza przyszły trend 7-dniowy na podstawie prognozy pogody
+     * Wylicza przyszły trend 7-dniowy na podstawie prognozy pogody.
+     *
+     * @param timeZone timezone used for parsing hourly timestamps and computing
+     *        day boundaries; defaults to system default. The Open-Meteo API returns
+     *        timestamps in the location's local time (controlled by `timezone=auto`),
+     *        so passing the forecast location's timezone produces correct results.
      */
-    fun calculateFutureWeeklyTrend(weatherResponse: pl.oki.frostalert.data.remote.WeatherResponse): WeeklyTrendStats {
+    fun calculateFutureWeeklyTrend(
+        weatherResponse: pl.oki.frostalert.data.remote.WeatherResponse,
+        timeZone: TimeZone = TimeZone.getDefault()
+    ): WeeklyTrendStats {
         val hourly = weatherResponse.hourly
         val now = System.currentTimeMillis()
-        val calendar = Calendar.getInstance()
+        val calendar = Calendar.getInstance(timeZone)
 
         // Znajdź indeks dla jutra 00:00
         calendar.timeInMillis = now
@@ -107,6 +123,7 @@ object TrendCalculations {
         // Znajdź indeks w hourly.time najbliższy do tomorrowStart
         var startIndex = 0
         val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.US)
+        sdf.timeZone = timeZone
         for (i in hourly.time.indices) {
             val timeMillis = sdf.parse(hourly.time[i])?.time ?: 0
             if (timeMillis >= tomorrowStart) {
@@ -216,18 +233,23 @@ object TrendCalculations {
     /**
      * Zwraca etykietę dnia (Dziś, Wczoraj, itd.)
      */
-    private fun getRelativeDayLabel(timestamp: Long): String {
-        val daysAgo = ((startOfDay(System.currentTimeMillis()) - startOfDay(timestamp)) / MILLIS_IN_DAY).toInt()
+    private fun getRelativeDayLabel(timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): String {
+        val daysAgo = ((startOfDay(System.currentTimeMillis(), timeZone) - startOfDay(timestamp, timeZone)) / MILLIS_IN_DAY).toInt()
         return when (daysAgo) {
             0 -> "Dziś"
             1 -> "Wczoraj"
             in 2..6 -> "$daysAgo dni temu"
-            else -> getDayOfWeekShort(timestamp)
+            else -> getDayOfWeekShort(timestamp, timeZone)
         }
     }
 
-    private fun startOfDay(timestamp: Long): Long {
-        val calendar = Calendar.getInstance().apply {
+    /**
+     * Returns the start-of-day (midnight) timestamp for the given [timestamp].
+     *
+     * @param timeZone timezone used to determine midnight; defaults to system default.
+     */
+    internal fun startOfDay(timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): Long {
+        val calendar = Calendar.getInstance(timeZone).apply {
             timeInMillis = timestamp
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -254,10 +276,12 @@ object TrendCalculations {
     }
 
     /**
-     * Zwraca skrót dnia tygodnia
+     * Zwraca skrót dnia tygodnia.
+     *
+     * @param timeZone timezone used for day-of-week determination; defaults to system default.
      */
-    fun getDayOfWeekShort(timestamp: Long): String {
-        val calendar = Calendar.getInstance()
+    fun getDayOfWeekShort(timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): String {
+        val calendar = Calendar.getInstance(timeZone)
         calendar.timeInMillis = timestamp
         val dayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
             Calendar.MONDAY -> "Pn"

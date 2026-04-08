@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.suspendCancellableCoroutine
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.remote.OpenMeteoApi
+import pl.oki.frostalert.data.remote.WeatherResponse
 import pl.oki.frostalert.utils.AppResult
+import pl.oki.frostalert.utils.GeofenceRateLimiter
 import pl.oki.frostalert.utils.WeatherCalculations
 import kotlin.coroutines.resume
 import kotlin.math.abs
@@ -59,20 +61,39 @@ class LocationRepository(private val context: Context, private val settingsDataS
 
     /**
      * Sprawdza czy użytkownik wjechał w rejon z wyższym ryzykiem szronu
-     * Porównuje aktualną lokalizację z sąsiednimi punktami geograficznymi
+     * Porównuje aktualną lokalizację z sąsiednimi punktami geograficznymi.
+     *
+     * @param currentLocation the user's current location
+     * @param userPrefs user preferences (thresholds, modes)
+     * @param currentWeather optional pre-fetched weather for [currentLocation]; when
+     *        provided the method skips the redundant API call for the current location,
+     *        keeping total API calls at [GeofenceRateLimiter.MAX_CALLS_PER_TRIGGER] (8).
      */
-    suspend fun checkGeofencingRisk(currentLocation: Location, userPrefs: pl.oki.frostalert.data.local.UserPreferences): GeofencingResult {
+    suspend fun checkGeofencingRisk(
+        currentLocation: Location,
+        userPrefs: pl.oki.frostalert.data.local.UserPreferences,
+        currentWeather: WeatherResponse? = null
+    ): GeofencingResult {
         if (!userPrefs.isGeofencingEnabled) {
             return GeofencingResult.NoRisk
         }
 
-        // Sprawdź ryzyko w aktualnej lokalizacji
-        val currentRisk = getFrostRiskForLocation(currentLocation.latitude, currentLocation.longitude, userPrefs)
-        if (currentRisk is AppResult.Error) {
-            return GeofencingResult.Error("Błąd pobierania danych pogodowych")
-        }
+        val rateLimiter = GeofenceRateLimiter()
 
-        val currentRiskData = (currentRisk as AppResult.Success).data
+        // Sprawdź ryzyko w aktualnej lokalizacji — reuse pre-fetched data when available
+        val currentRiskData = if (currentWeather != null) {
+            computeRiskFromWeather(currentWeather, currentLocation.latitude, currentLocation.longitude, userPrefs)
+        } else {
+            // Fallback: fetch weather (counts against rate limit)
+            if (!rateLimiter.tryAcquire()) {
+                return GeofencingResult.Error("Przekroczono limit zapytań API")
+            }
+            val currentRisk = getFrostRiskForLocation(currentLocation.latitude, currentLocation.longitude, userPrefs)
+            if (currentRisk is AppResult.Error) {
+                return GeofencingResult.Error("Błąd pobierania danych pogodowych")
+            }
+            (currentRisk as AppResult.Success).data
+        }
 
         // Sprawdź ryzyko w sąsiednich lokalizacjach (w promieniu ~20km)
         // Używamy 0.18 dla przesunięć N/S/E/W (~20km), a dla diagonalnych przesunięć ~0.127 (0.18/sqrt(2))
@@ -101,6 +122,8 @@ class LocationRepository(private val context: Context, private val settingsDataS
         var riskierDirection: String? = null
 
         for ((nearbyLoc, dir) in nearbyLocations) {
+            if (!rateLimiter.tryAcquire()) break
+
             val nearbyRisk = getFrostRiskForLocation(nearbyLoc.latitude, nearbyLoc.longitude, userPrefs)
             if (nearbyRisk is AppResult.Success) {
                 val nearbyRiskData = nearbyRisk.data
@@ -122,6 +145,44 @@ class LocationRepository(private val context: Context, private val settingsDataS
         } else {
             GeofencingResult.NoRisk
         }
+    }
+
+    /**
+     * Computes frost risk data from an already-fetched [WeatherResponse], avoiding
+     * a redundant network call when the caller already has weather for this location.
+     */
+    private fun computeRiskFromWeather(
+        weather: WeatherResponse,
+        lat: Double,
+        lon: Double,
+        userPrefs: pl.oki.frostalert.data.local.UserPreferences
+    ): FrostRiskData {
+        val minTemp = WeatherCalculations.getNightMinTemp(weather.hourly)
+        val hasRisk = WeatherCalculations.hasFrostRisk(
+            temp = minTemp,
+            humidity = weather.current.humidity,
+            precip = weather.current.precipitation,
+            weatherCode = weather.current.weatherCode,
+            tempThreshold = if (userPrefs.isAutoModeEnabled) 1.0 else userPrefs.tempThreshold,
+            humidityThreshold = userPrefs.humidityThreshold.toDouble(),
+            precipitationThreshold = userPrefs.precipitationThreshold,
+            sensitivity = userPrefs.sensitivity,
+            windSpeed = weather.current.windSpeed,
+            appMode = userPrefs.appMode
+        )
+        val riskLevel = when {
+            hasRisk && minTemp < -5 -> 1.0
+            hasRisk && minTemp < 0 -> 0.7
+            hasRisk -> 0.5
+            minTemp < 2 -> 0.2
+            else -> 0.0
+        }
+        return FrostRiskData(
+            minTemp = minTemp,
+            hasRisk = hasRisk,
+            riskLevel = riskLevel,
+            locationName = getLocationName(lat, lon)
+        )
     }
 
     /**
