@@ -43,6 +43,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         fun parseRequestId(requestId: String?): ParsedGeofenceId? {
             if (requestId.isNullOrBlank()) return null
             val parts = requestId.split(":")
+            if (parts.isEmpty()) return null
             val lat: Double
             val lon: Double
             val direction: String?
