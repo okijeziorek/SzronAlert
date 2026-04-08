@@ -104,6 +104,8 @@ class LocationRepository(private val context: Context, private val settingsDataS
             return GeofencingResult.Error("Błąd pobierania danych pogodowych")
         }
 
+        val rateLimiter = GeofenceRateLimiter()
+
         // Sprawdź ryzyko w aktualnej lokalizacji — reuse pre-fetched data when available
         val currentRiskData = if (currentWeather != null) {
             computeRiskFromWeather(currentWeather, currentLocation.latitude, currentLocation.longitude, userPrefs)
