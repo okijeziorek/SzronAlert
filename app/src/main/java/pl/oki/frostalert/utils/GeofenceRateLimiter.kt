@@ -1,7 +1,5 @@
 package pl.oki.frostalert.utils
 
-import android.util.Log
-
 /**
  * Rate limiter for geofence-triggered weather API calls.
  *
@@ -20,8 +18,6 @@ class GeofenceRateLimiter(
          * The current-location call is avoided by reusing already-fetched weather data.
          */
         const val MAX_CALLS_PER_TRIGGER = 8
-
-        private const val TAG = "GeofenceRateLimiter"
     }
 
     private var callCount = 0
@@ -32,7 +28,6 @@ class GeofenceRateLimiter(
      */
     fun tryAcquire(): Boolean {
         if (callCount >= maxCallsPerTrigger) {
-            Log.w(TAG, "Rate limit reached: $callCount/$maxCallsPerTrigger calls used")
             return false
         }
         callCount++
