@@ -32,6 +32,37 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         private const val TAG = "GeofenceReceiver"
         /** Prefix used when constructing geofence request IDs. */
         private const val GEOFENCE_ID_PREFIX = "geofence"
+
+        /**
+         * Parses a geofence request ID in two supported formats:
+         * - Prefixed: `"geofence:<lat>:<lon>"` or `"geofence:<lat>:<lon>:<direction>"`
+         * - Bare: `"<lat>:<lon>"` or `"<lat>:<lon>:<direction>"`
+         *
+         * @return [ParsedGeofenceId] on success, or `null` if the input is null/blank/malformed.
+         */
+        fun parseRequestId(requestId: String?): ParsedGeofenceId? {
+            if (requestId.isNullOrBlank()) return null
+            val parts = requestId.split(":")
+            if (parts.isEmpty()) return null
+            val lat: Double
+            val lon: Double
+            val direction: String?
+            if (parts[0] == GEOFENCE_ID_PREFIX) {
+                // Prefixed format: ["geofence", lat, lon, direction?]
+                if (parts.size < 3) return null
+                lat = parts[1].toDoubleOrNull() ?: return null
+                lon = parts[2].toDoubleOrNull() ?: return null
+                direction = parts.getOrNull(3)?.takeIf { it.isNotBlank() }
+            } else {
+                // Bare format: [lat, lon, direction?]
+                if (parts.size < 2) return null
+                lat = parts[0].toDoubleOrNull() ?: return null
+                lon = parts[1].toDoubleOrNull() ?: return null
+                direction = parts.getOrNull(2)?.takeIf { it.isNotBlank() }
+            }
+            if (lat !in -90.0..90.0 || lon !in -180.0..180.0) return null
+            return ParsedGeofenceId(lat, lon, direction)
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -52,13 +83,14 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             if (geofence != null) {
                 val requestId = geofence.requestId
 
-                // Parse lat/lon from requestId format "geofence:<lat>:<lon>"
-                val parsed = parseGeofenceId(requestId)
+                // Parse lat/lon (and optional direction) from requestId
+                val parsed = parseRequestId(requestId)
                 if (parsed == null) {
                     Log.w(TAG, "Could not parse geofence requestId: $requestId")
                     return
                 }
-                val (lat, lon) = parsed
+                val lat = parsed.latitude
+                val lon = parsed.longitude
 
                 // goAsync() keeps the receiver alive while the coroutine runs.
                 val pendingResult = goAsync()
@@ -105,7 +137,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                             timestamp = System.currentTimeMillis(),
                             latitude = lat,
                             longitude = lon,
-                            direction = null,
+                            direction = parsed.direction,
                             minTemp = minTemp,
                             hasRisk = hasRisk,
                             riskLevel = riskLevel,
@@ -122,16 +154,4 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         }
     }
 
-    /**
-     * Parses a geofence request ID in the format "geofence:<lat>:<lon>" and returns (lat, lon).
-     * Returns null if the format is invalid or coordinates cannot be parsed.
-     */
-    private fun parseGeofenceId(requestId: String): Pair<Double, Double>? {
-        val parts = requestId.split(":")
-        if (parts.size < 3 || parts[0] != GEOFENCE_ID_PREFIX) return null
-        val lat = parts[1].toDoubleOrNull() ?: return null
-        val lon = parts[2].toDoubleOrNull() ?: return null
-        if (lat !in -90.0..90.0 || lon !in -180.0..180.0) return null
-        return lat to lon
-    }
 }

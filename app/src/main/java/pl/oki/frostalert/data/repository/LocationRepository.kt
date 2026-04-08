@@ -104,6 +104,10 @@ class LocationRepository(private val context: Context, private val settingsDataS
             return GeofencingResult.Error("Błąd pobierania danych pogodowych")
         }
 
+        // Fresh limiter for each trigger cycle — this is intentional: GeofenceRateLimiter
+        // tracks calls within a single geofence trigger (max 8 API calls per trigger).
+        val rateLimiter = GeofenceRateLimiter()
+
         // Sprawdź ryzyko w aktualnej lokalizacji — reuse pre-fetched data when available
         val currentRiskData = if (currentWeather != null) {
             computeRiskFromWeather(currentWeather, currentLocation.latitude, currentLocation.longitude, userPrefs)
