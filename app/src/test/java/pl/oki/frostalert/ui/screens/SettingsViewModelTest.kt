@@ -81,8 +81,8 @@ class SettingsViewModelTest {
 
         val geofenceRegistrar = FakeRegistrar()
         val billingManager = FakeBillingManager()
-        val appContext: android.content.Context = mock()
-        viewModel = SettingsViewModel(repository, geofenceRegistrar, appContext, billingManager)
+        val locationRepository: pl.oki.frostalert.data.repository.LocationRepository = mock()
+        viewModel = SettingsViewModel(repository, geofenceRegistrar, locationRepository, billingManager)
     }
 
     @After

@@ -183,6 +183,7 @@
     <string name="widget_risk_low_short">Low</string>
     <string name="widget_no_data">No data</string>
     <string name="widget_tap_to_refresh">Tap to refresh</string>
+    <string name="widget_refresh_button">Refresh</string>
     <string name="widget_temp_label">Min: %s</string>
     <string name="widget_risk_label">Risk: %s</string>
     <string name="widget_title_with_date">FrostAlert • %s</string>
