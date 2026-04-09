@@ -9,5 +9,6 @@ data class TemperatureRecord(
     val id: Int = 0,
     val timestamp: Long,
     val minTemp: Double,
-    val hasRisk: Boolean
+    val hasRisk: Boolean,
+    val frostProbability: Int = 0
 )

@@ -8,6 +8,8 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.math.ln
+import kotlin.math.max
+import kotlin.math.min
 
 object WeatherCalculations {
 
@@ -58,6 +60,85 @@ object WeatherCalculations {
         return (surfaceTemp + windAdjustment) <= tempThreshold && 
                (surfaceTemp + windAdjustment) <= dewPoint && 
                humidity >= humidityThreshold
+    }
+
+    /**
+     * Oblicza prawdopodobieństwo szronu jako wartość 0-100.
+     * Uwzględnia: odległość temperatury od progu, punkt rosy, wilgotność,
+     * kod pogody (czyste niebo = wyższe ryzyko) oraz wiatr.
+     */
+    fun calculateFrostProbability(
+        temp: Double,
+        humidity: Double,
+        precip: Double,
+        weatherCode: Int,
+        tempThreshold: Double,
+        humidityThreshold: Double,
+        precipitationThreshold: Double,
+        sensitivity: Double = 1.0,
+        windSpeed: Double = 0.0,
+        appMode: Int = 0
+    ): Int {
+        // Wiatr >15 km/h eliminuje ryzyko szronu
+        if (windSpeed > 15.0) return 0
+
+        val dewPoint = calculateDewPoint(temp, humidity)
+        val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity, appMode)
+        val windAdjustment = if (windSpeed > 5.0) 0.5 else 0.0
+        val effectiveSurface = surfaceTemp + windAdjustment
+
+        // 1. Czynnik temperaturowy: ile poniżej progu (0-40 punktów)
+        val tempDelta = tempThreshold - effectiveSurface
+        val tempFactor = (tempDelta.coerceIn(0.0, 8.0) / 8.0 * 40.0).toInt()
+
+        // 2. Czynnik wilgotności: bliskość 100% (0-25 punktów)
+        val humidityExcess = humidity - humidityThreshold
+        val humidityFactor = if (humidityExcess >= 0) {
+            val range = 100.0 - humidityThreshold
+            if (range > 0) (humidityExcess / range * 25.0).toInt() else 25
+        } else {
+            0
+        }
+
+        // 3. Czynnik klarowności nieba (0-20 punktów)
+        val skyFactor = when (weatherCode) {
+            0 -> 20
+            1 -> 15
+            2 -> 10
+            3 -> 5
+            else -> 0
+        }
+
+        // 4. Bliskość punktu rosy: powierzchnia <= punkt rosy → +15
+        val dewPointBonus = if (effectiveSurface <= dewPoint) 15 else 0
+
+        var score = tempFactor + humidityFactor + skyFactor + dewPointBonus
+
+        // 5. Kara za wiatr
+        when {
+            windSpeed > 10.0 -> score -= 30
+            windSpeed > 5.0 -> score -= 15
+        }
+
+        // Opady z kodem pogody < 70 (deszcz, nie śnieg/mgła) zmniejszają ryzyko szronu
+        if (precip > precipitationThreshold && weatherCode < 70) {
+            score -= 20
+        }
+
+        return score.coerceIn(0, 100)
+    }
+
+    /**
+     * Etykieta tekstowa poziomu ryzyka szronu.
+     */
+    fun getFrostProbabilityLabel(probability: Int): String {
+        return when {
+            probability >= 80 -> "Bardzo wysokie"
+            probability >= 60 -> "Wysokie"
+            probability >= 40 -> "Umiarkowane"
+            probability >= 20 -> "Niskie"
+            else -> "Minimalne"
+        }
     }
 
     /**

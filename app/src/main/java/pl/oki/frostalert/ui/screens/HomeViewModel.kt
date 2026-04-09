@@ -30,6 +30,7 @@ sealed class HomeUiState {
         val weather: WeatherResponse,
         val minTemp: Double,
         val hasFrostRisk: Boolean,
+        val frostProbability: Int,
         val warningMessage: String,
         val appMode: Int,
         val useFahrenheit: Boolean,
@@ -108,8 +109,19 @@ class HomeViewModel @Inject constructor(
                 useFahrenheit = prefs.useFahrenheit
             )
 
+            val frostProbability = WeatherCalculations.calculateFrostProbability(
+                minTemp, weather.current.humidity, weather.current.precipitation,
+                weather.current.weatherCode,
+                if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
+                if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                sensitivity = prefs.sensitivity,
+                windSpeed = weather.current.windSpeed,
+                appMode = prefs.appMode
+            )
+
             HomeUiState.Success(
-                weather, minTemp, hasRisk, warningMessage, prefs.appMode, prefs.useFahrenheit,
+                weather, minTemp, hasRisk, frostProbability, warningMessage, prefs.appMode, prefs.useFahrenheit,
                 showCalibrationDialog = showDialog
             )
         }
@@ -146,11 +158,23 @@ class HomeViewModel @Inject constructor(
                         windSpeed = weatherResult.data.current.windSpeed,
                         appMode = prefs.appMode
                     )
+
+                    val frostProbability = WeatherCalculations.calculateFrostProbability(
+                        minTemp, weatherResult.data.current.humidity, weatherResult.data.current.precipitation,
+                        weatherResult.data.current.weatherCode,
+                        if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                        if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
+                        if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                        sensitivity = prefs.sensitivity,
+                        windSpeed = weatherResult.data.current.windSpeed,
+                        appMode = prefs.appMode
+                    )
                     
                     temperatureDao.insert(TemperatureRecord(
                         timestamp = System.currentTimeMillis(),
                         minTemp = minTemp,
-                        hasRisk = hasRisk
+                        hasRisk = hasRisk,
+                        frostProbability = frostProbability
                     ))
                     // Aktualizuj oba widgety przez WidgetSyncHelper aby nie dopuścić do rozbieżności
                     WidgetSyncHelper.updateAll(context)

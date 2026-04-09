@@ -119,7 +119,11 @@ class FrostGlanceWidget : GlanceAppWidget() {
             if (lastRecord != null) {
                 val date = try { SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(lastRecord.timestamp)) } catch (_: Exception) { "--" }
                 val tempText = try { WeatherCalculations.formatTemperature(lastRecord.minTemp, useFahrenheit) } catch (_: Exception) { "--" }
-                val riskText = if (lastRecord.hasRisk) riskHighLabel else riskLowLabel
+                val riskText = if (lastRecord.frostProbability > 0) {
+                    "${lastRecord.frostProbability}%"
+                } else {
+                    if (lastRecord.hasRisk) riskHighLabel else riskLowLabel
+                }
 
                 Text(
                     text = String.format(tempLabelFormat, tempText),

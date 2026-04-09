@@ -128,10 +128,24 @@ class FrostCheckWorker @AssistedInject constructor(
                         appMode = appMode
                     )
 
+                    val frostProbability = WeatherCalculations.calculateFrostProbability(
+                        temp = minTemp,
+                        humidity = weather.current.humidity,
+                        precip = weather.current.precipitation,
+                        weatherCode = weather.current.weatherCode,
+                        tempThreshold = tempThreshold,
+                        humidityThreshold = humidityThreshold,
+                        precipitationThreshold = precipitationThreshold,
+                        sensitivity = sensitivity,
+                        windSpeed = weather.current.windSpeed,
+                        appMode = appMode
+                    )
+
                     val record = TemperatureRecord(
                         timestamp = System.currentTimeMillis(),
                         minTemp = minTemp,
-                        hasRisk = hasRisk
+                        hasRisk = hasRisk,
+                        frostProbability = frostProbability
                     )
                     temperatureDao.insert(record)
 

@@ -169,6 +169,7 @@ fun WeatherSuccessContent(
         } else {
             FrostWarningCard(
                 hasRisk = state.hasFrostRisk,
+                frostProbability = state.frostProbability,
                 warningMessage = state.warningMessage,
                 windSpeed = state.weather.current.windSpeed,
                 isGarden = isGarden
@@ -427,7 +428,7 @@ fun FeedbackSection(onCorrection: (Boolean) -> Unit) {
 }
 
 @Composable
-fun FrostWarningCard(hasRisk: Boolean, warningMessage: String, windSpeed: Double, isGarden: Boolean) {
+fun FrostWarningCard(hasRisk: Boolean, frostProbability: Int, warningMessage: String, windSpeed: Double, isGarden: Boolean) {
     val containerColor = if (hasRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
     val icon = if (hasRisk) (if (isGarden) Icons.Default.Warning else Icons.Default.AcUnit) else Icons.Default.CheckCircle
     
@@ -438,7 +439,19 @@ fun FrostWarningCard(hasRisk: Boolean, warningMessage: String, windSpeed: Double
     ) {
         Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(64.dp), tint = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "${frostProbability}%",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Black,
+                color = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = WeatherCalculations.getFrostProbabilityLabel(frostProbability),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(12.dp))
             Text(
                 text = if (isGarden && hasRisk) warningMessage.replace("Wysokie ryzyko szronu!", stringResource(R.string.risk_garden)) else warningMessage,
                 style = MaterialTheme.typography.titleLarge, 

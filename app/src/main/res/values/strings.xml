@@ -205,4 +205,13 @@
     <string name="notification_frost_garden_alert_title">Uwaga na rośliny!</string>
     <string name="notification_frost_forecast_message">Prognozowane min: %.1f°C.</string>
     <string name="notification_frost_night_message">Możliwy przymrozek w nocy.</string>
+
+    <!-- Frost Probability -->
+    <string name="frost_probability_very_high">Bardzo wysokie</string>
+    <string name="frost_probability_high">Wysokie</string>
+    <string name="frost_probability_moderate">Umiarkowane</string>
+    <string name="frost_probability_low">Niskie</string>
+    <string name="frost_probability_minimal">Minimalne</string>
+    <string name="frost_probability_label">Prawdopodobieństwo szronu</string>
+    <string name="widget_risk_probability">%d%%</string>
 </resources>
