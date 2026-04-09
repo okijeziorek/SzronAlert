@@ -135,6 +135,7 @@ fun WeatherSuccessContent(
 ) {
     val isGarden = state.appMode == 1
     val isSummer = state.weather.current.temperature > 15.0
+    val isPro by settingsViewModel.isPro.collectAsState()
     
     // Zapamiętujemy lokalnie, czy feedback został wysłany w tej sesji
     var feedbackSubmitted by remember { mutableStateOf(false) }
@@ -215,6 +216,10 @@ fun WeatherSuccessContent(
 
         MinTemperatureCard(minTemp = state.minTemp, useFahrenheit = state.useFahrenheit, isGarden = isGarden)
         HourlyForecastSection(hourly = state.weather.hourly, useFahrenheit = state.useFahrenheit)
+
+        if (!isPro) {
+            MonetizationBanner()
+        }
     }
 
     // KALIBRACJA ALGORYTMU - Dialog zbierania feedbacku

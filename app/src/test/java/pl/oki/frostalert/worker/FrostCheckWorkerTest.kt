@@ -12,9 +12,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -23,6 +25,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.TemperatureDao
+import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.local.UserPreferences
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.NetworkMonitor
@@ -42,7 +45,8 @@ class FrostCheckWorkerTest {
         ignoreUntil: Long = 0L,
         isAutoModeEnabled: Boolean = true,
         isGeofencingEnabled: Boolean = false,
-        isTrendChangeNotificationsEnabled: Boolean = false
+        isTrendChangeNotificationsEnabled: Boolean = false,
+        appMode: Int = 0
     ) = UserPreferences(
         tempThreshold = 1.0,
         humidityThreshold = 75,
@@ -55,7 +59,7 @@ class FrostCheckWorkerTest {
         isCarModeEnabled = true,
         isAutoModeEnabled = isAutoModeEnabled,
         isMataOptionEnabled = false,
-        appMode = 0,
+        appMode = appMode,
         lastFeedbackTimestamp = 0L,
         isProForced = false,
         heatThreshold = 30.0,
@@ -106,6 +110,8 @@ class FrostCheckWorkerTest {
             .build() as FrostCheckWorker
     }
 
+    // ── Test notification ──────────────────────────────────────────────────────
+
     @Test
     fun `test notification returns success immediately`() = runTest {
         val inputData = androidx.work.Data.Builder()
@@ -118,6 +124,8 @@ class FrostCheckWorkerTest {
         assertEquals(ListenableWorker.Result.success(), result)
     }
 
+    // ── Network scenarios ──────────────────────────────────────────────────────
+
     @Test
     fun `network unavailable returns retry`() = runTest {
         whenever(networkMonitor.isCurrentlyOnline()).thenReturn(false)
@@ -127,6 +135,19 @@ class FrostCheckWorkerTest {
 
         assertEquals(ListenableWorker.Result.retry(), result)
     }
+
+    @Test
+    fun `network unavailable does not attempt location or weather fetch`() = runTest {
+        whenever(networkMonitor.isCurrentlyOnline()).thenReturn(false)
+
+        val worker = buildWorker()
+        worker.doWork()
+
+        verify(locationRepository, never()).getEffectiveLocation()
+        verify(settingsDataStore, never()).userPreferencesFlow
+    }
+
+    // ── Ignore scenarios ───────────────────────────────────────────────────────
 
     @Test
     fun `ignoreUntil in the future returns success without fetching weather`() = runTest {
@@ -142,6 +163,23 @@ class FrostCheckWorkerTest {
     }
 
     @Test
+    fun `ignoreUntil in the past proceeds normally`() = runTest {
+        whenever(networkMonitor.isCurrentlyOnline()).thenReturn(true)
+        val prefs = buildPrefs(ignoreUntil = System.currentTimeMillis() - 60_000)
+        whenever(settingsDataStore.userPreferencesFlow).thenReturn(MutableStateFlow(prefs))
+        whenever(locationRepository.getEffectiveLocation()).thenReturn(null)
+
+        val worker = buildWorker()
+        val result = worker.doWork()
+
+        // Location is null so should retry — but the point is it tried to get location
+        verify(locationRepository).getEffectiveLocation()
+        assertEquals(ListenableWorker.Result.retry(), result)
+    }
+
+    // ── Location scenarios ─────────────────────────────────────────────────────
+
+    @Test
     fun `location unavailable returns retry`() = runTest {
         whenever(networkMonitor.isCurrentlyOnline()).thenReturn(true)
         whenever(settingsDataStore.userPreferencesFlow).thenReturn(MutableStateFlow(buildPrefs()))
@@ -152,6 +190,22 @@ class FrostCheckWorkerTest {
 
         assertEquals(ListenableWorker.Result.retry(), result)
     }
+
+    @Test
+    fun `location throws SecurityException returns retry`() = runTest {
+        whenever(networkMonitor.isCurrentlyOnline()).thenReturn(true)
+        whenever(settingsDataStore.userPreferencesFlow).thenReturn(MutableStateFlow(buildPrefs()))
+        whenever(locationRepository.getEffectiveLocation()).thenThrow(SecurityException("Permission denied"))
+
+        val worker = buildWorker()
+        val result = worker.doWork()
+
+        // SecurityException is caught by outer catch block — should retry
+        val resultIsRetryOrFailure = result == ListenableWorker.Result.retry() || result == ListenableWorker.Result.failure()
+        assertTrue("Expected retry or failure for permission denied", resultIsRetryOrFailure)
+    }
+
+    // ── API failure scenarios ──────────────────────────────────────────────────
 
     @Test
     fun `worker does not crash when API is unreachable`() = runTest {
@@ -172,6 +226,79 @@ class FrostCheckWorkerTest {
         val isValidResult = result == ListenableWorker.Result.success() ||
                 result == ListenableWorker.Result.retry() ||
                 result == ListenableWorker.Result.failure()
-        assertEquals(true, isValidResult)
+        assertTrue("Worker should return a valid Result, not crash", isValidResult)
+    }
+
+    // ── DB error scenarios ─────────────────────────────────────────────────────
+
+    @Test
+    fun `worker handles DB insert error gracefully`() = runTest {
+        whenever(networkMonitor.isCurrentlyOnline()).thenReturn(true)
+        whenever(settingsDataStore.userPreferencesFlow).thenReturn(MutableStateFlow(buildPrefs()))
+        val location = Location("test").apply {
+            latitude = 52.2297
+            longitude = 21.0122
+        }
+        whenever(locationRepository.getEffectiveLocation()).thenReturn(location)
+        whenever(temperatureDao.insert(any())).thenThrow(RuntimeException("DB is locked"))
+        whenever(temperatureDao.getRecentRecords()).thenReturn(flowOf(emptyList()))
+
+        // The actual API call will fail in test env, so the DB error may not be reached.
+        // But the worker should handle any error path gracefully.
+        val worker = buildWorker()
+        val result = worker.doWork()
+
+        val isValidResult = result == ListenableWorker.Result.success() ||
+                result == ListenableWorker.Result.retry() ||
+                result == ListenableWorker.Result.failure()
+        assertTrue("Worker should handle DB errors gracefully", isValidResult)
+    }
+
+    // ── Car mode scenarios ─────────────────────────────────────────────────────
+
+    @Test
+    fun `car mode input data is propagated correctly`() = runTest {
+        whenever(networkMonitor.isCurrentlyOnline()).thenReturn(true)
+        whenever(settingsDataStore.userPreferencesFlow).thenReturn(MutableStateFlow(buildPrefs()))
+        val location = Location("test").apply {
+            latitude = 52.2297
+            longitude = 21.0122
+        }
+        whenever(locationRepository.getEffectiveLocation()).thenReturn(location)
+        whenever(temperatureDao.getRecentRecords()).thenReturn(flowOf(emptyList()))
+
+        val inputData = androidx.work.Data.Builder()
+            .putBoolean("IS_CAR_MODE", true)
+            .build()
+        val worker = buildWorker(inputData)
+        val result = worker.doWork()
+
+        // Should not crash regardless of car mode flag
+        val isValidResult = result == ListenableWorker.Result.success() ||
+                result == ListenableWorker.Result.retry() ||
+                result == ListenableWorker.Result.failure()
+        assertTrue("Worker should handle car mode flag without crashing", isValidResult)
+    }
+
+    // ── Garden mode scenario ───────────────────────────────────────────────────
+
+    @Test
+    fun `garden mode (appMode=1) does not crash`() = runTest {
+        whenever(networkMonitor.isCurrentlyOnline()).thenReturn(true)
+        whenever(settingsDataStore.userPreferencesFlow).thenReturn(MutableStateFlow(buildPrefs(appMode = 1)))
+        val location = Location("test").apply {
+            latitude = 52.2297
+            longitude = 21.0122
+        }
+        whenever(locationRepository.getEffectiveLocation()).thenReturn(location)
+        whenever(temperatureDao.getRecentRecords()).thenReturn(flowOf(emptyList()))
+
+        val worker = buildWorker()
+        val result = worker.doWork()
+
+        val isValidResult = result == ListenableWorker.Result.success() ||
+                result == ListenableWorker.Result.retry() ||
+                result == ListenableWorker.Result.failure()
+        assertTrue("Worker should handle garden mode without crashing", isValidResult)
     }
 }

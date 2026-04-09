@@ -19,6 +19,8 @@ class AppTelemetryTest {
         AppTelemetry.reset(context)
     }
 
+    // ── Worker telemetry ──────────────────────────────────────────────────────
+
     @Test
     fun `initial state has all zero counts`() {
         assertEquals(0, AppTelemetry.getWorkerSuccessCount(context))
@@ -89,11 +91,104 @@ class AppTelemetryTest {
         assertEquals(1, AppTelemetry.getWorkerFailureCount(context))
     }
 
+    // ── Geofence telemetry ────────────────────────────────────────────────────
+
+    @Test
+    fun `initial geofence counts are zero`() {
+        assertEquals(0, AppTelemetry.getGeofenceTriggerCount(context))
+        assertEquals(0, AppTelemetry.getGeofenceErrorCount(context))
+        assertEquals(0L, AppTelemetry.getLastGeofenceTriggerMs(context))
+    }
+
+    @Test
+    fun `recordGeofenceTrigger increments count and updates timestamp`() {
+        val before = System.currentTimeMillis()
+        AppTelemetry.recordGeofenceTrigger(context)
+        AppTelemetry.recordGeofenceTrigger(context)
+        val after = System.currentTimeMillis()
+
+        assertEquals(2, AppTelemetry.getGeofenceTriggerCount(context))
+        assertTrue(AppTelemetry.getLastGeofenceTriggerMs(context) in before..after)
+    }
+
+    @Test
+    fun `recordGeofenceError increments error count`() {
+        AppTelemetry.recordGeofenceError(context)
+        assertEquals(1, AppTelemetry.getGeofenceErrorCount(context))
+    }
+
+    // ── Widget telemetry ──────────────────────────────────────────────────────
+
+    @Test
+    fun `initial widget counts are zero`() {
+        assertEquals(0, AppTelemetry.getWidgetUpdateCount(context))
+        assertEquals(0, AppTelemetry.getWidgetErrorCount(context))
+        assertEquals(0L, AppTelemetry.getLastWidgetUpdateMs(context))
+    }
+
+    @Test
+    fun `recordWidgetUpdate increments count and updates timestamp`() {
+        val before = System.currentTimeMillis()
+        AppTelemetry.recordWidgetUpdate(context)
+        val after = System.currentTimeMillis()
+
+        assertEquals(1, AppTelemetry.getWidgetUpdateCount(context))
+        assertTrue(AppTelemetry.getLastWidgetUpdateMs(context) in before..after)
+    }
+
+    @Test
+    fun `recordWidgetError increments error count`() {
+        AppTelemetry.recordWidgetError(context)
+        AppTelemetry.recordWidgetError(context)
+        assertEquals(2, AppTelemetry.getWidgetErrorCount(context))
+    }
+
+    // ── Billing telemetry ─────────────────────────────────────────────────────
+
+    @Test
+    fun `initial billing counts are zero`() {
+        assertEquals(0, AppTelemetry.getBillingPurchaseCount(context))
+        assertEquals(0, AppTelemetry.getBillingRestoreCount(context))
+        assertEquals(0, AppTelemetry.getBillingErrorCount(context))
+        assertEquals(0L, AppTelemetry.getLastBillingEventMs(context))
+    }
+
+    @Test
+    fun `recordBillingPurchase increments count and updates timestamp`() {
+        val before = System.currentTimeMillis()
+        AppTelemetry.recordBillingPurchase(context)
+        val after = System.currentTimeMillis()
+
+        assertEquals(1, AppTelemetry.getBillingPurchaseCount(context))
+        assertTrue(AppTelemetry.getLastBillingEventMs(context) in before..after)
+    }
+
+    @Test
+    fun `recordBillingRestore increments restore count`() {
+        AppTelemetry.recordBillingRestore(context)
+        assertEquals(1, AppTelemetry.getBillingRestoreCount(context))
+    }
+
+    @Test
+    fun `recordBillingError increments error count`() {
+        AppTelemetry.recordBillingError(context)
+        assertEquals(1, AppTelemetry.getBillingErrorCount(context))
+    }
+
+    // ── Reset ─────────────────────────────────────────────────────────────────
+
     @Test
     fun `reset clears all telemetry`() {
         AppTelemetry.recordWorkerSuccess(context)
         AppTelemetry.recordWorkerRetry(context, "error")
         AppTelemetry.recordWorkerFailure(context, "fail")
+        AppTelemetry.recordGeofenceTrigger(context)
+        AppTelemetry.recordGeofenceError(context)
+        AppTelemetry.recordWidgetUpdate(context)
+        AppTelemetry.recordWidgetError(context)
+        AppTelemetry.recordBillingPurchase(context)
+        AppTelemetry.recordBillingRestore(context)
+        AppTelemetry.recordBillingError(context)
 
         AppTelemetry.reset(context)
 
@@ -102,5 +197,12 @@ class AppTelemetryTest {
         assertEquals(0, AppTelemetry.getWorkerFailureCount(context))
         assertEquals(0L, AppTelemetry.getLastWorkerRunMs(context))
         assertNull(AppTelemetry.getLastErrorMessage(context))
+        assertEquals(0, AppTelemetry.getGeofenceTriggerCount(context))
+        assertEquals(0, AppTelemetry.getGeofenceErrorCount(context))
+        assertEquals(0, AppTelemetry.getWidgetUpdateCount(context))
+        assertEquals(0, AppTelemetry.getWidgetErrorCount(context))
+        assertEquals(0, AppTelemetry.getBillingPurchaseCount(context))
+        assertEquals(0, AppTelemetry.getBillingRestoreCount(context))
+        assertEquals(0, AppTelemetry.getBillingErrorCount(context))
     }
 }

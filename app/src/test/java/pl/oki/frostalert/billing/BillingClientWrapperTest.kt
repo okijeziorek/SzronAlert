@@ -34,6 +34,7 @@ class BillingClientWrapperTest {
         private var storedProductDetails: ProductDetails? = null
         var lastLaunchedActivity: Activity? = null
         var disconnectCalled = false
+        var restoreCalled = false
 
         fun simulatePurchaseSuccess() {
             _isPro.value = true
@@ -57,6 +58,10 @@ class BillingClientWrapperTest {
 
         override fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails) {
             lastLaunchedActivity = activity
+        }
+
+        override fun restorePurchases() {
+            restoreCalled = true
         }
 
         override fun clearError() {
@@ -149,5 +154,26 @@ class BillingClientWrapperTest {
         val billing = FakeBillingManager()
         billing.disconnect()
         assertTrue(billing.disconnectCalled)
+    }
+
+    @Test
+    fun `restorePurchases triggers restore flow`() = runTest {
+        val billing = FakeBillingManager()
+        billing.restorePurchases()
+        assertTrue(billing.restoreCalled)
+    }
+
+    @Test
+    fun `purchase error then clearError then new purchase succeeds`() = runTest {
+        val billing = FakeBillingManager()
+        billing.simulatePurchaseError("Network error")
+        assertEquals("Network error", billing.purchaseError.value)
+        assertFalse(billing.isPro.value)
+
+        billing.clearError()
+        assertNull(billing.purchaseError.value)
+
+        billing.simulatePurchaseSuccess()
+        assertTrue(billing.isPro.value)
     }
 }

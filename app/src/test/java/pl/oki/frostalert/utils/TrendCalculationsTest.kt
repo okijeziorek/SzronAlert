@@ -214,4 +214,99 @@ class TrendCalculationsTest {
         val stats = TrendCalculations.calculateWeeklyTrend(records)
         assertEquals(TrendCalculations.TrendDirection.STABLE, stats.trend)
     }
+
+    @Test
+    fun `calculateWeeklyTrend is deterministic for same input`() {
+        val now = System.currentTimeMillis()
+        val day = 24 * 60 * 60 * 1000L
+        val temps = listOf(-5.0, -4.0, -3.0, 0.0, 1.0, 2.0)
+
+        val records = temps.mapIndexed { index, temp ->
+            TemperatureRecord(
+                timestamp = now - day * (temps.size - 1L - index),
+                minTemp = temp,
+                hasRisk = temp <= 1.0
+            )
+        }
+
+        val result1 = TrendCalculations.calculateWeeklyTrend(records)
+        val result2 = TrendCalculations.calculateWeeklyTrend(records)
+        assertEquals(result1.trend, result2.trend)
+        assertEquals(result1.frostRiskPercentage, result2.frostRiskPercentage, 0.001)
+        assertEquals(result1.averageMinTemp, result2.averageMinTemp, 0.001)
+        assertEquals(result1.lowestTemp, result2.lowestTemp, 0.001)
+    }
+
+    @Test
+    fun `calculateWeeklyTrend handles extreme oscillating temperatures (minus5 to plus5 to minus10)`() {
+        val now = System.currentTimeMillis()
+        val day = 24 * 60 * 60 * 1000L
+        // Oscillation: −5 → +5 → −10 → +3 → −8 → +1
+        // First 3 medians: sorted([-5, 5, -10]) → [-10, -5, 5] → median = -5
+        // Last 3 medians: sorted([3, -8, 1]) → [-8, 1, 3] → median = 1
+        // delta = 1 - (-5) = 6 → UP (despite wild oscillations)
+        val temps = listOf(-5.0, 5.0, -10.0, 3.0, -8.0, 1.0)
+
+        val records = temps.mapIndexed { index, temp ->
+            TemperatureRecord(
+                timestamp = now - day * (temps.size - 1L - index),
+                minTemp = temp,
+                hasRisk = temp <= 1.0
+            )
+        }
+
+        val stats = TrendCalculations.calculateWeeklyTrend(records)
+        assertEquals(TrendCalculations.TrendDirection.UP, stats.trend)
+    }
+
+    @Test
+    fun `calculateWeeklyTrend handles 7 days (maximum window)`() {
+        val now = System.currentTimeMillis()
+        val day = 24 * 60 * 60 * 1000L
+        val temps = listOf(-7.0, -6.0, -5.0, -4.0, -3.0, -2.0, -1.0)
+
+        val records = temps.mapIndexed { index, temp ->
+            TemperatureRecord(
+                timestamp = now - day * (temps.size - 1L - index),
+                minTemp = temp,
+                hasRisk = true
+            )
+        }
+
+        val stats = TrendCalculations.calculateWeeklyTrend(records)
+        assertEquals(7, stats.trendPoints.size)
+        assertEquals(7, stats.nightsWithFrostRisk)
+        assertEquals(100.0, stats.frostRiskPercentage, 0.01)
+        assertEquals(TrendCalculations.TrendDirection.UP, stats.trend)
+    }
+
+    @Test
+    fun `calculateWeeklyTrend handles single record`() {
+        val record = TemperatureRecord(
+            timestamp = System.currentTimeMillis(),
+            minTemp = -3.0,
+            hasRisk = true
+        )
+
+        val stats = TrendCalculations.calculateWeeklyTrend(listOf(record))
+        assertEquals(1, stats.trendPoints.size)
+        assertEquals(TrendCalculations.TrendDirection.STABLE, stats.trend)
+    }
+
+    @Test
+    fun `calculateWeeklyTrend picks minimum temp per day from multiple records`() {
+        val now = System.currentTimeMillis()
+        val day = 24 * 60 * 60 * 1000L
+
+        // Multiple records in the same day — should use minimum
+        val records = listOf(
+            TemperatureRecord(timestamp = now + 1_000, minTemp = 5.0, hasRisk = false),
+            TemperatureRecord(timestamp = now + 2_000, minTemp = -2.0, hasRisk = true),
+            TemperatureRecord(timestamp = now + 3_000, minTemp = 3.0, hasRisk = false)
+        )
+
+        val stats = TrendCalculations.calculateWeeklyTrend(records)
+        assertEquals(1, stats.trendPoints.size)
+        assertEquals(-2.0, stats.trendPoints[0].minTemp, 0.01)
+    }
 }
