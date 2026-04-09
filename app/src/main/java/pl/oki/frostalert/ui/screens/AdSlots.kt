@@ -6,9 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.annotation.StringRes
 import com.google.android.gms.ads.AdRequest
@@ -22,15 +22,15 @@ fun MonetizationBanner(
     @StringRes adUnitResId: Int = R.string.admob_banner_unit_id
 ) {
     val context = LocalContext.current
-    val configuration = LocalConfiguration.current
-    val adWidthDp = remember(configuration.screenWidthDp) {
-        configuration.screenWidthDp.coerceAtLeast(320)
+    val density = LocalDensity.current
+    val containerWidthPx = LocalWindowInfo.current.containerSize.width
+    val adWidthDp = remember(containerWidthPx, density) {
+        with(density) { containerWidthPx.toDp() }.value.toInt().coerceAtLeast(320)
     }
     val adSize = remember(adWidthDp) {
         AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, adWidthDp)
     }
     val adUnitId = context.getString(adUnitResId)
-    val density = LocalDensity.current
     val adHeightDp = remember(adSize, density) {
         with(density) { adSize.getHeightInPixels(context).toDp() }
     }

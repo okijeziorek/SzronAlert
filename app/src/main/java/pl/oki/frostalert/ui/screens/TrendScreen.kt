@@ -3,13 +3,8 @@ package pl.oki.frostalert.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,7 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,7 +25,6 @@ import pl.oki.frostalert.R
 import pl.oki.frostalert.utils.TrendCalculations
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.ui.graphics.drawscope.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -224,7 +218,7 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
                         drawPath(
                             path = path,
                             color = primaryColor,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f)
+                            style = Stroke(width = 3f)
                         )
 
                         stats.trendPoints.forEachIndexed { index, point ->
@@ -242,7 +236,7 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
                                 color = backgroundColor,
                                 radius = 8f,
                                 center = offset,
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
+                                style = Stroke(width = 2f)
                             )
                         }
                     }
@@ -409,7 +403,7 @@ fun FutureTrendSection(
                 }
                 futureTrendState.errorMessage != null -> {
                     Text(
-                        text = futureTrendState.errorMessage ?: stringResource(R.string.trend_unknown_error),
+                        text = futureTrendState.errorMessage,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2,
@@ -417,7 +411,7 @@ fun FutureTrendSection(
                     )
                 }
                 futureTrendState.futureWeeklyStats != null -> {
-                    val stats = futureTrendState.futureWeeklyStats!!
+                    val stats = futureTrendState.futureWeeklyStats
                     Text(
                         text = stringResource(R.string.trend_future_loaded, TrendCalculations.getTrendEmoji(stats.trend)),
                         maxLines = 1,
