@@ -100,14 +100,14 @@ class FrostCheckWorker @AssistedInject constructor(
             when (weatherResult) {
                 is AppResult.Error -> {
                     val errorType = weatherResult.error::class.simpleName
-                    val errorMsg = weatherResult.error.message
+                    val errorMessage = weatherResult.error.message
                     val errorCause = weatherResult.error.cause
-                    Log.w(TAG, "Weather fetch error [$errorType] (attempt ${runAttemptCount + 1}/$MAX_RETRIES): $errorMsg", errorCause)
+                    Log.w(TAG, "Weather fetch error [$errorType] (attempt ${runAttemptCount + 1}/$MAX_RETRIES): $errorMessage", errorCause)
                     return if (runAttemptCount < MAX_RETRIES) {
-                        AppTelemetry.recordWorkerRetry(applicationContext, "[$errorType] $errorMsg")
+                        AppTelemetry.recordWorkerRetry(applicationContext, "[$errorType] $errorMessage")
                         Result.retry()
                     } else {
-                        AppTelemetry.recordWorkerFailure(applicationContext, "[$errorType] $errorMsg after $MAX_RETRIES attempts")
+                        AppTelemetry.recordWorkerFailure(applicationContext, "[$errorType] $errorMessage after $MAX_RETRIES attempts")
                         Result.failure()
                     }
                 }

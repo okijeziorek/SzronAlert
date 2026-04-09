@@ -201,8 +201,8 @@ class FrostCheckWorkerTest {
         val result = worker.doWork()
 
         // SecurityException is caught by outer catch block — should retry
-        val isRetryOrFailure = result == ListenableWorker.Result.retry() || result == ListenableWorker.Result.failure()
-        assertTrue("Expected retry or failure for permission denied", isRetryOrFailure)
+        val resultIsRetryOrFailure = result == ListenableWorker.Result.retry() || result == ListenableWorker.Result.failure()
+        assertTrue("Expected retry or failure for permission denied", resultIsRetryOrFailure)
     }
 
     // ── API failure scenarios ──────────────────────────────────────────────────

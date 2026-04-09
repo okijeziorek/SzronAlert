@@ -22,14 +22,14 @@ object WidgetSyncHelper {
      * does not prevent the other path from being updated.
      */
     suspend fun updateAll(context: Context) {
-        var hasError = false
+        var anyWidgetUpdateFailed = false
 
         // Glance widget (suspend call from Glance library)
         try {
             FrostGlanceWidget().updateAll(context)
         } catch (e: Exception) {
             Log.w(TAG, "Glance widget update failed: ${e.message}")
-            hasError = true
+            anyWidgetUpdateFailed = true
         }
 
         // Classic RemoteViews widget
@@ -43,10 +43,10 @@ object WidgetSyncHelper {
             }
         } catch (e: Exception) {
             Log.w(TAG, "Classic widget update failed: ${e.message}")
-            hasError = true
+            anyWidgetUpdateFailed = true
         }
 
-        if (hasError) {
+        if (anyWidgetUpdateFailed) {
             AppTelemetry.recordWidgetError(context)
         } else {
             AppTelemetry.recordWidgetUpdate(context)
