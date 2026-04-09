@@ -129,15 +129,22 @@ object WeatherCalculations {
     }
 
     /**
-     * Etykieta tekstowa poziomu ryzyka szronu.
+     * Poziom ryzyka szronu na podstawie prawdopodobieństwa.
      */
-    fun getFrostProbabilityLabel(probability: Int): String {
+    enum class FrostProbabilityLevel {
+        VERY_HIGH, HIGH, MODERATE, LOW, MINIMAL
+    }
+
+    /**
+     * Zwraca poziom ryzyka szronu na podstawie prawdopodobieństwa (0-100).
+     */
+    fun getFrostProbabilityLevel(probability: Int): FrostProbabilityLevel {
         return when {
-            probability >= 80 -> "Bardzo wysokie"
-            probability >= 60 -> "Wysokie"
-            probability >= 40 -> "Umiarkowane"
-            probability >= 20 -> "Niskie"
-            else -> "Minimalne"
+            probability >= 80 -> FrostProbabilityLevel.VERY_HIGH
+            probability >= 60 -> FrostProbabilityLevel.HIGH
+            probability >= 40 -> FrostProbabilityLevel.MODERATE
+            probability >= 20 -> FrostProbabilityLevel.LOW
+            else -> FrostProbabilityLevel.MINIMAL
         }
     }
 

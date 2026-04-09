@@ -447,7 +447,13 @@ fun FrostWarningCard(hasRisk: Boolean, frostProbability: Int, warningMessage: St
                 color = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
             Text(
-                text = WeatherCalculations.getFrostProbabilityLabel(frostProbability),
+                text = when (WeatherCalculations.getFrostProbabilityLevel(frostProbability)) {
+                    WeatherCalculations.FrostProbabilityLevel.VERY_HIGH -> stringResource(R.string.frost_probability_very_high)
+                    WeatherCalculations.FrostProbabilityLevel.HIGH -> stringResource(R.string.frost_probability_high)
+                    WeatherCalculations.FrostProbabilityLevel.MODERATE -> stringResource(R.string.frost_probability_moderate)
+                    WeatherCalculations.FrostProbabilityLevel.LOW -> stringResource(R.string.frost_probability_low)
+                    WeatherCalculations.FrostProbabilityLevel.MINIMAL -> stringResource(R.string.frost_probability_minimal)
+                },
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold
             )

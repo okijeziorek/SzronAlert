@@ -325,11 +325,11 @@ class WeatherCalculationsTest {
     }
 
     @Test
-    fun `getFrostProbabilityLabel returns correct labels`() {
-        assertEquals("Minimalne", WeatherCalculations.getFrostProbabilityLabel(10))
-        assertEquals("Niskie", WeatherCalculations.getFrostProbabilityLabel(25))
-        assertEquals("Umiarkowane", WeatherCalculations.getFrostProbabilityLabel(50))
-        assertEquals("Wysokie", WeatherCalculations.getFrostProbabilityLabel(65))
-        assertEquals("Bardzo wysokie", WeatherCalculations.getFrostProbabilityLabel(90))
+    fun `getFrostProbabilityLevel returns correct levels`() {
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.MINIMAL, WeatherCalculations.getFrostProbabilityLevel(10))
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.LOW, WeatherCalculations.getFrostProbabilityLevel(25))
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.MODERATE, WeatherCalculations.getFrostProbabilityLevel(50))
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.HIGH, WeatherCalculations.getFrostProbabilityLevel(65))
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.VERY_HIGH, WeatherCalculations.getFrostProbabilityLevel(90))
     }
 }
