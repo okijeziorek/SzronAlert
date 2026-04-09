@@ -75,6 +75,7 @@ class SettingsViewModelTest {
             override val purchaseError: StateFlow<String?> = MutableStateFlow(null)
             override fun queryProductDetails(onDetailsReady: (com.android.billingclient.api.ProductDetails?) -> Unit) {}
             override fun launchPurchaseFlow(activity: android.app.Activity, productDetails: com.android.billingclient.api.ProductDetails) {}
+            override fun restorePurchases() {}
             override fun clearError() {}
             override fun disconnect() {}
         }

@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import androidx.glance.appwidget.updateAll
+import pl.oki.frostalert.utils.AppTelemetry
 
 private const val TAG = "WidgetSyncHelper"
 
@@ -21,11 +22,14 @@ object WidgetSyncHelper {
      * does not prevent the other path from being updated.
      */
     suspend fun updateAll(context: Context) {
+        var hasError = false
+
         // Glance widget (suspend call from Glance library)
         try {
             FrostGlanceWidget().updateAll(context)
         } catch (e: Exception) {
             Log.w(TAG, "Glance widget update failed: ${e.message}")
+            hasError = true
         }
 
         // Classic RemoteViews widget
@@ -39,6 +43,13 @@ object WidgetSyncHelper {
             }
         } catch (e: Exception) {
             Log.w(TAG, "Classic widget update failed: ${e.message}")
+            hasError = true
+        }
+
+        if (hasError) {
+            AppTelemetry.recordWidgetError(context)
+        } else {
+            AppTelemetry.recordWidgetUpdate(context)
         }
     }
 }

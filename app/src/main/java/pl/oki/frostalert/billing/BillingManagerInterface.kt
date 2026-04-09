@@ -17,6 +17,9 @@ interface BillingManagerInterface {
     /** Launches the Play Billing purchase sheet for the given [productDetails]. */
     fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails)
 
+    /** Restores existing purchases (e.g. after reinstall or device switch). */
+    fun restorePurchases()
+
     /** Clears the last purchase error so the UI can dismiss any error message. */
     fun clearError()
 

@@ -57,8 +57,15 @@ class FrostCheckWorker @AssistedInject constructor(
         // retry so the exponential backoff kicks in rather than burning a network call that will
         // fail anyway.
         if (!networkMonitor.isCurrentlyOnline()) {
-            Log.w(TAG, "Network unavailable at runtime (attempt ${runAttemptCount + 1}/$MAX_RETRIES) — retrying")
-            return if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
+            val msg = "Network unavailable at runtime"
+            Log.w(TAG, "$msg (attempt ${runAttemptCount + 1}/$MAX_RETRIES) — retrying")
+            return if (runAttemptCount < MAX_RETRIES) {
+                AppTelemetry.recordWorkerRetry(applicationContext, msg)
+                Result.retry()
+            } else {
+                AppTelemetry.recordWorkerFailure(applicationContext, "$msg after $MAX_RETRIES attempts")
+                Result.failure()
+            }
         }
 
         val userPreferences = settingsDataStore.userPreferencesFlow.first()
@@ -92,12 +99,15 @@ class FrostCheckWorker @AssistedInject constructor(
 
             when (weatherResult) {
                 is AppResult.Error -> {
-                    Log.w(TAG, "Weather fetch error (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${weatherResult.error.message}")
+                    val errorType = weatherResult.error::class.simpleName
+                    val errorMsg = weatherResult.error.message
+                    val errorCause = weatherResult.error.cause
+                    Log.w(TAG, "Weather fetch error [$errorType] (attempt ${runAttemptCount + 1}/$MAX_RETRIES): $errorMsg", errorCause)
                     return if (runAttemptCount < MAX_RETRIES) {
-                        AppTelemetry.recordWorkerRetry(applicationContext, weatherResult.error.message)
+                        AppTelemetry.recordWorkerRetry(applicationContext, "[$errorType] $errorMsg")
                         Result.retry()
                     } else {
-                        AppTelemetry.recordWorkerFailure(applicationContext, weatherResult.error.message)
+                        AppTelemetry.recordWorkerFailure(applicationContext, "[$errorType] $errorMsg after $MAX_RETRIES attempts")
                         Result.failure()
                     }
                 }
@@ -177,6 +187,7 @@ class FrostCheckWorker @AssistedInject constructor(
                             val geofencingResult = locationRepository.checkGeofencingRisk(location, userPreferences, currentWeather = weather)
                             when (geofencingResult) {
                                 is pl.oki.frostalert.data.repository.GeofencingResult.HigherRiskNearby -> {
+                                    AppTelemetry.recordGeofenceTrigger(applicationContext)
                                     val direction = geofencingResult.direction
                                     val riskIncrease = geofencingResult.riskIncrease
                                     val currentMinTemp = geofencingResult.currentRisk.minTemp
@@ -193,6 +204,7 @@ class FrostCheckWorker @AssistedInject constructor(
                                         isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                                 }
                                 is pl.oki.frostalert.data.repository.GeofencingResult.Error -> {
+                                    AppTelemetry.recordGeofenceError(applicationContext)
                                     Log.w(TAG, "Błąd sprawdzania geofencing: ${geofencingResult.message}")
                                 }
                                 else -> {
@@ -237,12 +249,13 @@ class FrostCheckWorker @AssistedInject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error in doWork (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${e.message}", e)
+            val errorType = e::class.simpleName
+            Log.e(TAG, "Unexpected error [$errorType] in doWork (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${e.message}", e)
             return if (runAttemptCount < MAX_RETRIES) {
-                AppTelemetry.recordWorkerRetry(applicationContext, e.message)
+                AppTelemetry.recordWorkerRetry(applicationContext, "[$errorType] ${e.message}")
                 Result.retry()
             } else {
-                AppTelemetry.recordWorkerFailure(applicationContext, e.message)
+                AppTelemetry.recordWorkerFailure(applicationContext, "[$errorType] ${e.message}")
                 Result.failure()
             }
         }

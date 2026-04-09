@@ -153,6 +153,14 @@ class BillingClientWrapper @Inject constructor(
         _purchaseError.value = null
     }
 
+    override fun restorePurchases() {
+        if (!billingClient.isReady) {
+            connectWithRetry()
+            return
+        }
+        queryPurchases()
+    }
+
     override fun disconnect() {
         billingClient.endConnection()
     }
