@@ -10,6 +10,20 @@
     <issue id="NullDereference" severity="error" />
     <!-- Catch unsafe implicit casts -->
     <issue id="UnsafeDynamicallyLoadedCode" severity="error" />
+    <!-- Detect crashes from missing permissions at runtime -->
+    <issue id="MissingPermission" severity="error" />
+    <!-- Detect potential index out-of-bounds -->
+    <issue id="Range" severity="error" />
+    <!-- Detect wrong thread usage (UI from background, etc.) -->
+    <issue id="WrongThread" severity="error" />
+
+    <!-- ── Resource leaks (P0) ─────────────────────────────────────────────── -->
+    <!-- Cursor, TypedArray, and other resource leaks -->
+    <issue id="Recycle" severity="error" />
+    <!-- Unclosed streams and connections -->
+    <issue id="ResourceType" severity="error" />
+    <!-- Wake lock without timeout can drain battery -->
+    <issue id="WakelockTimeout" severity="error" />
 
     <!-- ── Localisation (P1) ────────────────────────────────────────────────── -->
     <!-- Any hardcoded text visible to users must be in strings.xml -->
@@ -25,13 +39,12 @@
     <issue id="UnusedResources" severity="warning" />
     <issue id="ObsoleteSdkInt" severity="warning" />
 
-    <!-- ── Performance ──────────────────────────────────────────────────────── -->
-    <issue id="WakelockTimeout" severity="error" />
-
     <!-- ── Security ─────────────────────────────────────────────────────────── -->
     <issue id="AllowAllHostnameVerifier" severity="error" />
     <issue id="SSLCertificateSocketFactoryGetInsecure" severity="error" />
     <issue id="TrustAllX509TrustManager" severity="error" />
+    <issue id="ExportedReceiver" severity="error" />
+    <issue id="ExportedService" severity="error" />
 
     <!-- ── Known false positives / environment quirks ───────────────────────── -->
     <!-- Room schemas are generated; ignore Dao method naming warnings -->

@@ -16,12 +16,13 @@ import com.android.billingclient.api.QueryPurchasesParams
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import pl.oki.frostalert.utils.AppTelemetry
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BillingClientWrapper @Inject constructor(
-    @ApplicationContext context: Context
+    @ApplicationContext private val appContext: Context
 ) : BillingManagerInterface, PurchasesUpdatedListener {
 
     companion object {
@@ -38,7 +39,7 @@ class BillingClientWrapper @Inject constructor(
 
     private var retryCount = 0
 
-    private val billingClient = BillingClient.newBuilder(context)
+    private val billingClient = BillingClient.newBuilder(appContext)
         .setListener(this)
         .enablePendingPurchases(
             PendingPurchasesParams.newBuilder()
@@ -112,6 +113,9 @@ class BillingClientWrapper @Inject constructor(
                     purchase.purchaseState == Purchase.PurchaseState.PURCHASED && purchase.isAcknowledged
                 }
                 _isPro.value = hasPro
+                if (hasPro) {
+                    AppTelemetry.recordBillingRestore(appContext)
+                }
             }
         }
     }
@@ -130,6 +134,7 @@ class BillingClientWrapper @Inject constructor(
             }
             else -> {
                 _purchaseError.value = billingResult.debugMessage
+                AppTelemetry.recordBillingError(appContext)
             }
         }
     }
@@ -142,8 +147,10 @@ class BillingClientWrapper @Inject constructor(
             billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     _isPro.value = true
+                    AppTelemetry.recordBillingPurchase(appContext)
                 } else {
                     _purchaseError.value = billingResult.debugMessage
+                    AppTelemetry.recordBillingError(appContext)
                 }
             }
         }
