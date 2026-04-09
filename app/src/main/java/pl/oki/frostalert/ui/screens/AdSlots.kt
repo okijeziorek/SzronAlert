@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.annotation.StringRes
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -17,7 +18,8 @@ import pl.oki.frostalert.R
 
 @Composable
 fun MonetizationBanner(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    @StringRes adUnitResId: Int = R.string.admob_banner_unit_id
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
@@ -27,7 +29,7 @@ fun MonetizationBanner(
     val adSize = remember(adWidthDp) {
         AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, adWidthDp)
     }
-    val adUnitId = context.getString(R.string.admob_banner_unit_id)
+    val adUnitId = context.getString(adUnitResId)
     val density = LocalDensity.current
     val adHeightDp = remember(adSize, density) {
         with(density) { adSize.getHeightInPixels(context).toDp() }

@@ -218,7 +218,7 @@ fun WeatherSuccessContent(
         HourlyForecastSection(hourly = state.weather.hourly, useFahrenheit = state.useFahrenheit)
 
         if (!isPro) {
-            MonetizationBanner()
+            MonetizationBanner(adUnitResId = R.string.admob_banner_home_unit_id)
         }
     }
 

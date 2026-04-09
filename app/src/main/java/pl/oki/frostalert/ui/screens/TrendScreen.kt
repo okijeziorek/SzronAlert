@@ -533,7 +533,7 @@ fun TrendScreen(
                     TrendSummaryCard(stats)
 
                     if (!isPro) {
-                        MonetizationBanner()
+                        MonetizationBanner(adUnitResId = R.string.admob_banner_trend_unit_id)
                     }
 
                     // SEKCJA 2: WYKRES TEMPERATURY

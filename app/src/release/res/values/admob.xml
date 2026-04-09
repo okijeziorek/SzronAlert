@@ -1,6 +1,8 @@
 <resources>
     <string name="admob_app_id" translatable="false">ca-app-pub-9015745896160670~8413321683</string>
     <string name="admob_banner_unit_id" translatable="false">ca-app-pub-9015745896160670/1359234223</string>
+    <string name="admob_banner_home_unit_id" translatable="false">ca-app-pub-9015745896160670/9281820220</string>
+    <string name="admob_banner_trend_unit_id" translatable="false">ca-app-pub-9015745896160670/2175792729</string>
     <string name="admob_native_unit_id" translatable="false">ca-app-pub-9015745896160670/8304058742</string>
 </resources>
 
