@@ -48,7 +48,15 @@ data class UserPreferences(
     val useFahrenheit: Boolean
     ,
     val geofenceRadiusMeters: Double,
-    val activeLocationId: Int
+    val activeLocationId: Int,
+    val isTtsEnabled: Boolean = false,
+    val isCalendarSyncEnabled: Boolean = false,
+    val enabledDashboardCards: Set<String> = setOf("frost", "weather", "trend"),
+    val dashboardCardOrder: String = "frost,weather,trend,uv,watering,storm",
+    val isSmartHomeEnabled: Boolean = false,
+    val smartHomeWebhookUrl: String = "",
+    val smartHomeThreshold: Int = 50,
+    val smartHomeIftttKey: String = ""
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -91,6 +99,14 @@ class SettingsDataStore(private val context: Context) {
         val IS_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
         val USE_FAHRENHEIT = booleanPreferencesKey("use_fahrenheit")
         val ACTIVE_LOCATION_ID = intPreferencesKey("active_location_id")
+        val IS_TTS_ENABLED = booleanPreferencesKey("is_tts_enabled")
+        val IS_CALENDAR_SYNC_ENABLED = booleanPreferencesKey("is_calendar_sync_enabled")
+        val ENABLED_DASHBOARD_CARDS = stringSetPreferencesKey("enabled_dashboard_cards")
+        val DASHBOARD_CARD_ORDER = stringPreferencesKey("dashboard_card_order")
+        val IS_SMART_HOME_ENABLED = booleanPreferencesKey("is_smart_home_enabled")
+        val SMART_HOME_WEBHOOK_URL = stringPreferencesKey("smart_home_webhook_url")
+        val SMART_HOME_THRESHOLD = intPreferencesKey("smart_home_threshold")
+        val SMART_HOME_IFTTT_KEY = stringPreferencesKey("smart_home_ifttt_key")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -145,7 +161,15 @@ class SettingsDataStore(private val context: Context) {
                 useFahrenheit = preferences[Keys.USE_FAHRENHEIT] ?: false
                 ,
                 geofenceRadiusMeters = preferences[Keys.GEOFENCE_RADIUS] ?: 20000.0,
-                activeLocationId = preferences[Keys.ACTIVE_LOCATION_ID] ?: 0
+                activeLocationId = preferences[Keys.ACTIVE_LOCATION_ID] ?: 0,
+                isTtsEnabled = preferences[Keys.IS_TTS_ENABLED] ?: false,
+                isCalendarSyncEnabled = preferences[Keys.IS_CALENDAR_SYNC_ENABLED] ?: false,
+                enabledDashboardCards = preferences[Keys.ENABLED_DASHBOARD_CARDS] ?: setOf("frost", "weather", "trend"),
+                dashboardCardOrder = preferences[Keys.DASHBOARD_CARD_ORDER] ?: "frost,weather,trend,uv,watering,storm",
+                isSmartHomeEnabled = preferences[Keys.IS_SMART_HOME_ENABLED] ?: false,
+                smartHomeWebhookUrl = preferences[Keys.SMART_HOME_WEBHOOK_URL] ?: "",
+                smartHomeThreshold = preferences[Keys.SMART_HOME_THRESHOLD] ?: 50,
+                smartHomeIftttKey = preferences[Keys.SMART_HOME_IFTTT_KEY] ?: ""
             )
         }
 
@@ -272,5 +296,37 @@ class SettingsDataStore(private val context: Context) {
                 it.remove(Keys.PENDING_TREND)
             }
         }
+    }
+
+    suspend fun updateTtsEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_TTS_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateCalendarSyncEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_CALENDAR_SYNC_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateEnabledDashboardCards(cards: Set<String>) {
+        context.dataStore.edit { it[Keys.ENABLED_DASHBOARD_CARDS] = cards }
+    }
+
+    suspend fun updateDashboardCardOrder(order: String) {
+        context.dataStore.edit { it[Keys.DASHBOARD_CARD_ORDER] = order }
+    }
+
+    suspend fun updateSmartHomeEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_SMART_HOME_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateSmartHomeWebhookUrl(url: String) {
+        context.dataStore.edit { it[Keys.SMART_HOME_WEBHOOK_URL] = url }
+    }
+
+    suspend fun updateSmartHomeThreshold(threshold: Int) {
+        context.dataStore.edit { it[Keys.SMART_HOME_THRESHOLD] = threshold.coerceIn(0, 100) }
+    }
+
+    suspend fun updateSmartHomeIftttKey(key: String) {
+        context.dataStore.edit { it[Keys.SMART_HOME_IFTTT_KEY] = key }
     }
 }

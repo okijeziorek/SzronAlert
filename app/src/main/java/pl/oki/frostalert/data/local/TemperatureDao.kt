@@ -32,4 +32,7 @@ interface TemperatureDao {
 
     @Query("SELECT AVG(minTemp) FROM temperature_records WHERE timestamp >= :since")
     suspend fun getAverageMinTempSince(since: Long): Double?
+
+    @Query("SELECT * FROM temperature_records WHERE timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
+    suspend fun getRecordsBetween(start: Long, end: Long): List<TemperatureRecord>
 }
