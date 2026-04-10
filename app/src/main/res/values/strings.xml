@@ -214,4 +214,11 @@
     <string name="frost_probability_minimal">Minimalne</string>
     <string name="frost_probability_label">Prawdopodobieństwo szronu</string>
     <string name="widget_risk_probability">%d%%</string>
+
+    <!-- Extended 14-Day Forecast -->
+    <string name="trend_extended_title">Prognoza 14-dniowa</string>
+    <string name="trend_extended_load_button">Załaduj prognozę 14-dniową</string>
+    <string name="trend_extended_reliable">Pewna prognoza (1–3 dni)</string>
+    <string name="trend_extended_estimate">Orientacyjna (4–14 dni)</string>
+    <string name="trend_extended_days_with_frost">Noce z ryzykiem szronu: %1$d z %2$d</string>
 </resources>

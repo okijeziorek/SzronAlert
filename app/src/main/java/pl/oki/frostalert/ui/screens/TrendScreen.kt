@@ -539,6 +539,9 @@ fun TrendScreen(
                     // SEKCJA 4: PRZYSZŁY TREND
                     FutureTrendSection(trendViewModel, futureTrendState)
 
+                    // SEKCJA 4b: PROGNOZA 14-DNIOWA
+                    ExtendedForecastSection(trendViewModel)
+
                     // SEKCJA 5: EKSPORT DANYCH
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -562,6 +565,127 @@ fun TrendScreen(
                                 Text(stringResource(R.string.trend_export_button), maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ExtendedForecastSection(
+    viewModel: TrendViewModel
+) {
+    val extendedState by viewModel.extendedTrendState.collectAsState()
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.trend_extended_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(8.dp))
+
+            when {
+                extendedState.isLoading -> {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                extendedState.errorMessage != null -> {
+                    Text(
+                        text = extendedState.errorMessage ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                extendedState.extendedStats != null -> {
+                    val stats = extendedState.extendedStats!!
+                    Text(
+                        text = stringResource(R.string.trend_extended_days_with_frost, stats.nightsWithFrostRisk, stats.totalDays),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(Modifier.height(4.dp))
+
+                    // Legenda pewności
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Circle,
+                                contentDescription = null,
+                                modifier = Modifier.size(10.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                stringResource(R.string.trend_extended_reliable),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Circle,
+                                contentDescription = null,
+                                modifier = Modifier.size(10.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                stringResource(R.string.trend_extended_estimate),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    // Lista punktów prognozy
+                    stats.forecastPoints.forEach { point ->
+                        val color = if (point.hasFrostRisk) MaterialTheme.colorScheme.error
+                                    else MaterialTheme.colorScheme.primary
+                        val alpha = if (point.isReliable) 1f else 0.5f
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = point.dayLabel,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "${String.format(Locale.US, "%.1f", point.minTemp)}°C",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = color.copy(alpha = alpha)
+                            )
+                            Text(
+                                text = if (point.hasFrostRisk) " ❄️" else " ✓",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    Button(
+                        onClick = { viewModel.loadExtendedForecast(52.2297, 21.0122) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.trend_extended_load_button), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

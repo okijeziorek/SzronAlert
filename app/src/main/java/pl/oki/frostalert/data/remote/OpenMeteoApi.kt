@@ -26,7 +26,8 @@ object OpenMeteoApi {
             val url = "https://api.open-meteo.com/v1/forecast?latitude=$latitude&longitude=$longitude" +
                     "&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,uv_index" +
                     "&hourly=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,uv_index" +
-                    "&daily=uv_index_max,precipitation_sum&timezone=auto"
+                    "&daily=temperature_2m_min,temperature_2m_max,weather_code,uv_index_max,precipitation_sum" +
+                    "&forecast_days=16&timezone=auto"
             
             val response = client.get(url).body<WeatherResponse>()
             AppResult.Success(response)
@@ -67,6 +68,9 @@ data class HourlyForecast(
 @Serializable
 data class DailyForecast(
     val time: List<String>,
+    @SerialName("temperature_2m_min") val temperatureMin: List<Double> = emptyList(),
+    @SerialName("temperature_2m_max") val temperatureMax: List<Double> = emptyList(),
+    @SerialName("weather_code") val weatherCode: List<Int> = emptyList(),
     @SerialName("uv_index_max") val uvIndexMax: List<Double>,
     @SerialName("precipitation_sum") val precipitationSum: List<Double>
 )

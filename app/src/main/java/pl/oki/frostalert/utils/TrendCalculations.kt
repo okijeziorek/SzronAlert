@@ -280,6 +280,105 @@ object TrendCalculations {
      *
      * @param timeZone timezone used for day-of-week determination; defaults to system default.
      */
+    /**
+     * Punkt prognozy dziennej z poziomu daily API.
+     */
+    data class DailyForecastPoint(
+        val dayLabel: String,
+        val date: String,
+        val minTemp: Double,
+        val maxTemp: Double,
+        val weatherCode: Int,
+        val precipitationSum: Double,
+        val hasFrostRisk: Boolean,
+        val isReliable: Boolean,
+        val timestamp: Long
+    )
+
+    /**
+     * Statystyki trendu rozszerzonego (14-dniowego).
+     */
+    data class ExtendedTrendStats(
+        val forecastPoints: List<DailyForecastPoint>,
+        val nightsWithFrostRisk: Int,
+        val frostRiskPercentage: Double,
+        val averageMinTemp: Double,
+        val lowestTemp: Double,
+        val trend: TrendDirection,
+        val reliableDays: Int,
+        val totalDays: Int
+    )
+
+    /**
+     * Oblicza rozszerzony trend 14-dniowy na podstawie daily forecast z Open-Meteo.
+     * Dni 1-3 oznaczone jako "pewna prognoza", dni 4-14 jako "orientacyjna".
+     */
+    fun calculateExtendedTrend(
+        weatherResponse: pl.oki.frostalert.data.remote.WeatherResponse,
+        frostThreshold: Double = 2.0
+    ): ExtendedTrendStats {
+        val daily = weatherResponse.daily ?: return ExtendedTrendStats(
+            forecastPoints = emptyList(),
+            nightsWithFrostRisk = 0,
+            frostRiskPercentage = 0.0,
+            averageMinTemp = 0.0,
+            lowestTemp = 0.0,
+            trend = TrendDirection.STABLE,
+            reliableDays = 0,
+            totalDays = 0
+        )
+
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US)
+
+        val points = daily.time.indices.drop(1).take(14).map { i ->
+            val minTemp = daily.temperatureMin.getOrElse(i) { 0.0 }
+            val maxTemp = daily.temperatureMax.getOrElse(i) { 0.0 }
+            val weatherCode = daily.weatherCode.getOrElse(i) { 0 }
+            val precip = daily.precipitationSum.getOrElse(i) { 0.0 }
+            val hasFrost = minTemp <= frostThreshold
+            val dateStr = daily.time.getOrElse(i) { "" }
+            val timestamp = try { sdf.parse(dateStr)?.time ?: 0L } catch (_: Exception) { 0L }
+
+            DailyForecastPoint(
+                dayLabel = getExtendedFutureDayLabel(i),
+                date = dateStr,
+                minTemp = minTemp,
+                maxTemp = maxTemp,
+                weatherCode = weatherCode,
+                precipitationSum = precip,
+                hasFrostRisk = hasFrost,
+                isReliable = i <= 3,
+                timestamp = timestamp
+            )
+        }
+
+        val nightsWithRisk = points.count { it.hasFrostRisk }
+        val percentage = if (points.isNotEmpty()) (nightsWithRisk.toDouble() / points.size) * 100.0 else 0.0
+        val avgTemp = if (points.isNotEmpty()) points.map { it.minTemp }.average() else 0.0
+        val lowestTemp = points.minOfOrNull { it.minTemp } ?: 0.0
+
+        val trendPoints = points.map {
+            DailyTrendPoint(dayLabel = it.dayLabel, minTemp = it.minTemp, hasFrostRisk = it.hasFrostRisk, timestamp = it.timestamp)
+        }
+
+        return ExtendedTrendStats(
+            forecastPoints = points,
+            nightsWithFrostRisk = nightsWithRisk,
+            frostRiskPercentage = percentage,
+            averageMinTemp = avgTemp,
+            lowestTemp = lowestTemp,
+            trend = computeTrendDirection(trendPoints),
+            reliableDays = points.count { it.isReliable },
+            totalDays = points.size
+        )
+    }
+
+    private fun getExtendedFutureDayLabel(dayIndex: Int): String = when (dayIndex) {
+        1 -> "Jutro"
+        2 -> "Pojutrze"
+        else -> "Za $dayIndex dni"
+    }
+
     fun getDayOfWeekShort(timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): String {
         val calendar = Calendar.getInstance(timeZone)
         calendar.timeInMillis = timestamp
