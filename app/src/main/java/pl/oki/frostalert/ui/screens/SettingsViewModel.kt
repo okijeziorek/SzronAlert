@@ -228,6 +228,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    private val _locationLimitReached = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val locationLimitReached: StateFlow<Boolean> = _locationLimitReached
+
     fun saveCurrentLocation(name: String, lat: Double, lon: Double) {
         viewModelScope.launch {
             val count = savedLocationDao.getCount()
@@ -239,8 +242,15 @@ class SettingsViewModel @Inject constructor(
                         longitude = lon
                     )
                 )
+                _locationLimitReached.value = false
+            } else {
+                _locationLimitReached.value = true
             }
         }
+    }
+
+    fun clearLocationLimitWarning() {
+        _locationLimitReached.value = false
     }
 
     fun deleteSavedLocation(location: pl.oki.frostalert.data.local.SavedLocation) {

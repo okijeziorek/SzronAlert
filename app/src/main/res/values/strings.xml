@@ -239,4 +239,5 @@
     <string name="location_save_as_separate">Zapisz jako lokalizację</string>
     <string name="location_saved_locations_title">Zapisane lokalizacje</string>
     <string name="location_delete">Usuń</string>
+    <string name="location_limit_reached">Maksymalnie 5 zapisanych lokalizacji</string>
 </resources>

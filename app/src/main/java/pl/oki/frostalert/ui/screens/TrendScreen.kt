@@ -574,9 +574,11 @@ fun TrendScreen(
 
 @Composable
 fun ExtendedForecastSection(
-    viewModel: TrendViewModel
+    viewModel: TrendViewModel,
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val extendedState by viewModel.extendedTrendState.collectAsState()
+    val userPrefs by settingsViewModel.userPreferences.collectAsState()
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -682,7 +684,12 @@ fun ExtendedForecastSection(
                 }
                 else -> {
                     Button(
-                        onClick = { viewModel.loadExtendedForecast(52.2297, 21.0122) },
+                        onClick = {
+                            val prefs = userPrefs
+                            val lat = if (prefs != null && prefs.isManualLocationEnabled) prefs.manualLatitude else 52.2297
+                            val lon = if (prefs != null && prefs.isManualLocationEnabled) prefs.manualLongitude else 21.0122
+                            viewModel.loadExtendedForecast(lat, lon)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(stringResource(R.string.trend_extended_load_button), maxLines = 1, overflow = TextOverflow.Ellipsis)

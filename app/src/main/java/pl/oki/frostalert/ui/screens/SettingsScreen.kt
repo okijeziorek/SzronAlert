@@ -43,12 +43,20 @@ fun SettingsScreen(
     val userPreferences by viewModel.userPreferences.collectAsState()
     val isPro by viewModel.isPro.collectAsState()
     val purchaseError by viewModel.purchaseError.collectAsState()
+    val locationLimitReached by viewModel.locationLimitReached.collectAsState()
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
 
     purchaseError?.let { error ->
         LaunchedEffect(error) {
             android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
             viewModel.clearPurchaseError()
+        }
+    }
+
+    if (locationLimitReached) {
+        LaunchedEffect(locationLimitReached) {
+            android.widget.Toast.makeText(context, context.getString(R.string.location_limit_reached), android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearLocationLimitWarning()
         }
     }
 
