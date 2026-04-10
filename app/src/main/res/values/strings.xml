@@ -221,4 +221,17 @@
     <string name="trend_extended_reliable">Pewna prognoza (1–3 dni)</string>
     <string name="trend_extended_estimate">Orientacyjna (4–14 dni)</string>
     <string name="trend_extended_days_with_frost">Noce z ryzykiem szronu: %1$d z %2$d</string>
+
+    <!-- Garden Screen -->
+    <string name="garden_tab_title">Ogród</string>
+    <string name="garden_screen_title">Baza Roślin</string>
+    <string name="garden_my_plants">Moje rośliny</string>
+    <string name="garden_plant_count">Roślin w ogrodzie: %d</string>
+    <string name="garden_most_sensitive">Najbardziej wrażliwa: %1$s (próg: %2$.1f°C)</string>
+    <string name="garden_search_hint">Szukaj rośliny…</string>
+    <string name="garden_all_categories">Wszystkie</string>
+    <string name="garden_no_results">Brak wyników</string>
+    <string name="garden_frost_threshold">Próg mrozu: %.1f°C</string>
+    <string name="garden_add_plant">Dodaj do ogrodu</string>
+    <string name="garden_remove_plant">Usuń z ogrodu</string>
 </resources>

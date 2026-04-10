@@ -101,6 +101,16 @@ object AppModule {
     }
 
     @Provides
+    fun providePlantDao(database: FrostDatabase): pl.oki.frostalert.data.local.PlantDao {
+        return database.plantDao()
+    }
+
+    @Provides
+    fun provideUserPlantDao(database: FrostDatabase): pl.oki.frostalert.data.local.UserPlantDao {
+        return database.userPlantDao()
+    }
+
+    @Provides
     @Singleton
     fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
         return NetworkMonitor(context)
