@@ -30,6 +30,7 @@ sealed class HomeUiState {
         val weather: WeatherResponse,
         val minTemp: Double,
         val hasFrostRisk: Boolean,
+        val frostProbability: Int,
         val warningMessage: String,
         val appMode: Int,
         val useFahrenheit: Boolean,
@@ -57,7 +58,8 @@ class HomeViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore,
     private val locationRepository: LocationRepository,
     private val temperatureDao: TemperatureDao,
-    private val calibrationDao: CalibrationDao
+    private val calibrationDao: CalibrationDao,
+    private val savedLocationDao: pl.oki.frostalert.data.local.SavedLocationDao
 ) : ViewModel() {
 
     companion object {
@@ -70,6 +72,11 @@ class HomeViewModel @Inject constructor(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
+    
+    // Saved locations for location selector
+    val savedLocations: StateFlow<List<pl.oki.frostalert.data.local.SavedLocation>> =
+        savedLocationDao.getAllLocations()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
     // Stan dialogu kalibracji
     private val _showCalibrationDialog = MutableStateFlow(false)
@@ -108,8 +115,19 @@ class HomeViewModel @Inject constructor(
                 useFahrenheit = prefs.useFahrenheit
             )
 
+            val frostProbability = WeatherCalculations.calculateFrostProbability(
+                minTemp, weather.current.humidity, weather.current.precipitation,
+                weather.current.weatherCode,
+                if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
+                if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                sensitivity = prefs.sensitivity,
+                windSpeed = weather.current.windSpeed,
+                appMode = prefs.appMode
+            )
+
             HomeUiState.Success(
-                weather, minTemp, hasRisk, warningMessage, prefs.appMode, prefs.useFahrenheit,
+                weather, minTemp, hasRisk, frostProbability, warningMessage, prefs.appMode, prefs.useFahrenheit,
                 showCalibrationDialog = showDialog
             )
         }
@@ -123,7 +141,22 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _isRefreshing.value = true
             try {
-                val location = locationRepository.getEffectiveLocation()
+                val prefs = settingsDataStore.userPreferencesFlow.first()
+                
+                // Determine effective location based on activeLocationId
+                val location = if (prefs.activeLocationId > 0) {
+                    val savedLoc = savedLocationDao.getById(prefs.activeLocationId)
+                    if (savedLoc != null) {
+                        android.location.Location("saved").apply {
+                            latitude = savedLoc.latitude
+                            longitude = savedLoc.longitude
+                        }
+                    } else {
+                        locationRepository.getEffectiveLocation()
+                    }
+                } else {
+                    locationRepository.getEffectiveLocation()
+                }
                 if (location == null) {
                     _isRefreshing.value = false
                     return@launch
@@ -146,11 +179,23 @@ class HomeViewModel @Inject constructor(
                         windSpeed = weatherResult.data.current.windSpeed,
                         appMode = prefs.appMode
                     )
+
+                    val frostProbability = WeatherCalculations.calculateFrostProbability(
+                        minTemp, weatherResult.data.current.humidity, weatherResult.data.current.precipitation,
+                        weatherResult.data.current.weatherCode,
+                        if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                        if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
+                        if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                        sensitivity = prefs.sensitivity,
+                        windSpeed = weatherResult.data.current.windSpeed,
+                        appMode = prefs.appMode
+                    )
                     
                     temperatureDao.insert(TemperatureRecord(
                         timestamp = System.currentTimeMillis(),
                         minTemp = minTemp,
-                        hasRisk = hasRisk
+                        hasRisk = hasRisk,
+                        frostProbability = frostProbability
                     ))
                     // Aktualizuj oba widgety przez WidgetSyncHelper aby nie dopuścić do rozbieżności
                     WidgetSyncHelper.updateAll(context)
@@ -185,6 +230,13 @@ class HomeViewModel @Inject constructor(
 
     fun hideCalibrationDialog() {
         _showCalibrationDialog.value = false
+    }
+
+    fun switchLocation(locationId: Int) {
+        viewModelScope.launch {
+            settingsDataStore.updateActiveLocationId(locationId)
+            refreshData()
+        }
     }
 
     fun submitCalibrationFeedback(actualFrostOccurred: Boolean) {

@@ -47,7 +47,8 @@ data class UserPreferences(
     val isOnboardingCompleted: Boolean,
     val useFahrenheit: Boolean
     ,
-    val geofenceRadiusMeters: Double
+    val geofenceRadiusMeters: Double,
+    val activeLocationId: Int
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -89,6 +90,7 @@ class SettingsDataStore(private val context: Context) {
         val MANUAL_LOCATION_NAME = stringPreferencesKey("manual_location_name")
         val IS_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
         val USE_FAHRENHEIT = booleanPreferencesKey("use_fahrenheit")
+        val ACTIVE_LOCATION_ID = intPreferencesKey("active_location_id")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -142,7 +144,8 @@ class SettingsDataStore(private val context: Context) {
                 isOnboardingCompleted = preferences[Keys.IS_ONBOARDING_COMPLETED] ?: false,
                 useFahrenheit = preferences[Keys.USE_FAHRENHEIT] ?: false
                 ,
-                geofenceRadiusMeters = preferences[Keys.GEOFENCE_RADIUS] ?: 20000.0
+                geofenceRadiusMeters = preferences[Keys.GEOFENCE_RADIUS] ?: 20000.0,
+                activeLocationId = preferences[Keys.ACTIVE_LOCATION_ID] ?: 0
             )
         }
 
@@ -241,6 +244,10 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun updateGeofenceRadius(radiusMeters: Double) {
         context.dataStore.edit { it[Keys.GEOFENCE_RADIUS] = radiusMeters.coerceIn(1000.0, 100_000.0) }
+    }
+
+    suspend fun updateActiveLocationId(id: Int) {
+        context.dataStore.edit { it[Keys.ACTIVE_LOCATION_ID] = id }
     }
 
     suspend fun updateTrendChangeNotificationsEnabled(isEnabled: Boolean) {

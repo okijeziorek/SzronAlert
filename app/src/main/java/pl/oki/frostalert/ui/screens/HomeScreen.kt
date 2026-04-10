@@ -71,6 +71,9 @@ fun HomeScreen(
                     val prefs = userPrefs!!
                     MutedAlertsBanner(prefs, settingsViewModel)
 
+                    // Location selector chips
+                    LocationSelectorRow(viewModel, prefs)
+
                     when (val state = uiState) {
                         is HomeUiState.Loading -> {
                             Box(Modifier.fillMaxSize().padding(top = 100.dp), contentAlignment = Alignment.Center) {
@@ -169,6 +172,7 @@ fun WeatherSuccessContent(
         } else {
             FrostWarningCard(
                 hasRisk = state.hasFrostRisk,
+                frostProbability = state.frostProbability,
                 warningMessage = state.warningMessage,
                 windSpeed = state.weather.current.windSpeed,
                 isGarden = isGarden
@@ -427,7 +431,7 @@ fun FeedbackSection(onCorrection: (Boolean) -> Unit) {
 }
 
 @Composable
-fun FrostWarningCard(hasRisk: Boolean, warningMessage: String, windSpeed: Double, isGarden: Boolean) {
+fun FrostWarningCard(hasRisk: Boolean, frostProbability: Int, warningMessage: String, windSpeed: Double, isGarden: Boolean) {
     val containerColor = if (hasRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
     val icon = if (hasRisk) (if (isGarden) Icons.Default.Warning else Icons.Default.AcUnit) else Icons.Default.CheckCircle
     
@@ -438,7 +442,25 @@ fun FrostWarningCard(hasRisk: Boolean, warningMessage: String, windSpeed: Double
     ) {
         Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(64.dp), tint = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "${frostProbability}%",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Black,
+                color = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = when (WeatherCalculations.getFrostProbabilityLevel(frostProbability)) {
+                    WeatherCalculations.FrostProbabilityLevel.VERY_HIGH -> stringResource(R.string.frost_probability_very_high)
+                    WeatherCalculations.FrostProbabilityLevel.HIGH -> stringResource(R.string.frost_probability_high)
+                    WeatherCalculations.FrostProbabilityLevel.MODERATE -> stringResource(R.string.frost_probability_moderate)
+                    WeatherCalculations.FrostProbabilityLevel.LOW -> stringResource(R.string.frost_probability_low)
+                    WeatherCalculations.FrostProbabilityLevel.MINIMAL -> stringResource(R.string.frost_probability_minimal)
+                },
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(12.dp))
             Text(
                 text = if (isGarden && hasRisk) warningMessage.replace("Wysokie ryzyko szronu!", stringResource(R.string.risk_garden)) else warningMessage,
                 style = MaterialTheme.typography.titleLarge, 
@@ -591,4 +613,64 @@ fun getWeatherIcon(code: Int): ImageVector = when (code) {
     in 80..82 -> Icons.Default.BeachAccess
     95, 96, 99 -> Icons.Default.Thunderstorm
     else -> Icons.Default.Cloud
+}
+
+@Composable
+private fun LocationSelectorRow(
+    viewModel: HomeViewModel,
+    prefs: UserPreferences
+) {
+    val savedLocations by viewModel.savedLocations.collectAsState()
+    
+    if (savedLocations.isEmpty()) return
+
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            FilterChip(
+                selected = prefs.activeLocationId == 0,
+                onClick = { viewModel.switchLocation(0) },
+                label = {
+                    Text(
+                        text = if (prefs.isManualLocationEnabled) prefs.manualLocationName
+                               else stringResource(R.string.location_gps_auto),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.MyLocation,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            )
+        }
+        items(savedLocations.size) { index ->
+            val loc = savedLocations[index]
+            FilterChip(
+                selected = prefs.activeLocationId == loc.id,
+                onClick = { viewModel.switchLocation(loc.id) },
+                label = {
+                    Text(
+                        text = loc.name,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            )
+        }
+    }
 }

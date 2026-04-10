@@ -264,4 +264,72 @@ class WeatherCalculationsTest {
         )
         assertTrue(msg.contains("ogrodzie") || msg.contains("Bezpiecznie"))
     }
+
+    // ── calculateFrostProbability ──────────────────────────────────────────────
+
+    @Test
+    fun `calculateFrostProbability returns 0 for high wind`() {
+        val prob = WeatherCalculations.calculateFrostProbability(
+            temp = -5.0, humidity = 95.0, precip = 0.0, weatherCode = 0,
+            tempThreshold = 1.0, humidityThreshold = 75.0, precipitationThreshold = 0.2,
+            windSpeed = 20.0
+        )
+        assertEquals(0, prob)
+    }
+
+    @Test
+    fun `calculateFrostProbability returns high value for extreme frost conditions`() {
+        val prob = WeatherCalculations.calculateFrostProbability(
+            temp = -5.0, humidity = 95.0, precip = 0.0, weatherCode = 0,
+            tempThreshold = 1.0, humidityThreshold = 75.0, precipitationThreshold = 0.2,
+            windSpeed = 0.0
+        )
+        assertTrue("Should be high probability: $prob", prob >= 70)
+    }
+
+    @Test
+    fun `calculateFrostProbability returns moderate value for borderline conditions`() {
+        val prob = WeatherCalculations.calculateFrostProbability(
+            temp = 2.0, humidity = 80.0, precip = 0.0, weatherCode = 2,
+            tempThreshold = 1.0, humidityThreshold = 75.0, precipitationThreshold = 0.2,
+            windSpeed = 3.0
+        )
+        assertTrue("Should be moderate probability: $prob", prob in 20..70)
+    }
+
+    @Test
+    fun `calculateFrostProbability returns low value for warm conditions`() {
+        val prob = WeatherCalculations.calculateFrostProbability(
+            temp = 10.0, humidity = 50.0, precip = 0.0, weatherCode = 3,
+            tempThreshold = 1.0, humidityThreshold = 75.0, precipitationThreshold = 0.2,
+            windSpeed = 0.0
+        )
+        assertTrue("Should be low probability: $prob", prob < 20)
+    }
+
+    @Test
+    fun `calculateFrostProbability is always between 0 and 100`() {
+        val testCases = listOf(
+            Triple(-20.0, 100.0, 0.0),  // extreme cold
+            Triple(30.0, 10.0, 0.0),     // extreme warm
+            Triple(0.0, 80.0, 5.0),      // moderate with precip
+        )
+        testCases.forEach { (temp, humidity, wind) ->
+            val prob = WeatherCalculations.calculateFrostProbability(
+                temp = temp, humidity = humidity, precip = 0.0, weatherCode = 0,
+                tempThreshold = 1.0, humidityThreshold = 75.0, precipitationThreshold = 0.2,
+                windSpeed = wind
+            )
+            assertTrue("Probability should be 0-100, got $prob for temp=$temp", prob in 0..100)
+        }
+    }
+
+    @Test
+    fun `getFrostProbabilityLevel returns correct levels`() {
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.MINIMAL, WeatherCalculations.getFrostProbabilityLevel(10))
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.LOW, WeatherCalculations.getFrostProbabilityLevel(25))
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.MODERATE, WeatherCalculations.getFrostProbabilityLevel(50))
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.HIGH, WeatherCalculations.getFrostProbabilityLevel(65))
+        assertEquals(WeatherCalculations.FrostProbabilityLevel.VERY_HIGH, WeatherCalculations.getFrostProbabilityLevel(90))
+    }
 }

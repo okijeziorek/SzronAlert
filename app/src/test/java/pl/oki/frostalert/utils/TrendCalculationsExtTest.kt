@@ -115,6 +115,81 @@ class TrendCalculationsExtTest {
         assertEquals(50.0, stats.frostRiskPercentage, 0.1)
     }
 
+    // ── calculateExtendedTrend ──────────────────────────────────────────────
+
+    @Test
+    fun `calculateExtendedTrend returns empty for null daily data`() {
+        val response = pl.oki.frostalert.data.remote.WeatherResponse(
+            current = pl.oki.frostalert.data.remote.CurrentWeather(
+                temperature = 5.0, humidity = 60.0, precipitation = 0.0, weatherCode = 0, windSpeed = 5.0
+            ),
+            hourly = pl.oki.frostalert.data.remote.HourlyForecast(
+                time = emptyList(), temperature = emptyList(), humidity = emptyList(),
+                precipitation = emptyList(), weatherCode = emptyList(), windSpeed = emptyList()
+            ),
+            daily = null
+        )
+        val stats = TrendCalculations.calculateExtendedTrend(response)
+        assertEquals(0, stats.totalDays)
+        assertEquals(0, stats.nightsWithFrostRisk)
+    }
+
+    @Test
+    fun `calculateExtendedTrend detects frost risk when minTemp below threshold`() {
+        val times = (0..15).map { "2026-04-${String.format("%02d", it + 1)}" }
+        val minTemps = (0..15).map { if (it < 5) -1.0 else 10.0 }
+        val maxTemps = (0..15).map { 15.0 }
+        val codes = (0..15).map { 0 }
+        val precipSums = (0..15).map { 0.0 }
+        val uvMaxes = (0..15).map { 3.0 }
+
+        val response = pl.oki.frostalert.data.remote.WeatherResponse(
+            current = pl.oki.frostalert.data.remote.CurrentWeather(
+                temperature = 5.0, humidity = 60.0, precipitation = 0.0, weatherCode = 0, windSpeed = 5.0
+            ),
+            hourly = pl.oki.frostalert.data.remote.HourlyForecast(
+                time = emptyList(), temperature = emptyList(), humidity = emptyList(),
+                precipitation = emptyList(), weatherCode = emptyList(), windSpeed = emptyList()
+            ),
+            daily = pl.oki.frostalert.data.remote.DailyForecast(
+                time = times, temperatureMin = minTemps, temperatureMax = maxTemps,
+                weatherCode = codes, uvIndexMax = uvMaxes, precipitationSum = precipSums
+            )
+        )
+        val stats = TrendCalculations.calculateExtendedTrend(response, frostThreshold = 2.0)
+        assertTrue("Should have some frost nights", stats.nightsWithFrostRisk > 0)
+        assertTrue("Should have reliable days", stats.reliableDays > 0)
+        assertTrue("Should have total days", stats.totalDays > 0)
+    }
+
+    @Test
+    fun `calculateExtendedTrend marks first 3 days as reliable`() {
+        val times = (0..15).map { "2026-04-${String.format("%02d", it + 1)}" }
+        val minTemps = (0..15).map { 5.0 }
+        val maxTemps = (0..15).map { 15.0 }
+        val codes = (0..15).map { 0 }
+        val precipSums = (0..15).map { 0.0 }
+        val uvMaxes = (0..15).map { 3.0 }
+
+        val response = pl.oki.frostalert.data.remote.WeatherResponse(
+            current = pl.oki.frostalert.data.remote.CurrentWeather(
+                temperature = 5.0, humidity = 60.0, precipitation = 0.0, weatherCode = 0, windSpeed = 5.0
+            ),
+            hourly = pl.oki.frostalert.data.remote.HourlyForecast(
+                time = emptyList(), temperature = emptyList(), humidity = emptyList(),
+                precipitation = emptyList(), weatherCode = emptyList(), windSpeed = emptyList()
+            ),
+            daily = pl.oki.frostalert.data.remote.DailyForecast(
+                time = times, temperatureMin = minTemps, temperatureMax = maxTemps,
+                weatherCode = codes, uvIndexMax = uvMaxes, precipitationSum = precipSums
+            )
+        )
+        val stats = TrendCalculations.calculateExtendedTrend(response)
+        assertEquals(3, stats.reliableDays)
+        assertTrue(stats.forecastPoints.take(3).all { it.isReliable })
+        assertTrue(stats.forecastPoints.drop(3).none { it.isReliable })
+    }
+
     // ── helper ────────────────────────────────────────────────────────────────
 
     private fun makeTrendStats(frostRiskPercentage: Double) = TrendCalculations.WeeklyTrendStats(

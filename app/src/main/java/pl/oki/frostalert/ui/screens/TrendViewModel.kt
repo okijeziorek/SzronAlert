@@ -29,6 +29,12 @@ data class FutureTrendUiState(
     val errorMessage: String? = null
 )
 
+data class ExtendedTrendUiState(
+    val extendedStats: TrendCalculations.ExtendedTrendStats? = null,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
 @HiltViewModel
 class TrendViewModel @Inject constructor(
     private val temperatureDao: TemperatureDao,
@@ -38,6 +44,10 @@ class TrendViewModel @Inject constructor(
     // Stan dla przyszłego trendu
     private val _futureTrendState = MutableStateFlow(FutureTrendUiState())
     val futureTrendState: StateFlow<FutureTrendUiState> = _futureTrendState.asStateFlow()
+
+    // Stan dla rozszerzonego trendu 14-dniowego
+    private val _extendedTrendState = MutableStateFlow(ExtendedTrendUiState())
+    val extendedTrendState: StateFlow<ExtendedTrendUiState> = _extendedTrendState.asStateFlow()
 
     // Reaktywny strumień statystyk trendu
     val trendState: StateFlow<TrendUiState> = temperatureDao.getRecentRecords()
@@ -80,6 +90,33 @@ class TrendViewModel @Inject constructor(
             } catch (e: Exception) {
                 _futureTrendState.value = FutureTrendUiState(
                     errorMessage = "Błąd ładowania przyszłego trendu: ${e.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Ładuje rozszerzony trend 14-dniowy na podstawie współrzędnych
+     */
+    fun loadExtendedForecast(latitude: Double, longitude: Double) {
+        _extendedTrendState.value = ExtendedTrendUiState(isLoading = true)
+        viewModelScope.launch {
+            try {
+                val weatherResult = OpenMeteoApi.getWeather(latitude, longitude)
+                when (weatherResult) {
+                    is AppResult.Success -> {
+                        val stats = TrendCalculations.calculateExtendedTrend(weatherResult.data)
+                        _extendedTrendState.value = ExtendedTrendUiState(extendedStats = stats)
+                    }
+                    is AppResult.Error -> {
+                        _extendedTrendState.value = ExtendedTrendUiState(
+                            errorMessage = "Błąd pobierania prognozy: ${weatherResult.error.message}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _extendedTrendState.value = ExtendedTrendUiState(
+                    errorMessage = "Błąd ładowania prognozy 14-dniowej: ${e.message}"
                 )
             }
         }

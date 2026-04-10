@@ -9,11 +9,14 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [TemperatureRecord::class, CalibrationFeedback::class, pl.oki.frostalert.data.local.GeofenceRecord::class], version = 3, exportSchema = false)
+@Database(entities = [TemperatureRecord::class, CalibrationFeedback::class, pl.oki.frostalert.data.local.GeofenceRecord::class, Plant::class, UserPlant::class, SavedLocation::class], version = 6, exportSchema = false)
 abstract class FrostDatabase : RoomDatabase() {
     abstract fun temperatureDao(): TemperatureDao
     abstract fun calibrationDao(): CalibrationDao
     abstract fun geofenceDao(): GeofenceDao
+    abstract fun plantDao(): PlantDao
+    abstract fun userPlantDao(): UserPlantDao
+    abstract fun savedLocationDao(): SavedLocationDao
 
     companion object {
         @Volatile
@@ -59,6 +62,49 @@ abstract class FrostDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE temperature_records ADD COLUMN frostProbability INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `plants` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `category` TEXT NOT NULL,
+                        `frostThresholdCelsius` REAL NOT NULL,
+                        `description` TEXT NOT NULL DEFAULT '',
+                        `iconEmoji` TEXT NOT NULL DEFAULT '🌱'
+                    )
+                """.trimIndent())
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `user_plants` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `plantId` INTEGER NOT NULL,
+                        `addedTimestamp` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `saved_locations` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `latitude` REAL NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `isDefault` INTEGER NOT NULL DEFAULT 0,
+                        `addedTimestamp` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): FrostDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -66,7 +112,7 @@ abstract class FrostDatabase : RoomDatabase() {
                     FrostDatabase::class.java,
                     "frost_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 // Do NOT add fallbackToDestructiveMigration — explicit migrations are defined
                 // for every version bump; a missing migration should surface as a hard error,
                 // not silently delete user data.

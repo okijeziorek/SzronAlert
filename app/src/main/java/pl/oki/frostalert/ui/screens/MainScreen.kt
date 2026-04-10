@@ -32,7 +32,7 @@ fun MainScreen(initialTab: Int = 0) {
     val networkMonitor = remember { NetworkMonitor(context) }
     val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
     
-    val pagerState = rememberPagerState(initialPage = initialTab) { if (BuildConfig.DEBUG) 5 else 4 }
+    val pagerState = rememberPagerState(initialPage = initialTab) { if (BuildConfig.DEBUG) 6 else 5 }
     val scope = rememberCoroutineScope()
 
     // Optymalizacja: derivedStateOf zapobiega zbędnym przeliczeniom podczas swipowania
@@ -112,8 +112,9 @@ fun MainScreen(initialTab: Int = 0) {
                         add(Triple(1, Icons.Default.Settings, R.string.tab_settings))
                         add(Triple(2, Icons.Default.History, R.string.tab_history))
                         add(Triple(3, Icons.Default.ShowChart, R.string.trend_screen_title))
+                        add(Triple(4, Icons.Default.Yard, R.string.garden_tab_title))
                         if (BuildConfig.DEBUG) {
-                            add(Triple(4, Icons.Default.BugReport, R.string.tab_debug))
+                            add(Triple(5, Icons.Default.BugReport, R.string.tab_debug))
                         }
                     }
 
@@ -150,7 +151,8 @@ fun MainScreen(initialTab: Int = 0) {
                     1 -> SettingsScreen()
                     2 -> HistoryScreen()
                     3 -> TrendScreen()
-                    4 -> DebugScreen(
+                    4 -> GardenScreen()
+                    5 -> DebugScreen(
                         onOpenTrendRequested = {
                             scope.launch { pagerState.animateScrollToPage(3) }
                         }
