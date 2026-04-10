@@ -40,6 +40,12 @@ sealed class HomeUiState {
     data class Error(val message: String) : HomeUiState()
 }
 
+data class HistoricalComparisonData(
+    val hadFrost: Boolean,
+    val minTemp: Double,
+    val tempDifference: Double // positive = warmer now
+)
+
 data class WeatherDataForCalibration(
     val temperature: Double,
     val humidity: Int,
@@ -72,6 +78,9 @@ class HomeViewModel @Inject constructor(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
+
+    private val _yearAgoData = MutableStateFlow<HistoricalComparisonData?>(null)
+    val yearAgoData: StateFlow<HistoricalComparisonData?> = _yearAgoData.asStateFlow()
     
     // Saved locations for location selector
     val savedLocations: StateFlow<List<pl.oki.frostalert.data.local.SavedLocation>> =
@@ -199,6 +208,24 @@ class HomeViewModel @Inject constructor(
                     ))
                     // Aktualizuj oba widgety przez WidgetSyncHelper aby nie dopuścić do rozbieżności
                     WidgetSyncHelper.updateAll(context)
+
+                    // B3: Load year-ago comparison data (±1 day window around 365 days ago)
+                    try {
+                        val oneDayMs = 24 * 60 * 60 * 1000L
+                        val yearAgoMs = System.currentTimeMillis() - 365 * oneDayMs
+                        val yearAgoRecords = temperatureDao.getRecordsBetween(
+                            yearAgoMs - oneDayMs,
+                            yearAgoMs + oneDayMs
+                        )
+                        if (yearAgoRecords.isNotEmpty()) {
+                            val bestRecord = yearAgoRecords.minBy { it.minTemp }
+                            _yearAgoData.value = HistoricalComparisonData(
+                                hadFrost = bestRecord.hasRisk,
+                                minTemp = bestRecord.minTemp,
+                                tempDifference = minTemp - bestRecord.minTemp
+                            )
+                        }
+                    } catch (_: Exception) { }
 
                     // KALIBRACJA: Sprawdź czy należy pokazać dialog feedbacku
                     val lastFeedback = prefs.lastFeedbackTimestamp

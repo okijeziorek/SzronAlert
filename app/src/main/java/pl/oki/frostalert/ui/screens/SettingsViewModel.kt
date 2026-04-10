@@ -222,6 +222,18 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateCalendarSyncEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateCalendarSyncEnabled(isEnabled)
+        }
+    }
+
+    fun updateTtsEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateTtsEnabled(isEnabled)
+        }
+    }
+
     fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
         viewModelScope.launch {
             settingsRepository.updateLastTrend(trend)
