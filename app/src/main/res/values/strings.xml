@@ -234,4 +234,9 @@
     <string name="garden_frost_threshold">Próg mrozu: %.1f°C</string>
     <string name="garden_add_plant">Dodaj do ogrodu</string>
     <string name="garden_remove_plant">Usuń z ogrodu</string>
+
+    <!-- Multi-Location -->
+    <string name="location_save_as_separate">Zapisz jako lokalizację</string>
+    <string name="location_saved_locations_title">Zapisane lokalizacje</string>
+    <string name="location_delete">Usuń</string>
 </resources>

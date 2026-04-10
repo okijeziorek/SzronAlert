@@ -47,7 +47,8 @@ class GeofenceRegistrarTest {
         manualLocationName = "Warszawa",
         isOnboardingCompleted = true,
         useFahrenheit = false,
-        geofenceRadiusMeters = 20000.0
+        geofenceRadiusMeters = 20000.0,
+        activeLocationId = 0
     )
 
     @Test

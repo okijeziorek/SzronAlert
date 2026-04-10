@@ -71,6 +71,9 @@ fun HomeScreen(
                     val prefs = userPrefs!!
                     MutedAlertsBanner(prefs, settingsViewModel)
 
+                    // Location selector chips
+                    LocationSelectorRow(viewModel, prefs)
+
                     when (val state = uiState) {
                         is HomeUiState.Loading -> {
                             Box(Modifier.fillMaxSize().padding(top = 100.dp), contentAlignment = Alignment.Center) {
@@ -610,4 +613,64 @@ fun getWeatherIcon(code: Int): ImageVector = when (code) {
     in 80..82 -> Icons.Default.BeachAccess
     95, 96, 99 -> Icons.Default.Thunderstorm
     else -> Icons.Default.Cloud
+}
+
+@Composable
+private fun LocationSelectorRow(
+    viewModel: HomeViewModel,
+    prefs: UserPreferences
+) {
+    val savedLocations by viewModel.savedLocations.collectAsState()
+    
+    if (savedLocations.isEmpty()) return
+
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            FilterChip(
+                selected = prefs.activeLocationId == 0,
+                onClick = { viewModel.switchLocation(0) },
+                label = {
+                    Text(
+                        text = if (prefs.isManualLocationEnabled) prefs.manualLocationName
+                               else stringResource(R.string.location_gps_auto),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.MyLocation,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            )
+        }
+        items(savedLocations.size) { index ->
+            val loc = savedLocations[index]
+            FilterChip(
+                selected = prefs.activeLocationId == loc.id,
+                onClick = { viewModel.switchLocation(loc.id) },
+                label = {
+                    Text(
+                        text = loc.name,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            )
+        }
+    }
 }

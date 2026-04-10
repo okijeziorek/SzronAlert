@@ -9,6 +9,8 @@ import android.widget.TextView
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
@@ -220,8 +222,56 @@ fun SettingsScreen(
                         modifier = Modifier.align(Alignment.End).padding(top = 8.dp),
                         enabled = latError == null && lonError == null
                     ) { SingleLineText(text = stringResource(R.string.save_location), style = MaterialTheme.typography.bodyLarge) }
+
+                    // Save as separate location button
+                    if (latError == null && lonError == null) {
+                        Spacer(Modifier.height(4.dp))
+                        OutlinedButton(
+                            onClick = {
+                                val lat = latText.toDoubleOrNull() ?: 52.2297
+                                val lon = lonText.toDoubleOrNull() ?: 21.0122
+                                viewModel.saveCurrentLocation(nameText, lat, lon)
+                            },
+                            modifier = Modifier.align(Alignment.End)
+                        ) { SingleLineText(text = stringResource(R.string.location_save_as_separate), style = MaterialTheme.typography.bodyLarge) }
+                    }
                 } else {
                     Text(stringResource(R.string.location_gps_auto), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                }
+
+                // Saved locations list
+                val savedLocations by viewModel.savedLocations.collectAsState()
+                if (savedLocations.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.location_saved_locations_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    savedLocations.forEach { location ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                SingleLineText(text = location.name, style = MaterialTheme.typography.bodyMedium)
+                                SingleLineText(
+                                    text = "${String.format(Locale.US, "%.4f", location.latitude)}, ${String.format(Locale.US, "%.4f", location.longitude)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier
+                                )
+                            }
+                            IconButton(onClick = { viewModel.deleteSavedLocation(location) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(R.string.location_delete),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(Modifier.height(24.dp))

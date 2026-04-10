@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.billing.BillingManagerInterface
@@ -19,12 +20,18 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val geofenceRegistrar: pl.oki.frostalert.geofence.GeofenceRegistrarContract,
     private val locationRepository: pl.oki.frostalert.data.repository.LocationRepository,
-    private val billingManager: BillingManagerInterface
+    private val billingManager: BillingManagerInterface,
+    private val savedLocationDao: pl.oki.frostalert.data.local.SavedLocationDao,
+    private val settingsDataStore: pl.oki.frostalert.data.local.SettingsDataStore
 ) : ViewModel() {
 
     init {
         geofenceRegistrar.start()
     }
+
+    val savedLocations: StateFlow<List<pl.oki.frostalert.data.local.SavedLocation>> =
+        savedLocationDao.getAllLocations()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val userPreferences: StateFlow<UserPreferences?> = settingsRepository.userPreferencesFlow
         .stateIn(
@@ -218,6 +225,32 @@ class SettingsViewModel @Inject constructor(
     fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
         viewModelScope.launch {
             settingsRepository.updateLastTrend(trend)
+        }
+    }
+
+    fun saveCurrentLocation(name: String, lat: Double, lon: Double) {
+        viewModelScope.launch {
+            val count = savedLocationDao.getCount()
+            if (count < 5) {
+                savedLocationDao.insert(
+                    pl.oki.frostalert.data.local.SavedLocation(
+                        name = name,
+                        latitude = lat,
+                        longitude = lon
+                    )
+                )
+            }
+        }
+    }
+
+    fun deleteSavedLocation(location: pl.oki.frostalert.data.local.SavedLocation) {
+        viewModelScope.launch {
+            savedLocationDao.delete(location)
+            // Reset active location if deleted
+            val prefs = settingsRepository.userPreferencesFlow.first()
+            if (prefs?.activeLocationId == location.id) {
+                settingsDataStore.updateActiveLocationId(0)
+            }
         }
     }
 

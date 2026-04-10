@@ -54,7 +54,8 @@ class SettingsViewModelTest {
         isOnboardingCompleted = false,
         useFahrenheit = false
         ,
-        geofenceRadiusMeters = 20000.0
+        geofenceRadiusMeters = 20000.0,
+        activeLocationId = 0
     )
 
     @Before
@@ -83,7 +84,10 @@ class SettingsViewModelTest {
         val geofenceRegistrar = FakeRegistrar()
         val billingManager = FakeBillingManager()
         val locationRepository: pl.oki.frostalert.data.repository.LocationRepository = mock()
-        viewModel = SettingsViewModel(repository, geofenceRegistrar, locationRepository, billingManager)
+        val savedLocationDao: pl.oki.frostalert.data.local.SavedLocationDao = mock()
+        val settingsDataStore: pl.oki.frostalert.data.local.SettingsDataStore = mock()
+        whenever(savedLocationDao.getAllLocations()).thenReturn(MutableStateFlow(emptyList()))
+        viewModel = SettingsViewModel(repository, geofenceRegistrar, locationRepository, billingManager, savedLocationDao, settingsDataStore)
     }
 
     @After

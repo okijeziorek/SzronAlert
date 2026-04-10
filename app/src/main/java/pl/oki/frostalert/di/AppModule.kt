@@ -111,6 +111,11 @@ object AppModule {
     }
 
     @Provides
+    fun provideSavedLocationDao(database: FrostDatabase): pl.oki.frostalert.data.local.SavedLocationDao {
+        return database.savedLocationDao()
+    }
+
+    @Provides
     @Singleton
     fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
         return NetworkMonitor(context)

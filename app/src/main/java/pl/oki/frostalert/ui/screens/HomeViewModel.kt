@@ -58,7 +58,8 @@ class HomeViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore,
     private val locationRepository: LocationRepository,
     private val temperatureDao: TemperatureDao,
-    private val calibrationDao: CalibrationDao
+    private val calibrationDao: CalibrationDao,
+    private val savedLocationDao: pl.oki.frostalert.data.local.SavedLocationDao
 ) : ViewModel() {
 
     companion object {
@@ -71,6 +72,11 @@ class HomeViewModel @Inject constructor(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
+    
+    // Saved locations for location selector
+    val savedLocations: StateFlow<List<pl.oki.frostalert.data.local.SavedLocation>> =
+        savedLocationDao.getAllLocations()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
     // Stan dialogu kalibracji
     private val _showCalibrationDialog = MutableStateFlow(false)
@@ -135,7 +141,22 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _isRefreshing.value = true
             try {
-                val location = locationRepository.getEffectiveLocation()
+                val prefs = settingsDataStore.userPreferencesFlow.first()
+                
+                // Determine effective location based on activeLocationId
+                val location = if (prefs.activeLocationId > 0) {
+                    val savedLoc = savedLocationDao.getById(prefs.activeLocationId)
+                    if (savedLoc != null) {
+                        android.location.Location("saved").apply {
+                            latitude = savedLoc.latitude
+                            longitude = savedLoc.longitude
+                        }
+                    } else {
+                        locationRepository.getEffectiveLocation()
+                    }
+                } else {
+                    locationRepository.getEffectiveLocation()
+                }
                 if (location == null) {
                     _isRefreshing.value = false
                     return@launch
@@ -209,6 +230,13 @@ class HomeViewModel @Inject constructor(
 
     fun hideCalibrationDialog() {
         _showCalibrationDialog.value = false
+    }
+
+    fun switchLocation(locationId: Int) {
+        viewModelScope.launch {
+            settingsDataStore.updateActiveLocationId(locationId)
+            refreshData()
+        }
     }
 
     fun submitCalibrationFeedback(actualFrostOccurred: Boolean) {
