@@ -222,6 +222,54 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateCalendarSyncEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateCalendarSyncEnabled(isEnabled)
+        }
+    }
+
+    fun updateTtsEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateTtsEnabled(isEnabled)
+        }
+    }
+
+    fun updateEnabledDashboardCards(cards: Set<String>) {
+        viewModelScope.launch {
+            settingsRepository.updateEnabledDashboardCards(cards)
+        }
+    }
+
+    fun updateDashboardCardOrder(order: String) {
+        viewModelScope.launch {
+            settingsRepository.updateDashboardCardOrder(order)
+        }
+    }
+
+    fun updateSmartHomeEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateSmartHomeEnabled(isEnabled)
+        }
+    }
+
+    fun updateSmartHomeWebhookUrl(url: String) {
+        viewModelScope.launch {
+            settingsRepository.updateSmartHomeWebhookUrl(url)
+        }
+    }
+
+    fun updateSmartHomeThreshold(threshold: Int) {
+        viewModelScope.launch {
+            settingsRepository.updateSmartHomeThreshold(threshold)
+        }
+    }
+
+    fun updateSmartHomeIftttKey(key: String) {
+        viewModelScope.launch {
+            settingsRepository.updateSmartHomeIftttKey(key)
+        }
+    }
+
     fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
         viewModelScope.launch {
             settingsRepository.updateLastTrend(trend)

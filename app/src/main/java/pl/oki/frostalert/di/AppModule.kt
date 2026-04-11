@@ -116,6 +116,28 @@ object AppModule {
     }
 
     @Provides
+    fun provideFrostPhotoDao(database: FrostDatabase): pl.oki.frostalert.data.local.FrostPhotoDao {
+        return database.frostPhotoDao()
+    }
+
+    @Provides
+    fun provideGardenZoneDao(database: FrostDatabase): pl.oki.frostalert.data.local.GardenZoneDao {
+        return database.gardenZoneDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSmartHomeRepository(): pl.oki.frostalert.data.repository.SmartHomeRepository {
+        return pl.oki.frostalert.data.repository.SmartHomeRepository()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCalendarRepository(@ApplicationContext context: Context): pl.oki.frostalert.data.repository.CalendarRepository {
+        return pl.oki.frostalert.data.repository.CalendarRepository(context)
+    }
+
+    @Provides
     @Singleton
     fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
         return NetworkMonitor(context)

@@ -187,6 +187,10 @@ fun WeatherSuccessContent(
             UvIndexCard(state.weather.current.uvIndex)
         }
 
+        // B3: Historical comparison card
+        val yearAgoData by viewModel.yearAgoData.collectAsState()
+        HistoricalComparisonCard(data = yearAgoData, useFahrenheit = state.useFahrenheit)
+
         // FEEDBACK z animacją zanikania
         AnimatedVisibility(
             visible = showFeedback,
@@ -601,6 +605,73 @@ fun ErrorState(message: String, onRetry: () -> Unit) {
         Text(message, textAlign = TextAlign.Center, maxLines = 4, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.height(16.dp))
         Button(onClick = onRetry) { Text(stringResource(R.string.retry_button), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    }
+}
+
+@Composable
+fun HistoricalComparisonCard(data: HistoricalComparisonData?, useFahrenheit: Boolean) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.history_comparison_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(4.dp))
+                if (data == null) {
+                    Text(
+                        text = stringResource(R.string.history_comparison_no_data),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                } else {
+                    Text(
+                        text = stringResource(
+                            R.string.history_comparison_min_temp,
+                            WeatherCalculations.formatTemperature(data.minTemp, useFahrenheit)
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (data.hadFrost) stringResource(R.string.history_comparison_frost_yes)
+                               else stringResource(R.string.history_comparison_frost_no),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    val absDiff = kotlin.math.abs(data.tempDifference)
+                    val diffText = WeatherCalculations.formatTemperature(absDiff, useFahrenheit)
+                    Text(
+                        text = if (data.tempDifference >= 0) stringResource(R.string.history_comparison_warmer, diffText)
+                               else stringResource(R.string.history_comparison_colder, diffText),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (data.tempDifference >= 0) MaterialTheme.colorScheme.primary
+                               else MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -32,6 +32,14 @@ interface SettingsRepository {
     suspend fun updateTrendChangeNotificationsEnabled(isEnabled: Boolean)
     suspend fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?)
     suspend fun updatePendingTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?)
+    suspend fun updateTtsEnabled(isEnabled: Boolean)
+    suspend fun updateCalendarSyncEnabled(isEnabled: Boolean)
+    suspend fun updateEnabledDashboardCards(cards: Set<String>)
+    suspend fun updateDashboardCardOrder(order: String)
+    suspend fun updateSmartHomeEnabled(isEnabled: Boolean)
+    suspend fun updateSmartHomeWebhookUrl(url: String)
+    suspend fun updateSmartHomeThreshold(threshold: Int)
+    suspend fun updateSmartHomeIftttKey(key: String)
 }
 
 class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) : SettingsRepository {
@@ -140,5 +148,37 @@ class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) :
 
     override suspend fun updatePendingTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
         settingsDataStore.updatePendingTrend(trend)
+    }
+
+    override suspend fun updateTtsEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateTtsEnabled(isEnabled)
+    }
+
+    override suspend fun updateCalendarSyncEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateCalendarSyncEnabled(isEnabled)
+    }
+
+    override suspend fun updateEnabledDashboardCards(cards: Set<String>) {
+        settingsDataStore.updateEnabledDashboardCards(cards)
+    }
+
+    override suspend fun updateDashboardCardOrder(order: String) {
+        settingsDataStore.updateDashboardCardOrder(order)
+    }
+
+    override suspend fun updateSmartHomeEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateSmartHomeEnabled(isEnabled)
+    }
+
+    override suspend fun updateSmartHomeWebhookUrl(url: String) {
+        settingsDataStore.updateSmartHomeWebhookUrl(url)
+    }
+
+    override suspend fun updateSmartHomeThreshold(threshold: Int) {
+        settingsDataStore.updateSmartHomeThreshold(threshold)
+    }
+
+    override suspend fun updateSmartHomeIftttKey(key: String) {
+        settingsDataStore.updateSmartHomeIftttKey(key)
     }
 }

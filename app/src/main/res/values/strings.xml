@@ -240,4 +240,100 @@
     <string name="location_saved_locations_title">Zapisane lokalizacje</string>
     <string name="location_delete">Usuń</string>
     <string name="location_limit_reached">Maksymalnie 5 zapisanych lokalizacji</string>
+
+    <!-- B1: Frost Map -->
+    <string name="frost_map_title">Mapa Szronu</string>
+    <string name="frost_map_loading">Ładowanie mapy…</string>
+    <string name="frost_map_pro_required">Mapa dostępna w wersji PRO</string>
+    <string name="frost_map_your_location">Twoja lokalizacja</string>
+    <string name="frost_map_risk_overlay">Nakładka ryzyka szronu</string>
+    <string name="frost_map_legend_high">Wysokie ryzyko</string>
+    <string name="frost_map_legend_moderate">Umiarkowane</string>
+    <string name="frost_map_legend_low">Niskie ryzyko</string>
+    <string name="frost_map_legend_none">Brak ryzyka</string>
+    <string name="frost_map_radius_label">Promień: %d km</string>
+    <string name="frost_map_no_location">Brak dostępu do lokalizacji</string>
+    <string name="frost_map_load_button">Załaduj mapę</string>
+    <string name="frost_map_pro_description">Odblokuj mapę szronu w wersji PRO</string>
+    <string name="frost_map_min_temp">Min: %s</string>
+
+    <!-- B2: Calendar Integration -->
+    <string name="calendar_sync_title">Synchronizacja z Kalendarzem</string>
+    <string name="calendar_sync_desc">Automatycznie dodawaj wydarzenia o ryzyku szronu</string>
+    <string name="calendar_permission_needed">Wymagane uprawnienie do kalendarza</string>
+    <string name="calendar_sync_success">Wydarzenie dodane do kalendarza</string>
+    <string name="calendar_sync_error">Błąd synchronizacji kalendarza</string>
+
+    <!-- B3: Historical Comparison -->
+    <string name="history_comparison_title">Rok temu w tym dniu</string>
+    <string name="history_comparison_min_temp">Min: %s</string>
+    <string name="history_comparison_frost_yes">Szron: TAK</string>
+    <string name="history_comparison_frost_no">Szron: NIE</string>
+    <string name="history_comparison_no_data">Zbieramy dane na przyszły sezon</string>
+    <string name="history_comparison_warmer">Dziś cieplej o %s</string>
+    <string name="history_comparison_colder">Dziś chłodniej o %s</string>
+
+    <!-- B4: Voice Notifications (TTS) -->
+    <string name="tts_enabled_label">Powiadomienia głosowe</string>
+    <string name="tts_enabled_desc">Odczytaj alert na głos (np. podczas jazdy)</string>
+    <string name="tts_frost_message">Uwaga! Dziś w nocy ryzyko szronu. Minimalna temperatura %s.</string>
+    <string name="tts_no_risk_message">Brak ryzyka szronu dziś w nocy.</string>
+    <string name="tts_init_error">Błąd inicjalizacji syntezatora mowy</string>
+
+    <!-- B5: Configurable Dashboard Cards -->
+    <string name="dashboard_config_title">Konfiguracja kart</string>
+    <string name="dashboard_config_desc">Wybierz i uporządkuj karty na ekranie głównym</string>
+    <string name="dashboard_card_frost">Karta szronu</string>
+    <string name="dashboard_card_weather">Pogoda bieżąca</string>
+    <string name="dashboard_card_trend">Mini-trend</string>
+    <string name="dashboard_card_uv">Indeks UV</string>
+    <string name="dashboard_card_watering">Podlewanie</string>
+    <string name="dashboard_card_storm">Burza / grad</string>
+    <string name="dashboard_reorder_pro">Zmiana kolejności w wersji PRO</string>
+
+    <!-- C2: Photo Documentation -->
+    <string name="photo_doc_title">Dokumentacja fotograficzna</string>
+    <string name="photo_take_picture">Zrób zdjęcie szronu</string>
+    <string name="photo_gallery_title">Galeria szronu</string>
+    <string name="photo_no_photos">Brak zdjęć</string>
+    <string name="photo_attached_to_record">Zdjęcie przypisane do rekordu</string>
+    <string name="photo_permission_needed">Wymagane uprawnienie do aparatu</string>
+    <string name="photo_save_error">Błąd zapisu zdjęcia</string>
+
+    <!-- C3: Microclimate Zones -->
+    <string name="microclimate_title">Strefy mikroklimatyczne</string>
+    <string name="microclimate_add_zone">Dodaj strefę</string>
+    <string name="microclimate_zone_name">Nazwa strefy</string>
+    <string name="microclimate_correction">Korekta temperatury</string>
+    <string name="microclimate_zone_wall">Pod murem</string>
+    <string name="microclimate_zone_hill">Na wzgórzu</string>
+    <string name="microclimate_zone_shade">W cieniu</string>
+    <string name="microclimate_zone_open">Otwarta przestrzeń</string>
+    <string name="microclimate_zone_custom">Własna</string>
+    <string name="microclimate_no_zones">Brak stref. Dodaj pierwszą!</string>
+    <string name="microclimate_delete_zone">Usuń strefę</string>
+    <string name="microclimate_correction_value">%+.1f°C</string>
+
+    <!-- C4: PDF Reports -->
+    <string name="pdf_report_title">Raport sezonowy</string>
+    <string name="pdf_generate">Generuj raport PDF</string>
+    <string name="pdf_generating">Generowanie raportu…</string>
+    <string name="pdf_share">Udostępnij raport</string>
+    <string name="pdf_frost_nights">Noce z szronem: %d</string>
+    <string name="pdf_avg_min">Średnie minimum: %s</string>
+    <string name="pdf_season_summary">Podsumowanie sezonu %s</string>
+    <string name="pdf_error">Błąd generowania raportu</string>
+
+    <!-- C5: Smart Home -->
+    <string name="smart_home_title">Smart Home</string>
+    <string name="smart_home_desc">Integracja z automatyką domową</string>
+    <string name="smart_home_webhook_url">Adres URL webhooka</string>
+    <string name="smart_home_webhook_test">Testuj webhook</string>
+    <string name="smart_home_webhook_success">Webhook wysłany pomyślnie</string>
+    <string name="smart_home_webhook_error">Błąd wysyłania webhooka</string>
+    <string name="smart_home_threshold">Próg uruchomienia (%)</string>
+    <string name="smart_home_enabled_label">Włącz integrację Smart Home</string>
+    <string name="smart_home_ifttt_key">Klucz IFTTT</string>
+    <string name="smart_home_save">Zapisz ustawienia</string>
+    <string name="smart_home_saved">Ustawienia zapisane</string>
 </resources>

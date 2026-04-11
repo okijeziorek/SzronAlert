@@ -1,6 +1,7 @@
 package pl.oki.frostalert.data.repository
 
 import pl.oki.frostalert.data.local.TemperatureDao
+import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.utils.AppError
 import pl.oki.frostalert.utils.AppResult
 import java.util.Calendar
@@ -51,6 +52,20 @@ class HistoryRepository @Inject constructor(private val dao: TemperatureDao) {
             AppResult.Success(dao.getAbsoluteMinTemp())
         } catch (e: Exception) {
             AppResult.Error(AppError.DatabaseError("Błąd odczytu temperatury minimalnej", e))
+        }
+    }
+
+    suspend fun getRecordsForDateOneYearAgo(): AppResult<List<TemperatureRecord>> {
+        return try {
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.YEAR, -1)
+            calendar.add(Calendar.DAY_OF_YEAR, -1)
+            val start = calendar.timeInMillis
+            calendar.add(Calendar.DAY_OF_YEAR, 2) // ±1 day window
+            val end = calendar.timeInMillis
+            AppResult.Success(dao.getRecordsBetween(start, end))
+        } catch (e: Exception) {
+            AppResult.Error(AppError.DatabaseError("Błąd odczytu danych historycznych: ${e.message}", e))
         }
     }
 }
