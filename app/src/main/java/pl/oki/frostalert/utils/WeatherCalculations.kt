@@ -16,12 +16,19 @@ object WeatherCalculations {
     private const val TAG = "WeatherCalculations"
     
     fun calculateDewPoint(temp: Double, humidity: Double): Double {
-        if (humidity <= 0.0 || humidity > 100.0) return temp // guard against invalid humidity
+        if (humidity <= 0.0 || humidity > 100.0) {
+            Log.w(TAG, "calculateDewPoint: invalid humidity=$humidity, falling back to temp=$temp")
+            return temp
+        }
         val a = 17.27
         val b = 237.7
         val alpha = ((a * temp) / (b + temp)) + ln(humidity / 100.0)
         val result = (b * alpha) / (a - alpha)
-        return if (result.isNaN() || result.isInfinite()) temp else result
+        if (result.isNaN() || result.isInfinite()) {
+            Log.w(TAG, "calculateDewPoint: NaN/Inf result for temp=$temp humidity=$humidity, falling back to temp")
+            return temp
+        }
+        return result
     }
 
     fun estimateSurfaceTemp(temp: Double, weatherCode: Int, sensitivity: Double = 1.0, appMode: Int = 0): Double {

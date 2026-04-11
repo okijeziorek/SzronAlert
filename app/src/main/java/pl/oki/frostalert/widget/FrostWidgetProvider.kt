@@ -25,6 +25,7 @@ import pl.oki.frostalert.worker.FrostCheckWorker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FrostWidgetProvider"
 
@@ -32,7 +33,7 @@ private const val TAG = "FrostWidgetProvider"
 private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 // Tracks running update jobs per widget ID to avoid cancelling unrelated widgets.
-private val widgetJobs = java.util.concurrent.ConcurrentHashMap<Int, Job>()
+private val widgetJobs = ConcurrentHashMap<Int, Job>()
 
 class FrostWidgetProvider : AppWidgetProvider() {
 

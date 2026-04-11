@@ -190,7 +190,7 @@ class HomeViewModel @Inject constructor(
                         windSpeed = weather.current.windSpeed,
                         appMode = prefs.appMode
                     )
-                    val hasRisk = frostProbability >= 40 || WeatherCalculations.hasFrostRisk(
+                    val hasRisk = WeatherCalculations.hasFrostRisk(
                         minTemp, weather.current.humidity, weather.current.precipitation,
                         weather.current.weatherCode,
                         if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,

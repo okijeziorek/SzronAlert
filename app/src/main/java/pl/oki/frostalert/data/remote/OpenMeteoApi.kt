@@ -20,6 +20,8 @@ object OpenMeteoApi {
                 ignoreUnknownKeys = true
             })
         }
+        // Timeouts prevent the app from hanging on slow/unresponsive network connections.
+        // Values tuned for mobile networks where latency spikes are common.
         install(HttpTimeout) {
             requestTimeoutMillis = 15_000
             connectTimeoutMillis = 10_000
