@@ -655,8 +655,6 @@ fun SettingsScreen(
                     )
                 }
 
-                // Native ad is intentionally shown near PRO CTA at the top for better visibility.
-
                 Spacer(Modifier.height(16.dp))
                 SectionTitle(stringResource(R.string.section_advanced_tools))
 
