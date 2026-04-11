@@ -1,14 +1,15 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.annotation.StringRes
 import com.google.android.gms.ads.AdRequest
@@ -23,9 +24,9 @@ fun MonetizationBanner(
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    val containerWidthPx = LocalWindowInfo.current.containerSize.width
-    val adWidthDp = remember(containerWidthPx, density) {
-        with(density) { containerWidthPx.toDp() }.value.toInt().coerceAtLeast(320)
+    val configuration = LocalConfiguration.current
+    val adWidthDp = remember(configuration.screenWidthDp) {
+        configuration.screenWidthDp.coerceAtLeast(320)
     }
     val adSize = remember(adWidthDp) {
         AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, adWidthDp)
