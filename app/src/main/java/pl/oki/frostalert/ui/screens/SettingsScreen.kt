@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
@@ -172,7 +173,7 @@ fun SettingsScreen(
                 }
 
                 if (showGeofenceHistory) {
-                    androidx.compose.ui.window.Dialog(onDismissRequest = { showGeofenceHistory = false }) {
+                    Dialog(onDismissRequest = { showGeofenceHistory = false }) {
                         Surface(modifier = Modifier.fillMaxSize()) {
                             GeofenceHistoryScreen()
                         }
@@ -655,6 +656,44 @@ fun SettingsScreen(
                 }
 
                 // Native ad is intentionally shown near PRO CTA at the top for better visibility.
+
+                Spacer(Modifier.height(16.dp))
+                SectionTitle(stringResource(R.string.section_advanced_tools))
+
+                var showDashboardConfig by remember { mutableStateOf(false) }
+                Button(onClick = { showDashboardConfig = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.dashboard_config_title),
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (showDashboardConfig) {
+                    Dialog(onDismissRequest = { showDashboardConfig = false }) {
+                        Surface(modifier = Modifier.fillMaxSize()) {
+                            DashboardConfigScreen()
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+                var showSmartHome by remember { mutableStateOf(false) }
+                Button(onClick = { showSmartHome = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.smart_home_title),
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (showSmartHome) {
+                    Dialog(onDismissRequest = { showSmartHome = false }) {
+                        Surface(modifier = Modifier.fillMaxSize()) {
+                            SmartHomeSettingsScreen()
+                        }
+                    }
+                }
             }
         }
     }

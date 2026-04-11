@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.Plant
@@ -117,6 +118,53 @@ fun GardenScreen(
                         },
                         label = { Text(category) }
                     )
+                }
+            }
+
+            // Dodatkowe narzędzia ogrodu
+            var showMicroclimate by remember { mutableStateOf(false) }
+            var showPhotoDoc by remember { mutableStateOf(false) }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { showMicroclimate = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.microclimate_title),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
+                    )
+                }
+                OutlinedButton(
+                    onClick = { showPhotoDoc = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.photo_doc_title),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
+                    )
+                }
+            }
+            if (showMicroclimate) {
+                Dialog(onDismissRequest = { showMicroclimate = false }) {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        MicroclimateScreen()
+                    }
+                }
+            }
+            if (showPhotoDoc) {
+                Dialog(onDismissRequest = { showPhotoDoc = false }) {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        PhotoDocumentationScreen()
+                    }
                 }
             }
 
