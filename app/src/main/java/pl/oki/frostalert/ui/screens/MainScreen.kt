@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import pl.oki.frostalert.BuildConfig
 import pl.oki.frostalert.R
 import pl.oki.frostalert.utils.NetworkMonitor
@@ -31,8 +32,10 @@ fun MainScreen(initialTab: Int = 0) {
     val context = LocalContext.current
     val networkMonitor = remember { NetworkMonitor(context) }
     val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
-    
-    val pagerState = rememberPagerState(initialPage = initialTab) { if (BuildConfig.DEBUG) 6 else 5 }
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
+    val isPro by settingsViewModel.isPro.collectAsState()
+
+    val pagerState = rememberPagerState(initialPage = initialTab) { if (BuildConfig.DEBUG) 7 else 6 }
     val scope = rememberCoroutineScope()
 
     // Optymalizacja: derivedStateOf zapobiega zbędnym przeliczeniom podczas swipowania
@@ -113,8 +116,9 @@ fun MainScreen(initialTab: Int = 0) {
                         add(Triple(2, Icons.Default.History, R.string.tab_history))
                         add(Triple(3, Icons.Default.ShowChart, R.string.trend_screen_title))
                         add(Triple(4, Icons.Default.Yard, R.string.garden_tab_title))
+                        add(Triple(5, Icons.Default.Map, R.string.tab_map))
                         if (BuildConfig.DEBUG) {
-                            add(Triple(5, Icons.Default.BugReport, R.string.tab_debug))
+                            add(Triple(6, Icons.Default.BugReport, R.string.tab_debug))
                         }
                     }
 
@@ -152,7 +156,8 @@ fun MainScreen(initialTab: Int = 0) {
                     2 -> HistoryScreen()
                     3 -> TrendScreen()
                     4 -> GardenScreen()
-                    5 -> DebugScreen(
+                    5 -> FrostMapScreen(isPro = isPro)
+                    6 -> DebugScreen(
                         onOpenTrendRequested = {
                             scope.launch { pagerState.animateScrollToPage(3) }
                         }
