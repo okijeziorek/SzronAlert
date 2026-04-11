@@ -195,7 +195,7 @@ private fun AddZoneDialog(
 
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Predefiniowane strefy:",
+                    text = stringResource(R.string.microclimate_zone_custom),
                     style = MaterialTheme.typography.labelMedium
                 )
                 Spacer(Modifier.height(4.dp))

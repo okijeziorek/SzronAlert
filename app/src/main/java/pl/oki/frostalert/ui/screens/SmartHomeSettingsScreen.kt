@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import pl.oki.frostalert.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,6 +33,8 @@ fun SmartHomeSettingsScreen(
             viewModel.clearTestResult()
         }
     }
+
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -169,8 +172,7 @@ fun SmartHomeSettingsScreen(
                 Button(
                     onClick = {
                         viewModel.saveSettings()
-                        // Show saved confirmation
-                        viewModel.clearTestResult()
+                        scope.launch { snackbarHostState.showSnackbar(savedMessage) }
                     },
                     modifier = Modifier.weight(1f),
                     enabled = uiState.isEnabled

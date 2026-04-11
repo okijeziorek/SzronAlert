@@ -209,10 +209,12 @@ class HomeViewModel @Inject constructor(
                     // Aktualizuj oba widgety przez WidgetSyncHelper aby nie dopuścić do rozbieżności
                     WidgetSyncHelper.updateAll(context)
 
-                    // B3: Load year-ago comparison data (±1 day window around 365 days ago)
+                    // B3: Load year-ago comparison data (±1 day window)
                     try {
                         val oneDayMs = 24 * 60 * 60 * 1000L
-                        val yearAgoMs = System.currentTimeMillis() - 365 * oneDayMs
+                        val yearAgoCal = java.util.Calendar.getInstance()
+                        yearAgoCal.add(java.util.Calendar.YEAR, -1)
+                        val yearAgoMs = yearAgoCal.timeInMillis
                         val yearAgoRecords = temperatureDao.getRecordsBetween(
                             yearAgoMs - oneDayMs,
                             yearAgoMs + oneDayMs
