@@ -16,10 +16,12 @@ object WeatherCalculations {
     private const val TAG = "WeatherCalculations"
     
     fun calculateDewPoint(temp: Double, humidity: Double): Double {
+        if (humidity <= 0.0 || humidity > 100.0) return temp // guard against invalid humidity
         val a = 17.27
         val b = 237.7
         val alpha = ((a * temp) / (b + temp)) + ln(humidity / 100.0)
-        return (b * alpha) / (a - alpha)
+        val result = (b * alpha) / (a - alpha)
+        return if (result.isNaN() || result.isInfinite()) temp else result
     }
 
     fun estimateSurfaceTemp(temp: Double, weatherCode: Int, sensitivity: Double = 1.0, appMode: Int = 0): Double {
@@ -256,5 +258,19 @@ object WeatherCalculations {
         val riskCount = records.count { it.hasRisk }
         val avgMinTemp = if (records.isNotEmpty()) records.map { it.minTemp }.average() else 0.0
         return Pair(riskCount, avgMinTemp)
+    }
+
+    /**
+     * Converts a boolean frost risk + minTemp into a 0.0–1.0 risk level score
+     * used by geofencing and broadcast receivers for comparison purposes.
+     */
+    fun calculateRiskLevel(hasRisk: Boolean, minTemp: Double): Double {
+        return when {
+            hasRisk && minTemp < -5 -> 1.0
+            hasRisk && minTemp < 0 -> 0.7
+            hasRisk -> 0.5
+            minTemp < 2 -> 0.2
+            else -> 0.0
+        }
     }
 }

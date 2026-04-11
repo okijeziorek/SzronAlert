@@ -31,9 +31,8 @@ private const val TAG = "FrostWidgetProvider"
 // Application-level scope so widget updates are not tied to a single component lifecycle.
 private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-// Tracks the currently running update job so we can cancel it before starting a new one,
-// preventing many parallel coroutines from accumulating when widgets refresh frequently.
-private var currentWidgetJob: Job? = null
+// Tracks running update jobs per widget ID to avoid cancelling unrelated widgets.
+private val widgetJobs = java.util.concurrent.ConcurrentHashMap<Int, Job>()
 
 class FrostWidgetProvider : AppWidgetProvider() {
 
@@ -72,9 +71,9 @@ class FrostWidgetProvider : AppWidgetProvider() {
 internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
     val views = RemoteViews(context.packageName, R.layout.frost_widget_layout)
 
-    // Cancel any in-flight update to avoid accumulating parallel coroutines.
-    currentWidgetJob?.cancel()
-    currentWidgetJob = widgetScope.launch {
+    // Cancel any in-flight update for this specific widget to avoid accumulating parallel coroutines.
+    widgetJobs[appWidgetId]?.cancel()
+    widgetJobs[appWidgetId] = widgetScope.launch {
         try {
             val db = FrostDatabase.getDatabase(context)
             val records = try {

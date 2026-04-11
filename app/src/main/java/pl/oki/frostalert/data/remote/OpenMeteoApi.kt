@@ -2,7 +2,9 @@ package pl.oki.frostalert.data.remote
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
@@ -12,11 +14,16 @@ import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.AppError
 
 object OpenMeteoApi {
-    private val client = HttpClient {
+    private val client = HttpClient(Android) {
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
             })
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 15_000
+            connectTimeoutMillis = 10_000
+            socketTimeoutMillis = 15_000
         }
     }
 

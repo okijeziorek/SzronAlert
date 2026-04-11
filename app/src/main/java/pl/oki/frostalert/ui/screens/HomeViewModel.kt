@@ -174,29 +174,30 @@ class HomeViewModel @Inject constructor(
                 val weatherResult = OpenMeteoApi.getWeather(location.latitude, location.longitude)
                 
                 if (weatherResult is AppResult.Success) {
-                    _weatherData.value = weatherResult.data
+                    val weather = weatherResult.data
+                    _weatherData.value = weather
                     
-                    val prefs = settingsDataStore.userPreferencesFlow.first()
-                    val minTemp = WeatherCalculations.getNightMinTemp(weatherResult.data.hourly)
-                    val hasRisk = WeatherCalculations.hasFrostRisk(
-                        minTemp, weatherResult.data.current.humidity, weatherResult.data.current.precipitation,
-                        weatherResult.data.current.weatherCode,
+                    // Compute risk once for DB record; the UI recalculates reactively
+                    // through the `uiState` combine whenever preferences or weather change.
+                    val minTemp = WeatherCalculations.getNightMinTemp(weather.hourly)
+                    val frostProbability = WeatherCalculations.calculateFrostProbability(
+                        minTemp, weather.current.humidity, weather.current.precipitation,
+                        weather.current.weatherCode,
                         if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
                         if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
                         if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
                         sensitivity = prefs.sensitivity,
-                        windSpeed = weatherResult.data.current.windSpeed,
+                        windSpeed = weather.current.windSpeed,
                         appMode = prefs.appMode
                     )
-
-                    val frostProbability = WeatherCalculations.calculateFrostProbability(
-                        minTemp, weatherResult.data.current.humidity, weatherResult.data.current.precipitation,
-                        weatherResult.data.current.weatherCode,
+                    val hasRisk = frostProbability >= 40 || WeatherCalculations.hasFrostRisk(
+                        minTemp, weather.current.humidity, weather.current.precipitation,
+                        weather.current.weatherCode,
                         if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
                         if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
                         if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
                         sensitivity = prefs.sensitivity,
-                        windSpeed = weatherResult.data.current.windSpeed,
+                        windSpeed = weather.current.windSpeed,
                         appMode = prefs.appMode
                     )
                     
@@ -206,7 +207,7 @@ class HomeViewModel @Inject constructor(
                         hasRisk = hasRisk,
                         frostProbability = frostProbability
                     ))
-                    // Aktualizuj oba widgety przez WidgetSyncHelper aby nie dopuścić do rozbieżności
+                    // Update both widgets atomically via WidgetSyncHelper
                     WidgetSyncHelper.updateAll(context)
 
                     // B3: Load year-ago comparison data (±1 day window)
@@ -227,7 +228,9 @@ class HomeViewModel @Inject constructor(
                                 tempDifference = minTemp - bestRecord.minTemp
                             )
                         }
-                    } catch (_: Exception) { }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to load year-ago comparison: ${e.message}")
+                    }
 
                     // KALIBRACJA: Sprawdź czy należy pokazać dialog feedbacku
                     val lastFeedback = prefs.lastFeedbackTimestamp

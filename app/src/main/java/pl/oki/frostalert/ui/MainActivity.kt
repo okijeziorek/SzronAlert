@@ -115,7 +115,9 @@ class MainActivity : ComponentActivity() {
                         data = Uri.parse("package:$packageName")
                     }
                     startActivity(intent)
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                    android.util.Log.w("MainActivity", "Could not request exact alarm permission: ${e.message}")
+                }
             }
         }
     }
