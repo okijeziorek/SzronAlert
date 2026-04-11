@@ -30,7 +30,7 @@ class GeofenceManager(private val context: Context) {
     fun registerGeofence(id: String, lat: Double, lon: Double, radiusMeters: Float = 20000f, loiteringDelayMs: Int = 60_000) {
         // Verify permission first
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // permission missing, cannot register
+            Log.w(TAG, "Cannot register geofence id=$id: ACCESS_FINE_LOCATION permission missing")
             return
         }
 
@@ -67,9 +67,6 @@ class GeofenceManager(private val context: Context) {
         }.build()
 
         try {
-            if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return
-            }
             geofencingClient.removeGeofences(geofencePendingIntent)
             geofencingClient.addGeofences(request, geofencePendingIntent)
                 .addOnSuccessListener { Log.i(TAG, "Geofence registered: id=$requestId lat=$lat lon=$lon radius=$radiusMeters") }

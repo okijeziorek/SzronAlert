@@ -80,6 +80,7 @@ object AppModule {
     }
 
     @Provides
+    @Singleton
     fun provideGeofenceManager(@ApplicationContext context: Context): pl.oki.frostalert.geofence.GeofenceManager {
         return pl.oki.frostalert.geofence.GeofenceManager(context)
     }
