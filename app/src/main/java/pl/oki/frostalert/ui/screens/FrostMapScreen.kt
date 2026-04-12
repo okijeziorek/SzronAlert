@@ -39,7 +39,8 @@ private val ColorNoRisk = Color(0xFF4CAF50)
 @Composable
 fun FrostMapScreen(
     viewModel: FrostMapViewModel = hiltViewModel(),
-    isPro: Boolean
+    isPro: Boolean,
+    onBuyPro: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -65,7 +66,7 @@ fun FrostMapScreen(
         ) {
             if (!isPro) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    ProRequiredCard()
+                    ProRequiredCard(onBuyPro = onBuyPro)
                 }
             } else {
                 MapContent(uiState) { viewModel.loadMapData() }
@@ -75,7 +76,7 @@ fun FrostMapScreen(
 }
 
 @Composable
-private fun ProRequiredCard() {
+private fun ProRequiredCard(onBuyPro: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -110,7 +111,7 @@ private fun ProRequiredCard() {
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(20.dp))
-            Button(onClick = { }) {
+            Button(onClick = onBuyPro) {
                 Text(
                     text = stringResource(R.string.buy_pro),
                     maxLines = 1,

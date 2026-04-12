@@ -292,6 +292,8 @@
     <string name="dashboard_card_watering">Podlewanie</string>
     <string name="dashboard_card_storm">Burza / grad</string>
     <string name="dashboard_reorder_pro">Zmiana kolejności w wersji PRO</string>
+    <string name="dashboard_move_up">Przesuń w górę</string>
+    <string name="dashboard_move_down">Przesuń w dół</string>
 
     <!-- C2: Photo Documentation -->
     <string name="photo_doc_title">Dokumentacja fotograficzna</string>

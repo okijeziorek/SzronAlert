@@ -150,6 +150,14 @@ fun WeatherSuccessContent(
         !feedbackSubmitted && (now - lastFeedback) > (12 * 60 * 60 * 1000)
     }
     
+    // Konfiguracja kart dashboardu z preferencji
+    val enabledCards = userPrefs.enabledDashboardCards
+    val storedOrder = userPrefs.dashboardCardOrder.split(",").filter { it.isNotBlank() }
+    // Normalizacja: dodaj brakujące włączone klucze na końcu
+    val allKnownKeys = listOf("frost", "weather", "trend", "uv", "watering", "storm")
+    val cardOrder = storedOrder.filter { it in allKnownKeys } +
+        allKnownKeys.filter { it !in storedOrder }
+
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -167,29 +175,89 @@ fun WeatherSuccessContent(
             )
         }
 
-        if (isSummer) {
-            SummerRiskCard(state, userPrefs, isGarden)
-        } else {
-            FrostWarningCard(
-                hasRisk = state.hasFrostRisk,
-                frostProbability = state.frostProbability,
-                warningMessage = state.warningMessage,
-                windSpeed = state.weather.current.windSpeed,
-                isGarden = isGarden
-            )
-        }
-
-        if (!isSummer && isGarden && state.hasFrostRisk) {
-            GardenAdviceCard(state.minTemp)
-        }
-
-        if (state.weather.current.uvIndex >= 3.0) {
-            UvIndexCard(state.weather.current.uvIndex)
-        }
-
-        // B3: Historical comparison card
+        // Renderuj karty w kolejności zgodnej z dashboardCardOrder, tylko jeśli są włączone
         val yearAgoData by viewModel.yearAgoData.collectAsState()
-        HistoricalComparisonCard(data = yearAgoData, useFahrenheit = state.useFahrenheit)
+
+        cardOrder.forEach { cardKey ->
+            if (cardKey !in enabledCards) return@forEach
+            when (cardKey) {
+                "frost" -> {
+                    if (isSummer) {
+                        SummerRiskCard(state, userPrefs, isGarden, enabledCards)
+                    } else {
+                        FrostWarningCard(
+                            hasRisk = state.hasFrostRisk,
+                            frostProbability = state.frostProbability,
+                            warningMessage = state.warningMessage,
+                            windSpeed = state.weather.current.windSpeed,
+                            isGarden = isGarden
+                        )
+                        if (!isSummer && isGarden && state.hasFrostRisk) {
+                            GardenAdviceCard(state.minTemp)
+                        }
+                    }
+                }
+                "weather" -> {
+                    MinTemperatureCard(minTemp = state.minTemp, useFahrenheit = state.useFahrenheit, isGarden = isGarden)
+                    HourlyForecastSection(hourly = state.weather.hourly, useFahrenheit = state.useFahrenheit)
+                }
+                "trend" -> {
+                    HistoricalComparisonCard(data = yearAgoData, useFahrenheit = state.useFahrenheit)
+                }
+                "uv" -> {
+                    if (state.weather.current.uvIndex >= 3.0) {
+                        UvIndexCard(state.weather.current.uvIndex)
+                    }
+                }
+                "watering" -> {
+                    if (isGarden && isSummer) {
+                        val needsWatering = state.weather.daily?.let {
+                            SummerCalculations.needsWatering(it.precipitationSum.firstOrNull() ?: 0.0, 26.0)
+                        } ?: false
+                        if (needsWatering) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.WaterDrop, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = stringResource(R.string.watering_needed),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                "storm" -> {
+                    if (isSummer && SummerCalculations.hasStormOrHailRisk(state.weather.current.weatherCode)) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Thunderstorm, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(R.string.storm_alert_label),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // FEEDBACK z animacją zanikania
         AnimatedVisibility(
@@ -221,9 +289,6 @@ fun WeatherSuccessContent(
                 textAlign = TextAlign.Center
             )
         }
-
-        MinTemperatureCard(minTemp = state.minTemp, useFahrenheit = state.useFahrenheit, isGarden = isGarden)
-        HourlyForecastSection(hourly = state.weather.hourly, useFahrenheit = state.useFahrenheit)
 
         if (!isPro) {
             MonetizationBanner(adUnitResId = R.string.admob_banner_home_unit_id)
@@ -277,7 +342,7 @@ fun WeatherSuccessContent(
 }
 
 @Composable
-fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden: Boolean) {
+fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden: Boolean, enabledCards: Set<String> = emptySet()) {
     val summerMsg = SummerCalculations.getSummerWarningMessage(
         state.weather.current.temperature,
         state.weather.current.weatherCode,
@@ -288,8 +353,10 @@ fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden:
     val hasHeat = SummerCalculations.hasHeatRisk(state.weather.current.temperature, prefs.heatThreshold)
     val hasStorm = SummerCalculations.hasStormOrHailRisk(state.weather.current.weatherCode)
     
-    val needsWatering = if (isGarden && state.weather.daily != null) {
-        SummerCalculations.needsWatering(state.weather.daily.precipitationSum.firstOrNull() ?: 0.0, 26.0)
+    // Nie pokazuj podlewania w SummerRiskCard, jeśli karta "watering" jest włączona osobno
+    val showWatering = "watering" !in enabledCards && isGarden && state.weather.daily != null
+    val needsWatering = if (showWatering) {
+        SummerCalculations.needsWatering(state.weather.daily?.precipitationSum?.firstOrNull() ?: 0.0, 26.0)
     } else false
 
     Card(

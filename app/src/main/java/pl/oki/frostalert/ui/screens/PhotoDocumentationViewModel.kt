@@ -19,7 +19,23 @@ class PhotoDocumentationViewModel @Inject constructor(
 
     fun deletePhoto(photo: FrostPhoto) {
         viewModelScope.launch {
+            try {
+                val file = java.io.File(photo.filePath)
+                if (file.exists()) file.delete()
+            } catch (_: Exception) { /* ignore cleanup errors */ }
             frostPhotoDao.delete(photo)
+        }
+    }
+
+    fun savePhoto(filePath: String, note: String = "") {
+        viewModelScope.launch {
+            frostPhotoDao.insert(
+                FrostPhoto(
+                    filePath = filePath,
+                    timestamp = System.currentTimeMillis(),
+                    note = note
+                )
+            )
         }
     }
 }

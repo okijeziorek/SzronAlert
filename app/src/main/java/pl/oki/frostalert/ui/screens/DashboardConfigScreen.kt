@@ -3,6 +3,9 @@ package pl.oki.frostalert.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,12 +29,15 @@ private val ALL_CARDS = listOf(
     DashboardCard("storm", R.string.dashboard_card_storm),
 )
 
+private val CARD_MAP = ALL_CARDS.associateBy { it.key }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardConfigScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val prefs by viewModel.userPreferences.collectAsState()
+    val isPro by viewModel.isPro.collectAsState()
 
     Scaffold(
         topBar = {
@@ -62,8 +68,16 @@ fun DashboardConfigScreen(
             Spacer(Modifier.height(8.dp))
 
             val enabledCards = prefs?.enabledDashboardCards ?: setOf("frost", "weather", "trend")
+            val currentOrder = prefs?.dashboardCardOrder ?: "frost,weather,trend,uv,watering,storm"
+            val storedKeys = currentOrder.split(",").filter { it.isNotBlank() }
+            // Normalizacja: dodaj brakujące klucze z ALL_CARDS i odfiltruj nieznane
+            val allKnownKeys = ALL_CARDS.map { it.key }
+            val orderedKeys = storedKeys.filter { it in allKnownKeys } +
+                allKnownKeys.filter { it !in storedKeys }
 
-            ALL_CARDS.forEach { card ->
+            // Pokaż karty w aktualnej kolejności z preferencji
+            orderedKeys.forEachIndexed { index, cardKey ->
+                val card = CARD_MAP[cardKey] ?: return@forEachIndexed
                 val isEnabled = card.key in enabledCards
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Row(
@@ -72,6 +86,41 @@ fun DashboardConfigScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Przyciski do przesuwania (tylko dla PRO)
+                        if (isPro) {
+                            Column {
+                                IconButton(
+                                    onClick = {
+                                        val reordered = moveItem(orderedKeys, index, -1)
+                                        viewModel.updateDashboardCardOrder(reordered.joinToString(","))
+                                    },
+                                    enabled = index > 0,
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.ArrowUpward,
+                                        contentDescription = stringResource(R.string.dashboard_move_up),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        val reordered = moveItem(orderedKeys, index, 1)
+                                        viewModel.updateDashboardCardOrder(reordered.joinToString(","))
+                                    },
+                                    enabled = index < orderedKeys.size - 1,
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.ArrowDownward,
+                                        contentDescription = stringResource(R.string.dashboard_move_down),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(8.dp))
+                        }
+
                         Text(
                             text = stringResource(card.labelRes),
                             style = MaterialTheme.typography.bodyLarge,
@@ -91,11 +140,22 @@ fun DashboardConfigScreen(
             }
 
             Spacer(Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.dashboard_reorder_pro),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (!isPro) {
+                Text(
+                    text = stringResource(R.string.dashboard_reorder_pro),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
+}
+
+private fun moveItem(list: List<String>, fromIndex: Int, direction: Int): List<String> {
+    val toIndex = fromIndex + direction
+    if (toIndex < 0 || toIndex >= list.size) return list
+    val mutableList = list.toMutableList()
+    val item = mutableList.removeAt(fromIndex)
+    mutableList.add(toIndex, item)
+    return mutableList
 }
