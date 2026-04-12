@@ -123,13 +123,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                                 windSpeed = weather.current.windSpeed,
                                 appMode = prefs.appMode
                             )
-                            riskLevel = when {
-                                hasRisk && minTemp < -5 -> 1.0
-                                hasRisk && minTemp < 0 -> 0.7
-                                hasRisk -> 0.5
-                                minTemp < 2 -> 0.2
-                                else -> 0.0
-                            }
+                            riskLevel = pl.oki.frostalert.utils.WeatherCalculations.calculateRiskLevel(hasRisk, minTemp)
                             locationName = "${"%.2f".format(lat)}, ${"%.2f".format(lon)}"
                         }
 

@@ -99,16 +99,11 @@ class LocationRepository(private val context: Context, private val settingsDataS
             return GeofencingResult.Error("Nieprawidłowe współrzędne lokalizacji")
         }
 
-        val currentRisk = getFrostRiskForLocation(currentLocation.latitude, currentLocation.longitude, userPrefs)
-        if (currentRisk is AppResult.Error) {
-            return GeofencingResult.Error("Błąd pobierania danych pogodowych")
-        }
-
         // Fresh limiter for each trigger cycle — this is intentional: GeofenceRateLimiter
         // tracks calls within a single geofence trigger (max 8 API calls per trigger).
         val rateLimiter = GeofenceRateLimiter()
 
-        // Sprawdź ryzyko w aktualnej lokalizacji — reuse pre-fetched data when available
+        // Compute risk for current location — reuse pre-fetched data when available
         val currentRiskData = if (currentWeather != null) {
             computeRiskFromWeather(currentWeather, currentLocation.latitude, currentLocation.longitude, userPrefs)
         } else {
@@ -188,13 +183,7 @@ class LocationRepository(private val context: Context, private val settingsDataS
             windSpeed = weather.current.windSpeed,
             appMode = userPrefs.appMode
         )
-        val riskLevel = when {
-            hasRisk && minTemp < -5 -> 1.0
-            hasRisk && minTemp < 0 -> 0.7
-            hasRisk -> 0.5
-            minTemp < 2 -> 0.2
-            else -> 0.0
-        }
+        val riskLevel = WeatherCalculations.calculateRiskLevel(hasRisk, minTemp)
         return FrostRiskData(
             minTemp = minTemp,
             hasRisk = hasRisk,
@@ -211,35 +200,7 @@ class LocationRepository(private val context: Context, private val settingsDataS
             val weatherResult = OpenMeteoApi.getWeather(lat, lon)
             when (weatherResult) {
                 is AppResult.Success -> {
-                    val weather = weatherResult.data
-                    val minTemp = WeatherCalculations.getNightMinTemp(weather.hourly)
-                    val hasRisk = WeatherCalculations.hasFrostRisk(
-                        temp = minTemp,
-                        humidity = weather.current.humidity,
-                        precip = weather.current.precipitation,
-                        weatherCode = weather.current.weatherCode,
-                        tempThreshold = if (userPrefs.isAutoModeEnabled) 1.0 else userPrefs.tempThreshold,
-                        humidityThreshold = userPrefs.humidityThreshold.toDouble(),
-                        precipitationThreshold = userPrefs.precipitationThreshold,
-                        sensitivity = userPrefs.sensitivity,
-                        windSpeed = weather.current.windSpeed,
-                        appMode = userPrefs.appMode
-                    )
-
-                    val riskLevel = when {
-                        hasRisk && minTemp < -5 -> 1.0
-                        hasRisk && minTemp < 0 -> 0.7
-                        hasRisk -> 0.5
-                        minTemp < 2 -> 0.2
-                        else -> 0.0
-                    }
-
-                    AppResult.Success(FrostRiskData(
-                        minTemp = minTemp,
-                        hasRisk = hasRisk,
-                        riskLevel = riskLevel,
-                        locationName = getLocationName(lat, lon)
-                    ))
+                    AppResult.Success(computeRiskFromWeather(weatherResult.data, lat, lon, userPrefs))
                 }
                 is AppResult.Error -> weatherResult
             }

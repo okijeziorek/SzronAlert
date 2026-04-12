@@ -315,7 +315,8 @@ class SettingsViewModel @Inject constructor(
     private fun registerGeofenceForCurrentSettings() {
         try {
             geofenceRegistrar.registerForCurrentLocation(locationRepository)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            android.util.Log.w("SettingsViewModel", "Failed to register geofence: ${e.message}")
         }
     }
 }

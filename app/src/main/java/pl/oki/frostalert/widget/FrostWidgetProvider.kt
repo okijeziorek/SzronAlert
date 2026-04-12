@@ -25,15 +25,15 @@ import pl.oki.frostalert.worker.FrostCheckWorker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FrostWidgetProvider"
 
 // Application-level scope so widget updates are not tied to a single component lifecycle.
 private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-// Tracks the currently running update job so we can cancel it before starting a new one,
-// preventing many parallel coroutines from accumulating when widgets refresh frequently.
-private var currentWidgetJob: Job? = null
+// Tracks running update jobs per widget ID to avoid cancelling unrelated widgets.
+private val widgetJobs = ConcurrentHashMap<Int, Job>()
 
 class FrostWidgetProvider : AppWidgetProvider() {
 
@@ -67,14 +67,21 @@ class FrostWidgetProvider : AppWidgetProvider() {
             )
         }
     }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        for (id in appWidgetIds) {
+            widgetJobs.remove(id)?.cancel()
+        }
+    }
 }
 
 internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
     val views = RemoteViews(context.packageName, R.layout.frost_widget_layout)
 
-    // Cancel any in-flight update to avoid accumulating parallel coroutines.
-    currentWidgetJob?.cancel()
-    currentWidgetJob = widgetScope.launch {
+    // Cancel any in-flight update for this specific widget to avoid accumulating parallel coroutines.
+    widgetJobs[appWidgetId]?.cancel()
+    val job = widgetScope.launch {
         try {
             val db = FrostDatabase.getDatabase(context)
             val records = try {
@@ -122,4 +129,6 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
             Log.e(TAG, "Error updating widget $appWidgetId: ${e.message}", e)
         }
     }
+    widgetJobs[appWidgetId] = job
+    job.invokeOnCompletion { widgetJobs.remove(appWidgetId, job) }
 }

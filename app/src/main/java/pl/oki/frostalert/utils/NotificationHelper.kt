@@ -1,12 +1,15 @@
 package pl.oki.frostalert.utils
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.flow.first
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.SettingsDataStore
@@ -24,7 +27,8 @@ object NotificationHelper {
             val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
                 description = "Alerts about frost and ice on windshields"
             }
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                ?: return
             notificationManager.createNotificationChannel(channel)
         }
     }
@@ -36,6 +40,14 @@ object NotificationHelper {
      *        Pass this from already-loaded preferences to avoid an extra DataStore read.
      */
     fun sendNotification(context: Context, title: String, message: String, isMataOptionEnabled: Boolean) {
+        // Check POST_NOTIFICATIONS permission on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                return
+            }
+        }
+
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -81,7 +93,8 @@ object NotificationHelper {
             builder.addAction(0, context.getString(R.string.action_mata), mataPendingIntent)
         }
 
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            ?: return
         notificationManager.notify(NOTIFICATION_ID, builder.build())
     }
 
