@@ -22,6 +22,7 @@ playServicesLocation = "21.3.0"
 room = "2.5.2"
 work = "2.10.0"
 ycharts = "2.1.0"
+osmdroid = "6.1.18"
 kotlin = "2.1.10"
 
 [libraries]
@@ -60,6 +61,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 ycharts = { group = "co.yml", name = "ycharts", version.ref = "ycharts" }
+osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.remote.OpenMeteoApi
+import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.WeatherCalculations
 import javax.inject.Inject
@@ -34,7 +35,8 @@ data class FrostMapUiState(
 
 @HiltViewModel
 class FrostMapViewModel @Inject constructor(
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    private val locationRepository: LocationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FrostMapUiState())
@@ -45,8 +47,17 @@ class FrostMapViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             try {
                 val prefs = settingsDataStore.userPreferencesFlow.first()
-                val centerLat = prefs.manualLatitude
-                val centerLon = prefs.manualLongitude
+
+                val location = locationRepository.getEffectiveLocation()
+                if (location == null) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Nie udało się uzyskać lokalizacji. Sprawdź uprawnienia lub ustaw lokalizację ręcznie."
+                    )
+                    return@launch
+                }
+                val centerLat = location.latitude
+                val centerLon = location.longitude
 
                 val result = OpenMeteoApi.getWeather(centerLat, centerLon)
                 if (result is AppResult.Success) {
@@ -75,10 +86,14 @@ class FrostMapViewModel @Inject constructor(
                             val adjustedMinTemp = baseMinTemp + tempVariation
 
                             val probability = WeatherCalculations.calculateFrostProbability(
-                                adjustedMinTemp, baseHumidity, basePrecip, baseWeatherCode,
-                                if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
-                                if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
-                                if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                                temp = adjustedMinTemp,
+                                humidity = baseHumidity,
+                                precip = basePrecip,
+                                weatherCode = baseWeatherCode,
+                                tempThreshold = if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
+                                humidityThreshold = if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
+                                precipitationThreshold = if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,
+                                sensitivity = prefs.sensitivity,
                                 windSpeed = baseWindSpeed,
                                 appMode = prefs.appMode
                             )
