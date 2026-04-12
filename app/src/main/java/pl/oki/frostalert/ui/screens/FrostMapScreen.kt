@@ -242,7 +242,7 @@ private fun FrostOsmMap(
                 }
 
                 // Center marker
-                if (uiState.centerLat != 0.0 || uiState.centerLon != 0.0) {
+                if (uiState.hasCenter) {
                     val centerMarker = Marker(mapView).apply {
                         position = GeoPoint(uiState.centerLat, uiState.centerLon)
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)

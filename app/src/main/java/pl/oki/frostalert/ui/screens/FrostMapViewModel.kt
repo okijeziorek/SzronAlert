@@ -28,6 +28,7 @@ data class FrostMapUiState(
     val gridPoints: List<MapGridPoint> = emptyList(),
     val centerLat: Double = 0.0,
     val centerLon: Double = 0.0,
+    val hasCenter: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val radiusKm: Int = 50
@@ -106,6 +107,7 @@ class FrostMapViewModel @Inject constructor(
                         gridPoints = points,
                         centerLat = centerLat,
                         centerLon = centerLon,
+                        hasCenter = true,
                         isLoading = false,
                         radiusKm = 50
                     )
