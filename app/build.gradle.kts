@@ -121,6 +121,7 @@ dependencies {
     implementation(libs.androidx.glance.material3)
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.ycharts)
+    implementation(libs.osmdroid)
 
     // System
     implementation(libs.play.services.location)

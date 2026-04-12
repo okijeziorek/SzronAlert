@@ -1,6 +1,5 @@
 package pl.oki.frostalert.ui.screens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -8,21 +7,27 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Polygon
+import org.osmdroid.views.overlay.Marker
 import pl.oki.frostalert.R
 
 private val ColorHighRisk = Color(0xFFD32F2F)
@@ -55,12 +60,13 @@ fun FrostMapScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (!isPro) {
-                ProRequiredCard()
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    ProRequiredCard()
+                }
             } else {
                 MapContent(uiState) { viewModel.loadMapData() }
             }
@@ -116,34 +122,28 @@ private fun ProRequiredCard() {
 }
 
 @Composable
-private fun MapContent(
+private fun ColumnScope.MapContent(
     uiState: FrostMapUiState,
     onLoadMap: () -> Unit
 ) {
-    Button(
-        onClick = onLoadMap,
-        modifier = Modifier.fillMaxWidth(),
-        enabled = !uiState.isLoading
-    ) {
-        Icon(Icons.Default.Map, contentDescription = null)
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = stringResource(R.string.frost_map_load_button),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+    // Auto-load on first composition
+    LaunchedEffect(Unit) {
+        if (uiState.gridPoints.isEmpty() && !uiState.isLoading) {
+            onLoadMap()
+        }
     }
 
-    Spacer(Modifier.height(16.dp))
-
-    if (uiState.isLoading) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (uiState.isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+            Spacer(Modifier.width(8.dp))
+        }
+        IconButton(onClick = onLoadMap, enabled = !uiState.isLoading) {
+            Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.frost_map_load_button))
         }
     }
 
@@ -161,76 +161,102 @@ private fun MapContent(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
     }
 
-    if (uiState.gridPoints.isNotEmpty()) {
-        FrostGridCanvas(uiState.gridPoints)
+    FrostOsmMap(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f),
+        uiState = uiState
+    )
 
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.frost_map_radius_label, uiState.radiusKm),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-
-        Spacer(Modifier.height(16.dp))
-        LegendRow()
-    }
+    Spacer(Modifier.height(8.dp))
+    LegendRow()
+    Spacer(Modifier.height(4.dp))
+    Text(
+        text = stringResource(R.string.frost_map_radius_label, uiState.radiusKm),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
 }
 
 @Composable
-private fun FrostGridCanvas(gridPoints: List<MapGridPoint>) {
-    val gridSize = 7
-    val highlightColor = MaterialTheme.colorScheme.onSurface
+private fun FrostOsmMap(
+    modifier: Modifier,
+    uiState: FrostMapUiState
+) {
+    val context = LocalContext.current
 
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-    ) {
-        val cellWidth = size.width / gridSize
-        val cellHeight = size.height / gridSize
+    // One-time osmdroid configuration
+    DisposableEffect(Unit) {
+        Configuration.getInstance().apply {
+            osmdroidTileCache = context.cacheDir
+            userAgentValue = context.packageName
+        }
+        onDispose {}
+    }
 
-        gridPoints.forEach { point ->
-            val col = point.lonOffset + gridSize / 2
-            val row = point.latOffset + gridSize / 2
+    AndroidView(
+        modifier = modifier,
+        factory = { ctx ->
+            MapView(ctx).apply {
+                setTileSource(TileSourceFactory.MAPNIK)
+                setMultiTouchControls(true)
+                isTilesScaledToDpi = true
+                controller.setZoom(9.0)
+            }
+        },
+        update = { mapView ->
+            mapView.overlays.clear()
 
-            val color = when {
-                point.frostProbability >= 80 -> ColorHighRisk
-                point.frostProbability >= 60 -> ColorModerateRisk
-                point.frostProbability >= 40 -> ColorLowRisk
-                else -> ColorNoRisk
+            if (uiState.gridPoints.isNotEmpty()) {
+                val halfSpanLat = 0.13 / 2.0
+                val halfSpanLon = 0.20 / 2.0
+
+                uiState.gridPoints.forEach { point ->
+                    val fillColor = when {
+                        point.frostProbability >= 80 -> ColorHighRisk
+                        point.frostProbability >= 60 -> ColorModerateRisk
+                        point.frostProbability >= 40 -> ColorLowRisk
+                        else -> ColorNoRisk
+                    }
+
+                    val polygon = Polygon(mapView).apply {
+                        // Rectangle corners (clockwise): NW, NE, SE, SW
+                        points = listOf(
+                            GeoPoint(point.latitude + halfSpanLat, point.longitude - halfSpanLon),
+                            GeoPoint(point.latitude + halfSpanLat, point.longitude + halfSpanLon),
+                            GeoPoint(point.latitude - halfSpanLat, point.longitude + halfSpanLon),
+                            GeoPoint(point.latitude - halfSpanLat, point.longitude - halfSpanLon),
+                            GeoPoint(point.latitude + halfSpanLat, point.longitude - halfSpanLon)
+                        )
+                        fillPaint.color = fillColor.copy(alpha = 0.45f).toArgb()
+                        outlinePaint.color = fillColor.copy(alpha = 0.7f).toArgb()
+                        outlinePaint.strokeWidth = 1f
+                        title = "${point.frostProbability}%"
+                    }
+                    mapView.overlays.add(polygon)
+                }
+
+                // Center marker
+                if (uiState.hasCenter) {
+                    val centerMarker = Marker(mapView).apply {
+                        position = GeoPoint(uiState.centerLat, uiState.centerLon)
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        title = context.getString(R.string.frost_map_your_location)
+                    }
+                    mapView.overlays.add(centerMarker)
+
+                    mapView.controller.animateTo(GeoPoint(uiState.centerLat, uiState.centerLon))
+                }
             }
 
-            drawRect(
-                color = color,
-                topLeft = Offset(col * cellWidth, row * cellHeight),
-                size = Size(cellWidth, cellHeight)
-            )
+            mapView.invalidate()
         }
-
-        // Center cell marker
-        val centerCol = gridSize / 2
-        val centerRow = gridSize / 2
-        val centerX = centerCol * cellWidth + cellWidth / 2
-        val centerY = centerRow * cellHeight + cellHeight / 2
-        val radius = cellWidth.coerceAtMost(cellHeight) / 3
-
-        drawCircle(
-            color = highlightColor,
-            radius = radius,
-            center = Offset(centerX, centerY),
-            style = Stroke(width = 3.dp.toPx())
-        )
-        drawCircle(
-            color = highlightColor,
-            radius = 4.dp.toPx(),
-            center = Offset(centerX, centerY)
-        )
-    }
+    )
 }
 
 @Composable
