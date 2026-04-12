@@ -37,11 +37,13 @@ fun PhotoDocumentationScreen(
     val photos by viewModel.photos.collectAsState()
     val context = LocalContext.current
     var photoUriString by rememberSaveable { mutableStateOf<String?>(null) }
+    var photoFilePath by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun createPhotoUri(): Uri {
         val photosDir = File(context.filesDir, "photos")
         photosDir.mkdirs()
         val file = File(photosDir, "frost_photo_${System.currentTimeMillis()}.jpg")
+        photoFilePath = file.absolutePath
         return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
@@ -49,8 +51,8 @@ fun PhotoDocumentationScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            photoUriString?.let { uriStr ->
-                viewModel.savePhoto(uriStr)
+            photoFilePath?.let { path ->
+                viewModel.savePhoto(path)
             }
         }
     }

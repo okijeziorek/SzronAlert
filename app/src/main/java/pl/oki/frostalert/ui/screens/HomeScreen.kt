@@ -356,7 +356,7 @@ fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden:
     // Nie pokazuj podlewania w SummerRiskCard, jeśli karta "watering" jest włączona osobno
     val showWatering = "watering" !in enabledCards && isGarden && state.weather.daily != null
     val needsWatering = if (showWatering) {
-        SummerCalculations.needsWatering(state.weather.daily!!.precipitationSum.firstOrNull() ?: 0.0, 26.0)
+        SummerCalculations.needsWatering(state.weather.daily?.precipitationSum?.firstOrNull() ?: 0.0, 26.0)
     } else false
 
     Card(
