@@ -156,7 +156,15 @@ fun MainScreen(initialTab: Int = 0) {
                     2 -> HistoryScreen()
                     3 -> TrendScreen()
                     4 -> GardenScreen()
-                    5 -> FrostMapScreen(isPro = isPro)
+                    5 -> {
+                        val mapContext = LocalContext.current
+                        FrostMapScreen(
+                            isPro = isPro,
+                            onBuyPro = {
+                                settingsViewModel.launchPurchaseFlow(mapContext as android.app.Activity)
+                            }
+                        )
+                    }
                     6 -> DebugScreen(
                         onOpenTrendRequested = {
                             scope.launch { pagerState.animateScrollToPage(3) }

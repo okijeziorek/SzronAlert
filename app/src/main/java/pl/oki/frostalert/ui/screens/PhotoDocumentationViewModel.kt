@@ -22,4 +22,16 @@ class PhotoDocumentationViewModel @Inject constructor(
             frostPhotoDao.delete(photo)
         }
     }
+
+    fun savePhoto(filePath: String, note: String = "") {
+        viewModelScope.launch {
+            frostPhotoDao.insert(
+                FrostPhoto(
+                    filePath = filePath,
+                    timestamp = System.currentTimeMillis(),
+                    note = note
+                )
+            )
+        }
+    }
 }
