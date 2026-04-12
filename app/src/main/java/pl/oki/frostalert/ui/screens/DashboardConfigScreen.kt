@@ -87,12 +87,8 @@ fun DashboardConfigScreen(
                             Column {
                                 IconButton(
                                     onClick = {
-                                        if (index > 0) {
-                                            val mutableList = orderedKeys.toMutableList()
-                                            val item = mutableList.removeAt(index)
-                                            mutableList.add(index - 1, item)
-                                            viewModel.updateDashboardCardOrder(mutableList.joinToString(","))
-                                        }
+                                        val reordered = moveItem(orderedKeys, index, -1)
+                                        viewModel.updateDashboardCardOrder(reordered.joinToString(","))
                                     },
                                     enabled = index > 0,
                                     modifier = Modifier.size(24.dp)
@@ -105,12 +101,8 @@ fun DashboardConfigScreen(
                                 }
                                 IconButton(
                                     onClick = {
-                                        if (index < orderedKeys.size - 1) {
-                                            val mutableList = orderedKeys.toMutableList()
-                                            val item = mutableList.removeAt(index)
-                                            mutableList.add(index + 1, item)
-                                            viewModel.updateDashboardCardOrder(mutableList.joinToString(","))
-                                        }
+                                        val reordered = moveItem(orderedKeys, index, 1)
+                                        viewModel.updateDashboardCardOrder(reordered.joinToString(","))
                                     },
                                     enabled = index < orderedKeys.size - 1,
                                     modifier = Modifier.size(24.dp)
@@ -153,4 +145,13 @@ fun DashboardConfigScreen(
             }
         }
     }
+}
+
+private fun moveItem(list: List<String>, fromIndex: Int, direction: Int): List<String> {
+    val toIndex = fromIndex + direction
+    if (toIndex < 0 || toIndex >= list.size) return list
+    val mutableList = list.toMutableList()
+    val item = mutableList.removeAt(fromIndex)
+    mutableList.add(toIndex, item)
+    return mutableList
 }

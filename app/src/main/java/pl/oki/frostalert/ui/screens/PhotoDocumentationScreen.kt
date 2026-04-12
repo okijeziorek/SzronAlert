@@ -40,6 +40,13 @@ fun PhotoDocumentationScreen(
     val context = LocalContext.current
     var photoUri by remember { mutableStateOf<Uri?>(null) }
 
+    fun createPhotoUri(): Uri {
+        val photosDir = File(context.filesDir, "photos")
+        photosDir.mkdirs()
+        val file = File(photosDir, "frost_photo_${System.currentTimeMillis()}.jpg")
+        return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    }
+
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -54,8 +61,7 @@ fun PhotoDocumentationScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            val file = File(context.cacheDir, "frost_photo_${System.currentTimeMillis()}.jpg")
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            val uri = createPhotoUri()
             photoUri = uri
             takePictureLauncher.launch(uri)
         } else {
@@ -85,8 +91,7 @@ fun PhotoDocumentationScreen(
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
                         == PackageManager.PERMISSION_GRANTED
                     ) {
-                        val file = File(context.cacheDir, "frost_photo_${System.currentTimeMillis()}.jpg")
-                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                        val uri = createPhotoUri()
                         photoUri = uri
                         takePictureLauncher.launch(uri)
                     } else {

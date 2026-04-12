@@ -161,7 +161,9 @@ fun MainScreen(initialTab: Int = 0) {
                         FrostMapScreen(
                             isPro = isPro,
                             onBuyPro = {
-                                settingsViewModel.launchPurchaseFlow(mapContext as android.app.Activity)
+                                (mapContext as? android.app.Activity)?.let { activity ->
+                                    settingsViewModel.launchPurchaseFlow(activity)
+                                }
                             }
                         )
                     }
