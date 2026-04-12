@@ -1,7 +1,5 @@
 package pl.oki.frostalert.ui.screens
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,6 +12,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -21,7 +20,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import pl.oki.frostalert.R
@@ -38,7 +36,7 @@ fun PhotoDocumentationScreen(
 ) {
     val photos by viewModel.photos.collectAsState()
     val context = LocalContext.current
-    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var photoUriString by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun createPhotoUri(): Uri {
         val photosDir = File(context.filesDir, "photos")
@@ -51,25 +49,9 @@ fun PhotoDocumentationScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            photoUri?.let { uri ->
-                viewModel.savePhoto(uri.toString())
+            photoUriString?.let { uriStr ->
+                viewModel.savePhoto(uriStr)
             }
-        }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            val uri = createPhotoUri()
-            photoUri = uri
-            takePictureLauncher.launch(uri)
-        } else {
-            android.widget.Toast.makeText(
-                context,
-                context.getString(R.string.photo_permission_needed),
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
         }
     }
 
@@ -88,15 +70,9 @@ fun PhotoDocumentationScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-                        == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        val uri = createPhotoUri()
-                        photoUri = uri
-                        takePictureLauncher.launch(uri)
-                    } else {
-                        permissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
+                    val uri = createPhotoUri()
+                    photoUriString = uri.toString()
+                    takePictureLauncher.launch(uri)
                 }
             ) {
                 Icon(Icons.Default.CameraAlt, contentDescription = stringResource(R.string.photo_take_picture))

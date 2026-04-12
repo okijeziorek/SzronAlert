@@ -19,6 +19,11 @@ class PhotoDocumentationViewModel @Inject constructor(
 
     fun deletePhoto(photo: FrostPhoto) {
         viewModelScope.launch {
+            // Usuń plik z dysku, jeśli istnieje
+            try {
+                val file = java.io.File(android.net.Uri.parse(photo.filePath).path ?: "")
+                if (file.exists()) file.delete()
+            } catch (_: Exception) { /* ignore cleanup errors */ }
             frostPhotoDao.delete(photo)
         }
     }

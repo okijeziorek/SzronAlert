@@ -69,7 +69,11 @@ fun DashboardConfigScreen(
 
             val enabledCards = prefs?.enabledDashboardCards ?: setOf("frost", "weather", "trend")
             val currentOrder = prefs?.dashboardCardOrder ?: "frost,weather,trend,uv,watering,storm"
-            val orderedKeys = currentOrder.split(",").filter { it.isNotBlank() }
+            val storedKeys = currentOrder.split(",").filter { it.isNotBlank() }
+            // Normalizacja: dodaj brakujące klucze z ALL_CARDS i odfiltruj nieznane
+            val allKnownKeys = ALL_CARDS.map { it.key }
+            val orderedKeys = storedKeys.filter { it in allKnownKeys } +
+                allKnownKeys.filter { it !in storedKeys }
 
             // Pokaż karty w aktualnej kolejności z preferencji
             orderedKeys.forEachIndexed { index, cardKey ->
@@ -95,7 +99,7 @@ fun DashboardConfigScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.ArrowUpward,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(R.string.dashboard_move_up),
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
@@ -109,7 +113,7 @@ fun DashboardConfigScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.ArrowDownward,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(R.string.dashboard_move_down),
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }

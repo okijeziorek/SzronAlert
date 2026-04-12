@@ -152,7 +152,11 @@ fun WeatherSuccessContent(
     
     // Konfiguracja kart dashboardu z preferencji
     val enabledCards = userPrefs.enabledDashboardCards
-    val cardOrder = userPrefs.dashboardCardOrder.split(",").filter { it.isNotBlank() }
+    val storedOrder = userPrefs.dashboardCardOrder.split(",").filter { it.isNotBlank() }
+    // Normalizacja: dodaj brakujące włączone klucze na końcu
+    val allKnownKeys = listOf("frost", "weather", "trend", "uv", "watering", "storm")
+    val cardOrder = storedOrder.filter { it in allKnownKeys } +
+        allKnownKeys.filter { it !in storedOrder }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -179,7 +183,7 @@ fun WeatherSuccessContent(
             when (cardKey) {
                 "frost" -> {
                     if (isSummer) {
-                        SummerRiskCard(state, userPrefs, isGarden)
+                        SummerRiskCard(state, userPrefs, isGarden, enabledCards)
                     } else {
                         FrostWarningCard(
                             hasRisk = state.hasFrostRisk,
@@ -338,7 +342,7 @@ fun WeatherSuccessContent(
 }
 
 @Composable
-fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden: Boolean) {
+fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden: Boolean, enabledCards: Set<String> = emptySet()) {
     val summerMsg = SummerCalculations.getSummerWarningMessage(
         state.weather.current.temperature,
         state.weather.current.weatherCode,
@@ -349,8 +353,10 @@ fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden:
     val hasHeat = SummerCalculations.hasHeatRisk(state.weather.current.temperature, prefs.heatThreshold)
     val hasStorm = SummerCalculations.hasStormOrHailRisk(state.weather.current.weatherCode)
     
-    val needsWatering = if (isGarden && state.weather.daily != null) {
-        SummerCalculations.needsWatering(state.weather.daily.precipitationSum.firstOrNull() ?: 0.0, 26.0)
+    // Nie pokazuj podlewania w SummerRiskCard, jeśli karta "watering" jest włączona osobno
+    val showWatering = "watering" !in enabledCards && isGarden && state.weather.daily != null
+    val needsWatering = if (showWatering) {
+        SummerCalculations.needsWatering(state.weather.daily!!.precipitationSum.firstOrNull() ?: 0.0, 26.0)
     } else false
 
     Card(
