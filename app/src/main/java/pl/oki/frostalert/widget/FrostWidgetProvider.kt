@@ -67,6 +67,13 @@ class FrostWidgetProvider : AppWidgetProvider() {
             )
         }
     }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        for (id in appWidgetIds) {
+            widgetJobs.remove(id)?.cancel()
+        }
+    }
 }
 
 internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
@@ -74,7 +81,7 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
 
     // Cancel any in-flight update for this specific widget to avoid accumulating parallel coroutines.
     widgetJobs[appWidgetId]?.cancel()
-    widgetJobs[appWidgetId] = widgetScope.launch {
+    val job = widgetScope.launch {
         try {
             val db = FrostDatabase.getDatabase(context)
             val records = try {
@@ -122,4 +129,6 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
             Log.e(TAG, "Error updating widget $appWidgetId: ${e.message}", e)
         }
     }
+    widgetJobs[appWidgetId] = job
+    job.invokeOnCompletion { widgetJobs.remove(appWidgetId, job) }
 }

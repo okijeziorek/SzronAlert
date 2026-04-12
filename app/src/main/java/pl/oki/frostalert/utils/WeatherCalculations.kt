@@ -273,10 +273,10 @@ object WeatherCalculations {
      */
     fun calculateRiskLevel(hasRisk: Boolean, minTemp: Double): Double {
         return when {
-            hasRisk && minTemp < -5 -> 1.0
-            hasRisk && minTemp < 0 -> 0.7
+            hasRisk && minTemp < -5.0 -> 1.0
+            hasRisk && minTemp < 0.0 -> 0.7
             hasRisk -> 0.5
-            minTemp < 2 -> 0.2
+            minTemp < 2.0 -> 0.2
             else -> 0.0
         }
     }
