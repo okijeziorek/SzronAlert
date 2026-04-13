@@ -236,6 +236,15 @@
     <string name="garden_frost_threshold">Próg mrozu: %.1f°C</string>
     <string name="garden_add_plant">Dodaj do ogrodu</string>
     <string name="garden_remove_plant">Usuń z ogrodu</string>
+    <string name="garden_plants_at_risk_title">⚠️ Rośliny zagrożone dziś w nocy!</string>
+    <string name="garden_plants_at_risk_temp">Prognozowana minimalna temperatura: %.1f°C</string>
+    <string name="garden_plant_at_risk_item">%1$s (próg: %2$.1f°C)</string>
+    <string name="garden_mark_watered">Podlano</string>
+    <string name="garden_watering_never">Nigdy nie podlewano</string>
+    <string name="garden_watering_today">Podlano dziś</string>
+    <string name="garden_watering_yesterday">Podlano wczoraj</string>
+    <string name="garden_watering_days_ago">Podlano %d dni temu</string>
+    <string name="garden_seasonal_tips_title">Porady na %s</string>
 
     <!-- Multi-Location -->
     <string name="location_save_as_separate">Zapisz jako lokalizację</string>

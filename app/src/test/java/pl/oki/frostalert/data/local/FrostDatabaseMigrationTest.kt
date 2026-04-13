@@ -105,6 +105,40 @@ class FrostDatabaseMigrationTest {
         assertTrue(FrostDatabase.MIGRATION_2_3.endVersion == 3)
     }
 
+    @Test
+    fun migration7to8_wateringLog_createsTableAndCanInsertAndRead() = runBlocking {
+        // Verify the MIGRATION_7_8 object covers the right versions.
+        assertTrue(FrostDatabase.MIGRATION_7_8.startVersion == 7)
+        assertTrue(FrostDatabase.MIGRATION_7_8.endVersion == 8)
+
+        // Insert a plant and then log a watering entry for it.
+        val plant = Plant(name = "Pomidor", category = "Warzywa", frostThresholdCelsius = 2.0)
+        db.plantDao().insertAll(listOf(plant))
+        val plantId = db.plantDao().getAllPlants().first().first { it.name == "Pomidor" }.id
+
+        val log = WateringLog(plantId = plantId, timestamp = 1_000_000L, note = "first watering")
+        db.wateringLogDao().insert(log)
+
+        val entries = db.wateringLogDao().getLastWateringPerPlant().first()
+        assertEquals(1, entries.size)
+        assertEquals(plantId, entries[0].plantId)
+        assertEquals(1_000_000L, entries[0].lastTimestamp)
+    }
+
+    @Test
+    fun migration7to8_wateringLog_deleteForPlant_removesEntries() = runBlocking {
+        val plant = Plant(name = "Ogórek", category = "Warzywa", frostThresholdCelsius = 3.0)
+        db.plantDao().insertAll(listOf(plant))
+        val plantId = db.plantDao().getAllPlants().first().first { it.name == "Ogórek" }.id
+
+        db.wateringLogDao().insert(WateringLog(plantId = plantId, timestamp = 2_000_000L))
+        db.wateringLogDao().insert(WateringLog(plantId = plantId, timestamp = 3_000_000L))
+        db.wateringLogDao().deleteForPlant(plantId)
+
+        val entries = db.wateringLogDao().getLastWateringPerPlant().first()
+        assertTrue(entries.none { it.plantId == plantId })
+    }
+
     // ── Data integrity ────────────────────────────────────────────────────────
 
     @Test

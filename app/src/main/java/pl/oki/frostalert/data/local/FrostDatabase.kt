@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [TemperatureRecord::class, CalibrationFeedback::class, pl.oki.frostalert.data.local.GeofenceRecord::class, Plant::class, UserPlant::class, SavedLocation::class, FrostPhoto::class, GardenZone::class], version = 7, exportSchema = false)
+@Database(entities = [TemperatureRecord::class, CalibrationFeedback::class, pl.oki.frostalert.data.local.GeofenceRecord::class, Plant::class, UserPlant::class, SavedLocation::class, FrostPhoto::class, GardenZone::class, WateringLog::class], version = 8, exportSchema = false)
 abstract class FrostDatabase : RoomDatabase() {
     abstract fun temperatureDao(): TemperatureDao
     abstract fun calibrationDao(): CalibrationDao
@@ -19,6 +19,7 @@ abstract class FrostDatabase : RoomDatabase() {
     abstract fun savedLocationDao(): SavedLocationDao
     abstract fun frostPhotoDao(): FrostPhotoDao
     abstract fun gardenZoneDao(): GardenZoneDao
+    abstract fun wateringLogDao(): WateringLogDao
 
     companion object {
         @Volatile
@@ -131,6 +132,20 @@ abstract class FrostDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `watering_log` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `plantId` INTEGER NOT NULL,
+                        `timestamp` INTEGER NOT NULL,
+                        `note` TEXT NOT NULL DEFAULT ''
+                    )
+                """.trimIndent())
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_watering_log_plantId` ON `watering_log` (`plantId`)")
+            }
+        }
+
         fun getDatabase(context: Context): FrostDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -138,7 +153,7 @@ abstract class FrostDatabase : RoomDatabase() {
                     FrostDatabase::class.java,
                     "frost_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                 // Do NOT add fallbackToDestructiveMigration — explicit migrations are defined
                 // for every version bump; a missing migration should surface as a hard error,
                 // not silently delete user data.
