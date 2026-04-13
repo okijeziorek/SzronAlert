@@ -127,6 +127,11 @@ object AppModule {
     }
 
     @Provides
+    fun provideWateringLogDao(database: FrostDatabase): pl.oki.frostalert.data.local.WateringLogDao {
+        return database.wateringLogDao()
+    }
+
+    @Provides
     @Singleton
     fun provideSmartHomeRepository(): pl.oki.frostalert.data.repository.SmartHomeRepository {
         return pl.oki.frostalert.data.repository.SmartHomeRepository()

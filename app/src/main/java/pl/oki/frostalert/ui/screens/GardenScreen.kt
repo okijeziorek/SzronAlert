@@ -1,5 +1,8 @@
 package pl.oki.frostalert.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -18,6 +21,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.Plant
+import pl.oki.frostalert.utils.GardenSeasonalTips
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,157 +52,401 @@ fun GardenScreen(
             )
         }
     ) { padding ->
-        Column(
+        var showMicroclimate by remember { mutableStateOf(false) }
+        var showPhotoDoc by remember { mutableStateOf(false) }
+        var showSeasonalTips by remember { mutableStateOf(true) }
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Mój ogród - podsumowanie
-            if (state.userPlants.isNotEmpty()) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = stringResource(R.string.garden_my_plants),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = stringResource(R.string.garden_plant_count, state.userPlants.size),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        val mostSensitive = state.userPlants.minByOrNull { it.frostThresholdCelsius }
-                        if (mostSensitive != null) {
-                            Text(
-                                text = stringResource(R.string.garden_most_sensitive, mostSensitive.name, mostSensitive.frostThresholdCelsius),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                }
-            }
 
-            // Wyszukiwarka
-            OutlinedTextField(
-                value = state.searchQuery,
-                onValueChange = { viewModel.setSearchQuery(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                placeholder = { Text(stringResource(R.string.garden_search_hint)) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                singleLine = true
-            )
-
-            // Filtry kategorii
-            LazyRow(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            // ── Rośliny zagrożone szronem ───────────────────────────────────
+            if (state.plantsAtRisk.isNotEmpty()) {
                 item {
-                    FilterChip(
-                        selected = state.selectedCategory == null,
-                        onClick = { viewModel.setCategory(null) },
-                        label = { Text(stringResource(R.string.garden_all_categories)) }
-                    )
-                }
-                items(state.categories) { category ->
-                    FilterChip(
-                        selected = state.selectedCategory == category,
-                        onClick = {
-                            viewModel.setCategory(if (state.selectedCategory == category) null else category)
-                        },
-                        label = { Text(category) }
+                    PlantsAtRiskCard(
+                        plants = state.plantsAtRisk,
+                        minTemp = state.lastMinTemp
                     )
                 }
             }
 
-            // Dodatkowe narzędzia ogrodu
-            var showMicroclimate by remember { mutableStateOf(false) }
-            var showPhotoDoc by remember { mutableStateOf(false) }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { showMicroclimate = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = stringResource(R.string.microclimate_title),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        softWrap = false
-                    )
-                }
-                OutlinedButton(
-                    onClick = { showPhotoDoc = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = stringResource(R.string.photo_doc_title),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        softWrap = false
+            // ── Moje rośliny (z podlewaniem) ────────────────────────────────
+            if (state.userPlants.isNotEmpty()) {
+                item {
+                    MyGardenCard(
+                        userPlants = state.userPlants,
+                        lastWateringByPlantId = state.lastWateringByPlantId,
+                        onMarkAsWatered = { viewModel.markAsWatered(it) }
                     )
                 }
             }
-            if (showMicroclimate) {
-                Dialog(onDismissRequest = { showMicroclimate = false }) {
-                    Surface(modifier = Modifier.fillMaxSize()) {
-                        MicroclimateScreen()
+
+            // ── Porady sezonowe ─────────────────────────────────────────────
+            if (state.seasonalTips.isNotEmpty()) {
+                item {
+                    SeasonalTipsCard(
+                        monthName = state.currentMonthName,
+                        tips = state.seasonalTips,
+                        expanded = showSeasonalTips,
+                        onToggle = { showSeasonalTips = !showSeasonalTips }
+                    )
+                }
+            }
+
+            // ── Dodatkowe narzędzia ogrodu ──────────────────────────────────
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { showMicroclimate = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.microclimate_title),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            softWrap = false
+                        )
                     }
-                }
-            }
-            if (showPhotoDoc) {
-                Dialog(onDismissRequest = { showPhotoDoc = false }) {
-                    Surface(modifier = Modifier.fillMaxSize()) {
-                        PhotoDocumentationScreen()
+                    OutlinedButton(
+                        onClick = { showPhotoDoc = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.photo_doc_title),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            softWrap = false
+                        )
                     }
                 }
             }
 
-            // Lista roślin
+            // ── Wyszukiwarka ────────────────────────────────────────────────
+            item {
+                OutlinedTextField(
+                    value = state.searchQuery,
+                    onValueChange = { viewModel.setSearchQuery(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.garden_search_hint)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    singleLine = true
+                )
+            }
+
+            // ── Filtry kategorii ────────────────────────────────────────────
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        FilterChip(
+                            selected = state.selectedCategory == null,
+                            onClick = { viewModel.setCategory(null) },
+                            label = { Text(stringResource(R.string.garden_all_categories)) }
+                        )
+                    }
+                    items(state.categories) { category ->
+                        FilterChip(
+                            selected = state.selectedCategory == category,
+                            onClick = {
+                                viewModel.setCategory(if (state.selectedCategory == category) null else category)
+                            },
+                            label = { Text(category) }
+                        )
+                    }
+                }
+            }
+
+            // ── Lista roślin ────────────────────────────────────────────────
             if (state.allPlants.isEmpty() && !state.isSeeded) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
             } else if (state.allPlants.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.garden_no_results),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.garden_no_results),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.allPlants, key = { it.id }) { plant ->
-                        PlantCard(
-                            plant = plant,
-                            isInGarden = plant.id in state.userPlantIds,
-                            onToggle = { viewModel.togglePlantInGarden(plant) }
-                        )
+                items(state.allPlants, key = { it.id }) { plant ->
+                    PlantCard(
+                        plant = plant,
+                        isInGarden = plant.id in state.userPlantIds,
+                        onToggle = { viewModel.togglePlantInGarden(plant) }
+                    )
+                }
+            }
+        }
+
+        if (showMicroclimate) {
+            Dialog(onDismissRequest = { showMicroclimate = false }) {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    MicroclimateScreen()
+                }
+            }
+        }
+        if (showPhotoDoc) {
+            Dialog(onDismissRequest = { showPhotoDoc = false }) {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    PhotoDocumentationScreen()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlantsAtRiskCard(
+    plants: List<Plant>,
+    minTemp: Double?
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.AcUnit,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.garden_plants_at_risk_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+            if (minTemp != null) {
+                Text(
+                    text = stringResource(R.string.garden_plants_at_risk_temp, minTemp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            plants.forEach { plant ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = plant.iconEmoji,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.garden_plant_at_risk_item,
+                            plant.name,
+                            plant.frostThresholdCelsius
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MyGardenCard(
+    userPlants: List<Plant>,
+    lastWateringByPlantId: Map<Int, Long>,
+    onMarkAsWatered: (Int) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.garden_my_plants),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.garden_plant_count, userPlants.size),
+                style = MaterialTheme.typography.bodySmall
+            )
+            val mostSensitive = userPlants.minByOrNull { it.frostThresholdCelsius }
+            if (mostSensitive != null) {
+                Text(
+                    text = stringResource(
+                        R.string.garden_most_sensitive,
+                        mostSensitive.name,
+                        mostSensitive.frostThresholdCelsius
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
+            Spacer(Modifier.height(8.dp))
+            userPlants.forEach { plant ->
+                UserPlantWateringRow(
+                    plant = plant,
+                    lastWatered = lastWateringByPlantId[plant.id],
+                    onMarkAsWatered = { onMarkAsWatered(plant.id) }
+                )
+                Spacer(Modifier.height(6.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun UserPlantWateringRow(
+    plant: Plant,
+    lastWatered: Long?,
+    onMarkAsWatered: () -> Unit
+) {
+    val daysSince = if (lastWatered != null) {
+        val diff = System.currentTimeMillis() - lastWatered
+        TimeUnit.MILLISECONDS.toDays(diff)
+    } else null
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = plant.iconEmoji, style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = plant.name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = when {
+                    daysSince == null -> stringResource(R.string.garden_watering_never)
+                    daysSince == 0L -> stringResource(R.string.garden_watering_today)
+                    daysSince == 1L -> stringResource(R.string.garden_watering_yesterday)
+                    else -> stringResource(R.string.garden_watering_days_ago, daysSince)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = when {
+                    daysSince == null || daysSince > 3 -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.onPrimaryContainer
+                }
+            )
+        }
+        FilledTonalButton(
+            onClick = onMarkAsWatered,
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+            modifier = Modifier.height(32.dp)
+        ) {
+            Icon(
+                Icons.Default.WaterDrop,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = stringResource(R.string.garden_mark_watered),
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+    }
+}
+
+@Composable
+private fun SeasonalTipsCard(
+    monthName: String,
+    tips: List<GardenSeasonalTips.MonthlyTip>,
+    expanded: Boolean,
+    onToggle: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.garden_seasonal_tips_title, monthName),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onToggle, modifier = Modifier.size(24.dp)) {
+                    Icon(
+                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    Spacer(Modifier.height(8.dp))
+                    tips.forEach { tip ->
+                        Row(
+                            modifier = Modifier.padding(vertical = 3.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Text(
+                                text = tip.emoji,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.width(28.dp)
+                            )
+                            Text(
+                                text = tip.tip,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }
