@@ -83,7 +83,7 @@ object PlantSeeder {
         Plant(name = "Pigwowiec", category = "Drzewa", frostThresholdCelsius = -15.0, description = "Odporna. Owoc do przetworów, kwiaty ozdobne.", iconEmoji = "🍎"),
 
         // Trawy i zboża
-        Plant(name = "Pszenica ozima", category = "Zboża", frostThresholdCelsius = -15.0, description = "Siana jesienią. Bardzo odporna na mróz pod śniegiem.", iconEmoji = "🌾"),
+        Plant(name = "Pszenica ozima", category = "Zboża", frostThresholdCelsius = -15.0, description = "Siewana jesienią. Bardzo odporna na mróz pod śniegiem.", iconEmoji = "🌾"),
         Plant(name = "Żyto", category = "Zboża", frostThresholdCelsius = -20.0, description = "Najbardziej mrozoodporne zboże. Siane jesienią.", iconEmoji = "🌾"),
         Plant(name = "Kukurydza", category = "Zboża", frostThresholdCelsius = 2.0, description = "Bardzo wrażliwa na mróz. Sadź po 15 maja.", iconEmoji = "🌽"),
         Plant(name = "Słonecznik", category = "Zboża", frostThresholdCelsius = 1.0, description = "Wrażliwy na mróz. Lubi pełne słońce i żyzną glebę.", iconEmoji = "🌻"),

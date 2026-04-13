@@ -22,7 +22,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.Plant
 import pl.oki.frostalert.utils.GardenSeasonalTips
-import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -332,8 +331,11 @@ private fun UserPlantWateringRow(
     onMarkAsWatered: () -> Unit
 ) {
     val daysSince = if (lastWatered != null) {
-        val diff = System.currentTimeMillis() - lastWatered
-        TimeUnit.MILLISECONDS.toDays(diff)
+        val nowCal = java.util.Calendar.getInstance()
+        val wateredCal = java.util.Calendar.getInstance().also { it.timeInMillis = lastWatered }
+        val dayOfYearNow = nowCal.get(java.util.Calendar.DAY_OF_YEAR) + nowCal.get(java.util.Calendar.YEAR) * 366
+        val dayOfYearWatered = wateredCal.get(java.util.Calendar.DAY_OF_YEAR) + wateredCal.get(java.util.Calendar.YEAR) * 366
+        (dayOfYearNow - dayOfYearWatered).toLong()
     } else null
 
     Row(
