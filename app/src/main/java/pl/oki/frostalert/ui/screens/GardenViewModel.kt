@@ -24,6 +24,14 @@ data class GardenUiState(
     val currentMonthName: String = ""
 )
 
+private data class PlantFilterState(
+    val allPlants: List<Plant>,
+    val userPlants: List<Plant>,
+    val categories: List<String>,
+    val selectedCategory: String?,
+    val query: String
+)
+
 @HiltViewModel
 class GardenViewModel @Inject constructor(
     private val plantDao: PlantDao,
@@ -35,57 +43,57 @@ class GardenViewModel @Inject constructor(
     private val _selectedCategory = MutableStateFlow<String?>(null)
     private val _searchQuery = MutableStateFlow("")
 
-    val gardenState: StateFlow<GardenUiState> = combine(
+    private val plantFilterFlow: Flow<PlantFilterState> = combine(
         plantDao.getAllPlants(),
         userPlantDao.getUserPlants(),
         plantDao.getAllCategories(),
         _selectedCategory,
-        _searchQuery,
+        _searchQuery
+    ) { allPlants, userPlants, categories, selectedCat, query ->
+        PlantFilterState(allPlants, userPlants, categories, selectedCat, query)
+    }
+
+    private val weatherWateringFlow: Flow<Pair<List<TemperatureRecord>, Map<Int, Long>>> = combine(
         temperatureDao.getRecentRecords(),
         wateringLogDao.getLastWateringPerPlant()
-    ) { args ->
-        @Suppress("UNCHECKED_CAST")
-        val allPlants = args[0] as List<Plant>
-        @Suppress("UNCHECKED_CAST")
-        val userPlants = args[1] as List<Plant>
-        @Suppress("UNCHECKED_CAST")
-        val categories = args[2] as List<String>
-        val selectedCat = args[3] as String?
-        val query = args[4] as String
-        @Suppress("UNCHECKED_CAST")
-        val recentRecords = args[5] as List<TemperatureRecord>
-        @Suppress("UNCHECKED_CAST")
-        val lastWateringEntries = args[6] as List<LastWateringEntry>
+    ) { records, entries ->
+        val lastWateringByPlantId = entries.associate { it.plantId to it.lastTimestamp }
+        Pair(records, lastWateringByPlantId)
+    }
 
-        val userPlantIds = userPlants.map { it.id }.toSet()
-        val filtered = allPlants.filter { plant ->
-            val matchesCategory = selectedCat == null || plant.category == selectedCat
-            val matchesQuery = query.isBlank() || plant.name.contains(query, ignoreCase = true)
+    val gardenState: StateFlow<GardenUiState> = combine(
+        plantFilterFlow,
+        weatherWateringFlow
+    ) { plantState, (recentRecords, lastWateringByPlantId) ->
+        val userPlantIds = plantState.userPlants.map { it.id }.toSet()
+        val filtered = plantState.allPlants.filter { plant ->
+            val matchesCategory = plantState.selectedCategory == null || plant.category == plantState.selectedCategory
+            val matchesQuery = plantState.query.isBlank() || plant.name.contains(plantState.query, ignoreCase = true)
             matchesCategory && matchesQuery
         }
 
         val lastMinTemp = recentRecords.firstOrNull()?.minTemp
         val plantsAtRisk = if (lastMinTemp != null) {
-            userPlants.filter { plant -> plant.frostThresholdCelsius >= lastMinTemp }
+            plantState.userPlants.filter { plant -> plant.frostThresholdCelsius >= lastMinTemp }
         } else {
             emptyList()
         }
 
-        val lastWateringByPlantId = lastWateringEntries.associate { it.plantId to it.lastTimestamp }
+        val monthData = GardenSeasonalTips.getCurrentMonthData()
 
         GardenUiState(
             allPlants = filtered,
-            userPlants = userPlants,
-            categories = categories,
-            selectedCategory = selectedCat,
-            searchQuery = query,
+            userPlants = plantState.userPlants,
+            categories = plantState.categories,
+            selectedCategory = plantState.selectedCategory,
+            searchQuery = plantState.query,
             userPlantIds = userPlantIds,
-            isSeeded = allPlants.isNotEmpty(),
+            isSeeded = plantState.allPlants.isNotEmpty(),
             plantsAtRisk = plantsAtRisk,
             lastMinTemp = lastMinTemp,
             lastWateringByPlantId = lastWateringByPlantId,
-            seasonalTips = GardenSeasonalTips.getCurrentMonthTips(),
-            currentMonthName = GardenSeasonalTips.getMonthName()
+            seasonalTips = monthData.tips,
+            currentMonthName = monthData.monthName
         )
     }.stateIn(
         scope = viewModelScope,

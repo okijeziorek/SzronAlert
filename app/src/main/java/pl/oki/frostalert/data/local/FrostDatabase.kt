@@ -142,6 +142,7 @@ abstract class FrostDatabase : RoomDatabase() {
                         `note` TEXT NOT NULL DEFAULT ''
                     )
                 """.trimIndent())
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_watering_log_plantId` ON `watering_log` (`plantId`)")
             }
         }
 

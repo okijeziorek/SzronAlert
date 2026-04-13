@@ -3,7 +3,10 @@ package pl.oki.frostalert.data.local
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "watering_log")
+@Entity(
+    tableName = "watering_log",
+    indices = [Index(value = ["plantId"])]
+)
 data class WateringLog(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val plantId: Int,

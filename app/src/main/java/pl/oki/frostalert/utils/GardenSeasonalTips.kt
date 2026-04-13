@@ -1,5 +1,6 @@
 package pl.oki.frostalert.utils
 
+import java.text.DateFormatSymbols
 import java.util.Calendar
 
 object GardenSeasonalTips {
@@ -7,6 +8,11 @@ object GardenSeasonalTips {
     data class MonthlyTip(
         val emoji: String,
         val tip: String
+    )
+
+    data class MonthData(
+        val tips: List<MonthlyTip>,
+        val monthName: String
     )
 
     private val tips: Map<Int, List<MonthlyTip>> = mapOf(
@@ -72,26 +78,17 @@ object GardenSeasonalTips {
         )
     )
 
-    fun getCurrentMonthTips(): List<MonthlyTip> {
-        val month = Calendar.getInstance().get(Calendar.MONTH)
-        return tips[month] ?: emptyList()
-    }
-
-    fun getMonthName(): String {
-        return when (Calendar.getInstance().get(Calendar.MONTH)) {
-            Calendar.JANUARY -> "Styczeń"
-            Calendar.FEBRUARY -> "Luty"
-            Calendar.MARCH -> "Marzec"
-            Calendar.APRIL -> "Kwiecień"
-            Calendar.MAY -> "Maj"
-            Calendar.JUNE -> "Czerwiec"
-            Calendar.JULY -> "Lipiec"
-            Calendar.AUGUST -> "Sierpień"
-            Calendar.SEPTEMBER -> "Wrzesień"
-            Calendar.OCTOBER -> "Październik"
-            Calendar.NOVEMBER -> "Listopad"
-            Calendar.DECEMBER -> "Grudzień"
-            else -> ""
-        }
+    /**
+     * Returns tips and the locale-aware month name in a single call,
+     * using one Calendar instance to avoid clock-skew around midnight.
+     */
+    fun getCurrentMonthData(): MonthData {
+        val cal = Calendar.getInstance()
+        val month = cal.get(Calendar.MONTH)
+        val tipsList = tips[month] ?: emptyList()
+        val monthName = DateFormatSymbols.getInstance().months[month]
+            .replaceFirstChar { it.uppercaseChar() }
+        return MonthData(tips = tipsList, monthName = monthName)
     }
 }
+

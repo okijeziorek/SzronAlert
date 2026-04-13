@@ -73,15 +73,23 @@ fun GardenScreen(
                 }
             }
 
-            // ── Moje rośliny (z podlewaniem) ────────────────────────────────
+            // ── Moje rośliny (z podlewaniem) — nagłówek ────────────────────
             if (state.userPlants.isNotEmpty()) {
                 item {
-                    MyGardenCard(
-                        userPlants = state.userPlants,
-                        lastWateringByPlantId = state.lastWateringByPlantId,
-                        onMarkAsWatered = { viewModel.markAsWatered(it) }
+                    MyGardenHeader(
+                        userPlants = state.userPlants
                     )
                 }
+                // Each plant row is its own lazy item for performance
+                items(state.userPlants, key = { it.id }) { plant ->
+                    UserPlantWateringRow(
+                        plant = plant,
+                        lastWatered = state.lastWateringByPlantId[plant.id],
+                        onMarkAsWatered = { viewModel.markAsWatered(plant.id) },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                }
+                item { Spacer(Modifier.height(4.dp)) }
             }
 
             // ── Porady sezonowe ─────────────────────────────────────────────
@@ -275,10 +283,8 @@ private fun PlantsAtRiskCard(
 }
 
 @Composable
-private fun MyGardenCard(
-    userPlants: List<Plant>,
-    lastWateringByPlantId: Map<Int, Long>,
-    onMarkAsWatered: (Int) -> Unit
+private fun MyGardenHeader(
+    userPlants: List<Plant>
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -286,7 +292,7 @@ private fun MyGardenCard(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
                 text = stringResource(R.string.garden_my_plants),
                 style = MaterialTheme.typography.titleSmall,
@@ -309,17 +315,6 @@ private fun MyGardenCard(
                     color = MaterialTheme.colorScheme.error
                 )
             }
-            Spacer(Modifier.height(8.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
-            Spacer(Modifier.height(8.dp))
-            userPlants.forEach { plant ->
-                UserPlantWateringRow(
-                    plant = plant,
-                    lastWatered = lastWateringByPlantId[plant.id],
-                    onMarkAsWatered = { onMarkAsWatered(plant.id) }
-                )
-                Spacer(Modifier.height(6.dp))
-            }
         }
     }
 }
@@ -328,20 +323,28 @@ private fun MyGardenCard(
 private fun UserPlantWateringRow(
     plant: Plant,
     lastWatered: Long?,
-    onMarkAsWatered: () -> Unit
+    onMarkAsWatered: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val daysSince = if (lastWatered != null) {
-        val nowCal = java.util.Calendar.getInstance()
-        val wateredCal = java.util.Calendar.getInstance().also { it.timeInMillis = lastWatered }
-        val dayOfYearNow = nowCal.get(java.util.Calendar.DAY_OF_YEAR) + nowCal.get(java.util.Calendar.YEAR) * 366
-        val dayOfYearWatered = wateredCal.get(java.util.Calendar.DAY_OF_YEAR) + wateredCal.get(java.util.Calendar.YEAR) * 366
-        (dayOfYearNow - dayOfYearWatered).toLong()
+    val daysSince: Long? = if (lastWatered != null) {
+        val zoneId = java.time.ZoneId.systemDefault()
+        val todayEpochDay = java.time.Instant.now().atZone(zoneId).toLocalDate().toEpochDay()
+        val wateredEpochDay = java.time.Instant.ofEpochMilli(lastWatered).atZone(zoneId).toLocalDate().toEpochDay()
+        todayEpochDay - wateredEpochDay
     } else null
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+        )
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
         Text(text = plant.iconEmoji, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -381,6 +384,7 @@ private fun UserPlantWateringRow(
                 text = stringResource(R.string.garden_mark_watered),
                 style = MaterialTheme.typography.labelSmall
             )
+        }
         }
     }
 }
