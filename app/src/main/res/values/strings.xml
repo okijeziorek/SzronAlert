@@ -11,6 +11,7 @@
     <string name="offline_banner_title">Brak połączenia</string>
     <string name="offline_banner_description">Sprawdź internet, aby odświeżać dane pogodowe.</string>
     <string name="offline_banner_action">USTAWIENIA</string>
+    <string name="offline_settings_unavailable">Nie można otworzyć ustawień</string>
 
     <!-- Home Screen -->
     <string name="loading_weather">Pobieranie danych pogodowych…</string>

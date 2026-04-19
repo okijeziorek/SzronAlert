@@ -24,4 +24,36 @@ class MainScreenTabsTest {
         assertEquals(7, tabs.size)
         assertTrue(tabs.any { it.index == 6 && it.labelRes == R.string.tab_debug })
     }
+
+    @Test
+    fun buildMainTabs_contentValues_matchTabOrder() {
+        val tabs = buildMainTabs(isDebugBuild = false)
+        val contents = tabs.map { it.content }
+
+        assertEquals(
+            listOf(
+                TabContent.HOME,
+                TabContent.SETTINGS,
+                TabContent.HISTORY,
+                TabContent.TREND,
+                TabContent.GARDEN,
+                TabContent.MAP
+            ),
+            contents
+        )
+    }
+
+    @Test
+    fun buildMainTabs_debugTab_hasDebugContent() {
+        val tabs = buildMainTabs(isDebugBuild = true)
+        val debugTab = tabs.first { it.index == 6 }
+
+        assertEquals(TabContent.DEBUG, debugTab.content)
+    }
+
+    @Test
+    fun buildMainTabs_indicesAreSequential() {
+        val tabs = buildMainTabs(isDebugBuild = true)
+        assertEquals(tabs.indices.toList(), tabs.map { it.index })
+    }
 }
