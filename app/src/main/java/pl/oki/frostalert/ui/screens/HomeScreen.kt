@@ -666,12 +666,36 @@ fun BatteryOptimizationWarning() {
 
 @Composable
 fun ErrorState(message: String, onRetry: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(top = 100.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(Icons.Default.ErrorOutline, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.error)
-        Spacer(Modifier.height(16.dp))
-        Text(message, textAlign = TextAlign.Center, maxLines = 4, overflow = TextOverflow.Ellipsis)
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = onRetry) { Text(stringResource(R.string.retry_button), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp, vertical = 64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            Icons.Default.ErrorOutline,
+            contentDescription = null,
+            modifier = Modifier.size(72.dp),
+            tint = MaterialTheme.colorScheme.error
+        )
+        Spacer(Modifier.height(24.dp))
+        Text(
+            message,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 4,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.height(24.dp))
+        Button(
+            onClick = onRetry,
+            modifier = Modifier.fillMaxWidth(0.6f)
+        ) {
+            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.retry_button), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }
 

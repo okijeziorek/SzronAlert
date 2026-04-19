@@ -159,6 +159,8 @@
     <string name="feature_1_desc">We analyze dew point and radiant cooling of car windows.</string>
     <string name="feature_2_title">Background Alerts</string>
     <string name="feature_2_desc">We will notify you in the evening if you need to scrape ice in the morning.</string>
+    <string name="onboarding_next">NEXT</string>
+    <string name="onboarding_skip">Skip</string>
     <string name="onboarding_finish">GET STARTED</string>
 
     <!-- Feedback Section -->

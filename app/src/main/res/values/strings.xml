@@ -163,6 +163,8 @@
     <string name="feature_1_desc">Analizujemy temperaturę punktu rosy i wychłodzenie radiacyjne szyb.</string>
     <string name="feature_2_title">Alerty w tle</string>
     <string name="feature_2_desc">Powiadomimy Cię wieczorem, jeśli rano czeka Cię skrobanie szyb.</string>
+    <string name="onboarding_next">DALEJ</string>
+    <string name="onboarding_skip">Pomiń</string>
     <string name="onboarding_finish">ZACZYNAMY</string>
 
     <!-- Feedback Section -->

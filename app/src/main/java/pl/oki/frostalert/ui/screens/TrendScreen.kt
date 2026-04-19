@@ -35,6 +35,7 @@ import java.util.Locale
 fun TrendSummaryCard(stats: TrendCalculations.WeeklyTrendStats) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
             containerColor = when {
                 stats.frostRiskPercentage > 70 -> MaterialTheme.colorScheme.errorContainer
@@ -150,7 +151,10 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
         return
     }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 stringResource(R.string.trend_chart_temperature_title),
@@ -281,7 +285,10 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
 
 @Composable
 fun TrendNightsDetail(stats: TrendCalculations.WeeklyTrendStats) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 stringResource(R.string.trend_night_details_title),
@@ -369,7 +376,7 @@ fun FutureTrendSection(
     val context = LocalContext.current
     val userPrefs by settingsViewModel.userPreferences.collectAsState()
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 stringResource(R.string.trend_future_title),
@@ -469,8 +476,9 @@ fun TrendScreen(
                     )
                 },
                 navigationIcon = {
+                    Spacer(Modifier.width(4.dp))
                     Icon(
-                            Icons.Default.ShowChart,
+                        Icons.Default.ShowChart,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.primary
@@ -543,7 +551,7 @@ fun TrendScreen(
                     ExtendedForecastSection(trendViewModel)
 
                     // SEKCJA 5: EKSPORT DANYCH
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 text = stringResource(R.string.trend_export_title),
@@ -580,7 +588,7 @@ fun ExtendedForecastSection(
     val extendedState by viewModel.extendedTrendState.collectAsState()
     val userPrefs by settingsViewModel.userPreferences.collectAsState()
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = stringResource(R.string.trend_extended_title),
