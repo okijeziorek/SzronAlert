@@ -67,12 +67,13 @@
 ## 📊 Data Storage Pattern
 
 ### Room Database
-- Multi-entity schema (version 3): `TemperatureRecord`, `CalibrationFeedback`, `GeofenceRecord`
+- Multi-entity schema (version 7): `TemperatureRecord`, `CalibrationFeedback`, `GeofenceRecord`, `Plant`, `UserPlant`, `SavedLocation`, `FrostPhoto`, `GardenZone`
 - Key queries in `TemperatureDao`:
   - `getRecentRecords()`: Last 30 records (reactive Flow for UI)
   - `getAllRecords()`: Full history for stats
   - `getAbsoluteMinTemp()`: Lowest temperature ever recorded
-- Additional DAOs: `CalibrationDao` (feedback calibration data), `GeofenceDao` (geofence event history)
+- Additional DAOs: `CalibrationDao`, `GeofenceDao`, `PlantDao`, `UserPlantDao`, `SavedLocationDao`, `FrostPhotoDao`, `GardenZoneDao`
+- Migrations are explicit (1→2→3→4→5→6→7); next migration: `MIGRATION_7_8`. **No `fallbackToDestructiveMigration`** — missing migration = hard error
 
 ### SettingsDataStore (Preferences)
 - Uses `DataStore<Preferences>` not Proto (easier for migrations)
@@ -223,7 +224,7 @@ File → Sync Now (or ./gradlew help)
 
 ## ⚠️ Critical Gotchas
 
-- **Permissions**: App requires SCHEDULE_EXACT_ALARM and ACCESS_BACKGROUND_LOCATION (check AndroidManifest)
+- **Permissions**: App requires `SCHEDULE_EXACT_ALARM`, `ACCESS_BACKGROUND_LOCATION`, `POST_NOTIFICATIONS`, and `RECEIVE_BOOT_COMPLETED` (check AndroidManifest)
 - **Frost Window**: Hard-coded 20:00-08:00 in `WeatherCalculations.getNightMinTemp()` — change only if you understand impact on all screens
 - **Glance Widget**: Updates via `FrostGlanceWidget().updateAll(context)` after data changes, not automatic
 - **Two Widget Paths**: Project uses both Glance (`FrostGlanceWidgetReceiver`) and classic AppWidget (`FrostWidgetProvider`); keep both update paths in sync after data writes

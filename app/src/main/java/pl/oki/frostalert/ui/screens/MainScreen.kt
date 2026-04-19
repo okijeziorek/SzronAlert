@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -46,7 +47,7 @@ internal fun buildMainTabs(isDebugBuild: Boolean): List<MainTabSpec> = buildList
     add(MainTabSpec(0, Icons.Default.Home,      R.string.tab_home,          TabContent.HOME))
     add(MainTabSpec(1, Icons.Default.Settings,  R.string.tab_settings,      TabContent.SETTINGS))
     add(MainTabSpec(2, Icons.Default.History,   R.string.tab_history,       TabContent.HISTORY))
-    add(MainTabSpec(3, Icons.Default.ShowChart, R.string.trend_screen_title, TabContent.TREND))
+    add(MainTabSpec(3, Icons.AutoMirrored.Filled.ShowChart, R.string.trend_screen_title, TabContent.TREND))
     add(MainTabSpec(4, Icons.Default.Yard,      R.string.garden_tab_title,  TabContent.GARDEN))
     add(MainTabSpec(5, Icons.Default.Map,       R.string.tab_map,           TabContent.MAP))
     if (isDebugBuild) {
