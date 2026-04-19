@@ -1,5 +1,9 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -26,6 +30,30 @@ import pl.oki.frostalert.BuildConfig
 import pl.oki.frostalert.R
 import pl.oki.frostalert.utils.NetworkMonitor
 
+/** Identifies which composable screen to render for a tab. */
+enum class TabContent {
+    HOME, SETTINGS, HISTORY, TREND, GARDEN, MAP, DEBUG
+}
+
+data class MainTabSpec(
+    val index: Int,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val labelRes: Int,
+    val content: TabContent
+)
+
+internal fun buildMainTabs(isDebugBuild: Boolean): List<MainTabSpec> = buildList {
+    add(MainTabSpec(0, Icons.Default.Home,      R.string.tab_home,          TabContent.HOME))
+    add(MainTabSpec(1, Icons.Default.Settings,  R.string.tab_settings,      TabContent.SETTINGS))
+    add(MainTabSpec(2, Icons.Default.History,   R.string.tab_history,       TabContent.HISTORY))
+    add(MainTabSpec(3, Icons.Default.ShowChart, R.string.trend_screen_title, TabContent.TREND))
+    add(MainTabSpec(4, Icons.Default.Yard,      R.string.garden_tab_title,  TabContent.GARDEN))
+    add(MainTabSpec(5, Icons.Default.Map,       R.string.tab_map,           TabContent.MAP))
+    if (isDebugBuild) {
+        add(MainTabSpec(6, Icons.Default.BugReport, R.string.tab_debug, TabContent.DEBUG))
+    }
+}
+
 @Composable
 @Suppress("DEPRECATION")
 fun MainScreen(initialTab: Int = 0) {
@@ -34,8 +62,9 @@ fun MainScreen(initialTab: Int = 0) {
     val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val isPro by settingsViewModel.isPro.collectAsState()
+    val tabs = remember { buildMainTabs(BuildConfig.DEBUG) }
 
-    val pagerState = rememberPagerState(initialPage = initialTab) { if (BuildConfig.DEBUG) 7 else 6 }
+    val pagerState = rememberPagerState(initialPage = initialTab) { tabs.size }
     val scope = rememberCoroutineScope()
 
     // Optymalizacja: derivedStateOf zapobiega zbędnym przeliczeniom podczas swipowania
@@ -88,19 +117,54 @@ fun MainScreen(initialTab: Int = 0) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
-                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "Brak połączenia",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.offline_banner_title),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = stringResource(R.string.offline_banner_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            TextButton(
+                                onClick = {
+                                    val opened = runCatching {
+                                        context.startActivity(
+                                            Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
+                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                        )
+                                    }.isSuccess
+                                    if (!opened) {
+                                        runCatching {
+                                            context.startActivity(
+                                                Intent(Settings.ACTION_SETTINGS).apply {
+                                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                }
+                                            )
+                                        }.onFailure {
+                                            Toast.makeText(context, R.string.offline_settings_unavailable, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.offline_banner_action),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
@@ -110,33 +174,22 @@ fun MainScreen(initialTab: Int = 0) {
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     tonalElevation = 0.dp
                 ) {
-                    val tabs = buildList {
-                        add(Triple(0, Icons.Default.Home, R.string.tab_home))
-                        add(Triple(1, Icons.Default.Settings, R.string.tab_settings))
-                        add(Triple(2, Icons.Default.History, R.string.tab_history))
-                        add(Triple(3, Icons.Default.ShowChart, R.string.trend_screen_title))
-                        add(Triple(4, Icons.Default.Yard, R.string.garden_tab_title))
-                        add(Triple(5, Icons.Default.Map, R.string.tab_map))
-                        if (BuildConfig.DEBUG) {
-                            add(Triple(6, Icons.Default.BugReport, R.string.tab_debug))
-                        }
-                    }
-
-                    tabs.forEach { (index, icon, labelRes) ->
+                    tabs.forEach { tab ->
                         NavigationBarItem(
-                            icon = { Icon(icon, contentDescription = null) },
+                            icon = { Icon(tab.icon, contentDescription = stringResource(tab.labelRes)) },
                             label = {
                                 Text(
-                                    text = stringResource(labelRes),
+                                    text = stringResource(tab.labelRes),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     softWrap = false
                                 )
                             },
-                            selected = pagerState.currentPage == index,
+                            selected = pagerState.currentPage == tab.index,
                             onClick = {
-                                scope.launch { pagerState.animateScrollToPage(index) }
-                            }
+                                scope.launch { pagerState.animateScrollToPage(tab.index) }
+                            },
+                            alwaysShowLabel = false
                         )
                     }
                 }
@@ -147,16 +200,16 @@ fun MainScreen(initialTab: Int = 0) {
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize(),
-                beyondViewportPageCount = 1, // Kluczowe dla płynności: trzymamy 1 sąsiedni ekran w gotowości
-                key = { it } // Stabilne klucze dla optymalizacji rekompozycji
+                beyondViewportPageCount = 1,
+                key = { it }
             ) { page ->
-                when (page) {
-                    0 -> HomeScreen()
-                    1 -> SettingsScreen()
-                    2 -> HistoryScreen()
-                    3 -> TrendScreen()
-                    4 -> GardenScreen()
-                    5 -> {
+                when (tabs[page].content) {
+                    TabContent.HOME     -> HomeScreen()
+                    TabContent.SETTINGS -> SettingsScreen()
+                    TabContent.HISTORY  -> HistoryScreen()
+                    TabContent.TREND    -> TrendScreen()
+                    TabContent.GARDEN   -> GardenScreen()
+                    TabContent.MAP      -> {
                         val mapContext = LocalContext.current
                         FrostMapScreen(
                             isPro = isPro,
@@ -167,9 +220,10 @@ fun MainScreen(initialTab: Int = 0) {
                             }
                         )
                     }
-                    6 -> DebugScreen(
+                    TabContent.DEBUG    -> DebugScreen(
                         onOpenTrendRequested = {
-                            scope.launch { pagerState.animateScrollToPage(3) }
+                            val trendTab = tabs.first { it.content == TabContent.TREND }
+                            scope.launch { pagerState.animateScrollToPage(trendTab.index) }
                         }
                     )
                 }

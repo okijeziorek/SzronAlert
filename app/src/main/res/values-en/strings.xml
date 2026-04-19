@@ -6,7 +6,13 @@
     <string name="tab_home">Home</string>
     <string name="tab_settings">Settings</string>
     <string name="tab_history">History</string>
+    <string name="tab_map">Map</string>
+    <string name="garden_tab_title">Garden</string>
     <string name="tab_debug">Debug</string>
+    <string name="offline_banner_title">No connection</string>
+    <string name="offline_banner_description">Check internet connection to refresh weather data.</string>
+    <string name="offline_banner_action">SETTINGS</string>
+    <string name="offline_settings_unavailable">Unable to open settings</string>
 
     <!-- Home Screen -->
     <string name="loading_weather">Fetching weather data…</string>
@@ -156,6 +162,8 @@
     <string name="feature_1_desc">We analyze dew point and radiant cooling of car windows.</string>
     <string name="feature_2_title">Background Alerts</string>
     <string name="feature_2_desc">We will notify you in the evening if you need to scrape ice in the morning.</string>
+    <string name="onboarding_next">NEXT</string>
+    <string name="onboarding_skip">Skip</string>
     <string name="onboarding_finish">GET STARTED</string>
 
     <!-- Feedback Section -->

@@ -699,13 +699,23 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionTitle(title: String) {
-    SingleLineText(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(vertical = 8.dp)
-    )
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.height(2.dp))
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+            thickness = 1.dp
+        )
+        Spacer(Modifier.height(8.dp))
+    }
 }
 
 @Composable

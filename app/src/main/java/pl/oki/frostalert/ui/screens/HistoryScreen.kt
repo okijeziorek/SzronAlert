@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -124,8 +125,8 @@ fun HistoryScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        StatCard(Modifier.weight(1f), stringResource(R.string.stat_risk_days), uiState.monthlyStats.sumOf { it.riskDays }.toString(), MaterialTheme.colorScheme.error)
-                        StatCard(Modifier.weight(1f), stringResource(R.string.stat_avg_temp), String.format(Locale.US, "%.1f°C", uiState.absoluteMinTemp ?: 0.0), MaterialTheme.colorScheme.primary)
+                        StatCard(Modifier.weight(1f), stringResource(R.string.stat_risk_days), uiState.monthlyStats.sumOf { it.riskDays }.toString(), MaterialTheme.colorScheme.error, Icons.Default.AcUnit)
+                        StatCard(Modifier.weight(1f), stringResource(R.string.stat_avg_temp), String.format(Locale.US, "%.1f°C", uiState.absoluteMinTemp ?: 0.0), MaterialTheme.colorScheme.primary, Icons.Default.Thermostat)
                     }
 
                     Spacer(Modifier.height(24.dp))
@@ -323,7 +324,7 @@ private fun exportToCsv(context: Context, records: List<TemperatureRecord>) {
 }
 
 @Composable
-private fun StatCard(modifier: Modifier = Modifier, title: String, value: String, color: Color) {
+private fun StatCard(modifier: Modifier = Modifier, title: String, value: String, color: Color, icon: ImageVector? = null) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
@@ -333,6 +334,15 @@ private fun StatCard(modifier: Modifier = Modifier, title: String, value: String
             Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = color
+                )
+                Spacer(Modifier.height(4.dp))
+            }
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,

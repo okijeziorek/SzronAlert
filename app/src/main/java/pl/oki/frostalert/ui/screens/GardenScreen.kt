@@ -41,6 +41,7 @@ fun GardenScreen(
                     )
                 },
                 navigationIcon = {
+                    Spacer(Modifier.width(4.dp))
                     Icon(
                         Icons.Default.Yard,
                         contentDescription = null,
@@ -468,6 +469,7 @@ private fun PlantCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = if (isInGarden)
                 MaterialTheme.colorScheme.secondaryContainer
