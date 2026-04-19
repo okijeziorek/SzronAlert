@@ -153,20 +153,20 @@ fun MainScreen(initialTab: Int = 0) {
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     tonalElevation = 0.dp
                 ) {
-                    tabs.forEach { (index, icon, labelRes) ->
+                    tabs.forEach { tab ->
                         NavigationBarItem(
-                            icon = { Icon(icon, contentDescription = stringResource(labelRes)) },
+                            icon = { Icon(tab.icon, contentDescription = stringResource(tab.labelRes)) },
                             label = {
                                 Text(
-                                    text = stringResource(labelRes),
+                                    text = stringResource(tab.labelRes),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     softWrap = false
                                 )
                             },
-                            selected = pagerState.currentPage == index,
+                            selected = pagerState.currentPage == tab.index,
                             onClick = {
-                                scope.launch { pagerState.animateScrollToPage(index) }
+                                scope.launch { pagerState.animateScrollToPage(tab.index) }
                             },
                             alwaysShowLabel = false
                         )

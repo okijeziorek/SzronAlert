@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import pl.oki.frostalert.R
 
 private val onboardingPages = listOf(
-    Triple(Icons.Default.AcUnit, R.string.welcome_title, R.string.welcome_desc),
+    Triple(Icons.Default.WbSunny, R.string.welcome_title, R.string.welcome_desc),
     Triple(Icons.Default.Speed, R.string.feature_1_title, R.string.feature_1_desc),
     Triple(Icons.Default.NotificationsActive, R.string.feature_2_title, R.string.feature_2_desc)
 )

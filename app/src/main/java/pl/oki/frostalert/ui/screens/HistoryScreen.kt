@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -323,7 +324,7 @@ private fun exportToCsv(context: Context, records: List<TemperatureRecord>) {
 }
 
 @Composable
-private fun StatCard(modifier: Modifier = Modifier, title: String, value: String, color: Color, icon: androidx.compose.ui.graphics.vector.ImageVector? = null) {
+private fun StatCard(modifier: Modifier = Modifier, title: String, value: String, color: Color, icon: ImageVector? = null) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
