@@ -7,6 +7,9 @@
     <string name="tab_settings">Settings</string>
     <string name="tab_history">History</string>
     <string name="tab_debug">Debug</string>
+    <string name="offline_banner_title">No connection</string>
+    <string name="offline_banner_description">Check internet connection to refresh weather data.</string>
+    <string name="offline_banner_action">SETTINGS</string>
 
     <!-- Home Screen -->
     <string name="loading_weather">Fetching weather data…</string>

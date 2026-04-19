@@ -1,5 +1,7 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.animation.*
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -26,6 +28,24 @@ import pl.oki.frostalert.BuildConfig
 import pl.oki.frostalert.R
 import pl.oki.frostalert.utils.NetworkMonitor
 
+data class MainTabSpec(
+    val index: Int,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val labelRes: Int
+)
+
+internal fun buildMainTabs(isDebugBuild: Boolean): List<MainTabSpec> = buildList {
+    add(MainTabSpec(0, Icons.Default.Home, R.string.tab_home))
+    add(MainTabSpec(1, Icons.Default.Settings, R.string.tab_settings))
+    add(MainTabSpec(2, Icons.Default.History, R.string.tab_history))
+    add(MainTabSpec(3, Icons.Default.ShowChart, R.string.trend_screen_title))
+    add(MainTabSpec(4, Icons.Default.Yard, R.string.garden_tab_title))
+    add(MainTabSpec(5, Icons.Default.Map, R.string.tab_map))
+    if (isDebugBuild) {
+        add(MainTabSpec(6, Icons.Default.BugReport, R.string.tab_debug))
+    }
+}
+
 @Composable
 @Suppress("DEPRECATION")
 fun MainScreen(initialTab: Int = 0) {
@@ -34,8 +54,9 @@ fun MainScreen(initialTab: Int = 0) {
     val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val isPro by settingsViewModel.isPro.collectAsState()
+    val tabs = remember { buildMainTabs(BuildConfig.DEBUG) }
 
-    val pagerState = rememberPagerState(initialPage = initialTab) { if (BuildConfig.DEBUG) 7 else 6 }
+    val pagerState = rememberPagerState(initialPage = initialTab) { tabs.size }
     val scope = rememberCoroutineScope()
 
     // Optymalizacja: derivedStateOf zapobiega zbędnym przeliczeniom podczas swipowania
@@ -88,19 +109,41 @@ fun MainScreen(initialTab: Int = 0) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
-                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "Brak połączenia",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.offline_banner_title),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = stringResource(R.string.offline_banner_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            TextButton(
+                                onClick = {
+                                    context.startActivity(
+                                        Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    )
+                                }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.offline_banner_action),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
@@ -110,21 +153,9 @@ fun MainScreen(initialTab: Int = 0) {
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     tonalElevation = 0.dp
                 ) {
-                    val tabs = buildList {
-                        add(Triple(0, Icons.Default.Home, R.string.tab_home))
-                        add(Triple(1, Icons.Default.Settings, R.string.tab_settings))
-                        add(Triple(2, Icons.Default.History, R.string.tab_history))
-                        add(Triple(3, Icons.Default.ShowChart, R.string.trend_screen_title))
-                        add(Triple(4, Icons.Default.Yard, R.string.garden_tab_title))
-                        add(Triple(5, Icons.Default.Map, R.string.tab_map))
-                        if (BuildConfig.DEBUG) {
-                            add(Triple(6, Icons.Default.BugReport, R.string.tab_debug))
-                        }
-                    }
-
                     tabs.forEach { (index, icon, labelRes) ->
                         NavigationBarItem(
-                            icon = { Icon(icon, contentDescription = null) },
+                            icon = { Icon(icon, contentDescription = stringResource(labelRes)) },
                             label = {
                                 Text(
                                     text = stringResource(labelRes),
@@ -136,7 +167,8 @@ fun MainScreen(initialTab: Int = 0) {
                             selected = pagerState.currentPage == index,
                             onClick = {
                                 scope.launch { pagerState.animateScrollToPage(index) }
-                            }
+                            },
+                            alwaysShowLabel = false
                         )
                     }
                 }
