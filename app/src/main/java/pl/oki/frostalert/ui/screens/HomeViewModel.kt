@@ -18,6 +18,7 @@ import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.remote.WeatherResponse
 import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.utils.AppResult
+import pl.oki.frostalert.utils.CalibrationEngine
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.widget.WidgetSyncHelper
 import pl.oki.frostalert.R
@@ -233,11 +234,13 @@ class HomeViewModel @Inject constructor(
                     }
 
                     // KALIBRACJA: Sprawdź czy należy pokazać dialog feedbacku
-                    val lastFeedback = prefs.lastFeedbackTimestamp
-                    val currentTime = System.currentTimeMillis()
-                    val hoursSinceLastFeedback = (currentTime - lastFeedback) / (1000 * 60 * 60)
+                    val shouldAskForFeedback = CalibrationEngine.shouldAskForFeedback(
+                        lastFeedbackTimestamp = prefs.lastFeedbackTimestamp,
+                        predictedRisk = hasRisk,
+                        minHoursBetweenFeedback = MIN_HOURS_BETWEEN_FEEDBACK
+                    )
 
-                    if (hoursSinceLastFeedback >= MIN_HOURS_BETWEEN_FEEDBACK) {
+                    if (shouldAskForFeedback) {
                         // Pokaż dialog kalibracji w następnym cyklu życia UI
                         // Ustawimy flagę, która zostanie sprawdzona w UI
                         viewModelScope.launch {

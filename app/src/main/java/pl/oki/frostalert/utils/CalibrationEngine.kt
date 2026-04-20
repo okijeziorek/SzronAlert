@@ -115,11 +115,18 @@ object CalibrationEngine {
     }
 
     /**
-     * Sprawdza czy warto pokazać użytkownikowi prośbę o feedback
+     * Sprawdza czy warto pokazać użytkownikowi prośbę o feedback.
+     * Dialog ma sens tylko gdy była prognoza ryzyka szronu.
      */
-    fun shouldAskForFeedback(lastFeedbackTimestamp: Long, currentTime: Long = System.currentTimeMillis()): Boolean {
+    fun shouldAskForFeedback(
+        lastFeedbackTimestamp: Long,
+        predictedRisk: Boolean,
+        minHoursBetweenFeedback: Int = 24,
+        currentTime: Long = System.currentTimeMillis()
+    ): Boolean {
+        if (!predictedRisk) return false
         val hoursSinceLastFeedback = (currentTime - lastFeedbackTimestamp) / (1000 * 60 * 60)
-        return hoursSinceLastFeedback >= 24 // Co najmniej raz dziennie
+        return hoursSinceLastFeedback >= minHoursBetweenFeedback
     }
 
     /**
