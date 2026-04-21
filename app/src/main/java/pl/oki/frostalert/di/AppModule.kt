@@ -14,6 +14,7 @@ import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.repository.HistoryRepository
 import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.data.repository.MorningWakeLearningRepository
 import pl.oki.frostalert.data.repository.SettingsRepository
 import pl.oki.frostalert.data.repository.SettingsRepositoryImpl
 import pl.oki.frostalert.utils.NetworkMonitor
@@ -135,6 +136,12 @@ object AppModule {
     @Singleton
     fun provideSmartHomeRepository(): pl.oki.frostalert.data.repository.SmartHomeRepository {
         return pl.oki.frostalert.data.repository.SmartHomeRepository()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMorningWakeLearningRepository(dataStore: SettingsDataStore): MorningWakeLearningRepository {
+        return MorningWakeLearningRepository(dataStore)
     }
 
     @Provides

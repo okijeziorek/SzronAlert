@@ -40,6 +40,10 @@ interface SettingsRepository {
     suspend fun updateSmartHomeWebhookUrl(url: String)
     suspend fun updateSmartHomeThreshold(threshold: Int)
     suspend fun updateSmartHomeIftttKey(key: String)
+    // Morning Brief
+    suspend fun updateMorningBriefEnabled(isEnabled: Boolean)
+    suspend fun updateMorningLearningDays(days: Int)
+    suspend fun updateMorningBriefDelayMinutes(minutes: Int)
 }
 
 class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) : SettingsRepository {
@@ -180,5 +184,17 @@ class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) :
 
     override suspend fun updateSmartHomeIftttKey(key: String) {
         settingsDataStore.updateSmartHomeIftttKey(key)
+    }
+
+    override suspend fun updateMorningBriefEnabled(isEnabled: Boolean) {
+        settingsDataStore.updateMorningBriefEnabled(isEnabled)
+    }
+
+    override suspend fun updateMorningLearningDays(days: Int) {
+        settingsDataStore.updateMorningLearningDays(days)
+    }
+
+    override suspend fun updateMorningBriefDelayMinutes(minutes: Int) {
+        settingsDataStore.updateMorningBriefDelayMinutes(minutes)
     }
 }

@@ -211,4 +211,14 @@
     <string name="notification_frost_garden_alert_title">Watch your plants!</string>
     <string name="notification_frost_forecast_message">Forecast min: %.1f°C.</string>
     <string name="notification_frost_night_message">Possible frost tonight.</string>
+    <string name="notification_morning_brief_title">☀️ Good morning! Frost forecast</string>
+    <string name="notification_morning_brief_risk_message">⚠️ Frost risk tonight! Min: %.1f°C, probability: %d%%</string>
+    <string name="notification_morning_brief_no_risk_message">✅ No frost risk. Forecast min: %.1f°C</string>
+
+    <!-- Morning Brief settings -->
+    <string name="section_morning_brief">Morning summary</string>
+    <string name="morning_brief_label">Morning notification</string>
+    <string name="morning_brief_desc">Send a weather summary shortly after the first phone unlock</string>
+    <string name="morning_brief_delay_label">Delay after unlock (min)</string>
+    <string name="morning_brief_learning_days_label">Learning history (days)</string>
 </resources>

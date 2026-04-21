@@ -270,6 +270,24 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateMorningBriefEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateMorningBriefEnabled(isEnabled)
+        }
+    }
+
+    fun updateMorningLearningDays(days: Int) {
+        viewModelScope.launch {
+            settingsRepository.updateMorningLearningDays(days)
+        }
+    }
+
+    fun updateMorningBriefDelayMinutes(minutes: Int) {
+        viewModelScope.launch {
+            settingsRepository.updateMorningBriefDelayMinutes(minutes)
+        }
+    }
+
     fun updateLastTrend(trend: pl.oki.frostalert.utils.TrendCalculations.TrendDirection?) {
         viewModelScope.launch {
             settingsRepository.updateLastTrend(trend)

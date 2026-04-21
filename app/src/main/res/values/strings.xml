@@ -213,6 +213,16 @@
     <string name="notification_frost_garden_alert_title">Uwaga na rośliny!</string>
     <string name="notification_frost_forecast_message">Prognozowane min: %.1f°C.</string>
     <string name="notification_frost_night_message">Możliwy przymrozek w nocy.</string>
+    <string name="notification_morning_brief_title">☀️ Dzień dobry! Prognoza szronu</string>
+    <string name="notification_morning_brief_risk_message">⚠️ Ryzyko szronu tej nocy! Min: %.1f°C, prawdop.: %d%%</string>
+    <string name="notification_morning_brief_no_risk_message">✅ Brak ryzyka szronu. Prognozowane min: %.1f°C</string>
+
+    <!-- Morning Brief settings -->
+    <string name="section_morning_brief">Poranne podsumowanie</string>
+    <string name="morning_brief_label">Powiadomienie poranne</string>
+    <string name="morning_brief_desc">Wyślij podsumowanie pogody chwilę po pierwszym odblokowaniu telefonu</string>
+    <string name="morning_brief_delay_label">Opóźnienie po odblokowaniu (min)</string>
+    <string name="morning_brief_learning_days_label">Historia nauki (dni)</string>
 
     <!-- Frost Probability -->
     <string name="frost_probability_very_high">Bardzo wysokie</string>

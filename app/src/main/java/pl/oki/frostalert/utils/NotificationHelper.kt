@@ -21,15 +21,27 @@ object NotificationHelper {
     private const val CHANNEL_NAME = "Frost Alerts"
     private const val NOTIFICATION_ID = 1001
 
+    private const val MORNING_BRIEF_CHANNEL_ID = "morning_brief_channel"
+    private const val MORNING_BRIEF_CHANNEL_NAME = "Morning Weather Brief"
+    private const val MORNING_BRIEF_NOTIFICATION_ID = 1002
+
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
                 description = "Alerts about frost and ice on windshields"
             }
+            val morningChannel = NotificationChannel(
+                MORNING_BRIEF_CHANNEL_ID,
+                MORNING_BRIEF_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Morning weather summary after first phone unlock"
+            }
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
                 ?: return
             notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(morningChannel)
         }
     }
 
@@ -106,5 +118,39 @@ object NotificationHelper {
         val settingsDataStore = SettingsDataStore(context)
         val prefs = settingsDataStore.userPreferencesFlow.first()
         sendNotification(context, title, message, isMataOptionEnabled = prefs.isMataOptionEnabled)
+    }
+
+    /**
+     * Sends a simple informational morning brief notification (no action buttons).
+     * Uses a separate notification ID and channel so it can be individually managed by the user.
+     */
+    fun sendMorningBriefNotification(context: Context, title: String, message: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                return
+            }
+        }
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context, 0, intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(context, MORNING_BRIEF_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_frost)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            ?: return
+        notificationManager.notify(MORNING_BRIEF_NOTIFICATION_ID, builder.build())
     }
 }
