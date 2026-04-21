@@ -28,6 +28,7 @@ import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.local.UserPreferences
 import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.data.repository.MorningWakeLearningRepository
 import pl.oki.frostalert.utils.NetworkMonitor
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -40,6 +41,7 @@ class FrostCheckWorkerTest {
     private lateinit var locationRepository: LocationRepository
     private lateinit var temperatureDao: TemperatureDao
     private lateinit var networkMonitor: NetworkMonitor
+    private lateinit var morningWakeLearningRepository: MorningWakeLearningRepository
 
     private fun buildPrefs(
         ignoreUntil: Long = 0L,
@@ -87,6 +89,7 @@ class FrostCheckWorkerTest {
         locationRepository = mock()
         temperatureDao = mock()
         networkMonitor = mock()
+        morningWakeLearningRepository = mock()
     }
 
     private fun buildWorker(inputData: androidx.work.Data = androidx.work.Data.EMPTY): FrostCheckWorker {
@@ -104,7 +107,8 @@ class FrostCheckWorkerTest {
                         settingsDataStore,
                         locationRepository,
                         temperatureDao,
-                        networkMonitor
+                        networkMonitor,
+                        morningWakeLearningRepository
                     )
                 }
             })

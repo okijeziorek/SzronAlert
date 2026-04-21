@@ -214,7 +214,7 @@
     <string name="notification_frost_forecast_message">Prognozowane min: %.1f°C.</string>
     <string name="notification_frost_night_message">Możliwy przymrozek w nocy.</string>
     <string name="notification_morning_brief_title">☀️ Dzień dobry! Prognoza szronu</string>
-    <string name="notification_morning_brief_risk_message">⚠️ Ryzyko szronu tej nocy! Min: %.1f°C, prawdop.: %d%%</string>
+    <string name="notification_morning_brief_risk_message">⚠️ Ryzyko szronu tej nocy! Min: %1$.1f°C, prawdop.: %2$d%%</string>
     <string name="notification_morning_brief_no_risk_message">✅ Brak ryzyka szronu. Prognozowane min: %.1f°C</string>
 
     <!-- Morning Brief settings -->

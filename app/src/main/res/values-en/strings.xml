@@ -212,7 +212,7 @@
     <string name="notification_frost_forecast_message">Forecast min: %.1f°C.</string>
     <string name="notification_frost_night_message">Possible frost tonight.</string>
     <string name="notification_morning_brief_title">☀️ Good morning! Frost forecast</string>
-    <string name="notification_morning_brief_risk_message">⚠️ Frost risk tonight! Min: %.1f°C, probability: %d%%</string>
+    <string name="notification_morning_brief_risk_message">⚠️ Frost risk tonight! Min: %1$.1f°C, probability: %2$d%%</string>
     <string name="notification_morning_brief_no_risk_message">✅ No frost risk. Forecast min: %.1f°C</string>
 
     <!-- Morning Brief settings -->

@@ -23,6 +23,7 @@ import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.TrendCalculations
 import pl.oki.frostalert.widget.WidgetSyncHelper
 import pl.oki.frostalert.R
+import pl.oki.frostalert.receiver.MorningUserPresentReceiver
 import java.time.LocalDate
 import java.util.Calendar
 import androidx.work.Constraints
@@ -281,7 +282,7 @@ class FrostCheckWorker @AssistedInject constructor(
                                     .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                                     .build()
                                 WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-                                    "morning_brief_fallback_$epochDay",
+                                    "${MorningUserPresentReceiver.WORK_NAME_PREFIX}$epochDay",
                                     ExistingWorkPolicy.KEEP,
                                     workRequest
                                 )
