@@ -123,12 +123,15 @@ object NotificationHelper {
     /**
      * Sends a simple informational morning brief notification (no action buttons).
      * Uses a separate notification ID and channel so it can be individually managed by the user.
+     *
+     * @return `true` if the notification was successfully posted, `false` if it was skipped
+     *         (e.g., POST_NOTIFICATIONS permission not granted, NotificationManager unavailable).
      */
-    fun sendMorningBriefNotification(context: Context, title: String, message: String) {
+    fun sendMorningBriefNotification(context: Context, title: String, message: String): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-                return
+                return false
             }
         }
 
@@ -150,7 +153,8 @@ object NotificationHelper {
             .setContentIntent(pendingIntent)
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-            ?: return
+            ?: return false
         notificationManager.notify(MORNING_BRIEF_NOTIFICATION_ID, builder.build())
+        return true
     }
 }

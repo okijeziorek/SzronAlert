@@ -278,7 +278,9 @@ class FrostCheckWorker @AssistedInject constructor(
                             val epochDay = LocalDate.now().toEpochDay()
                             val inWindow = minuteOfDay in userPreferences.morningWindowStartMinute..userPreferences.morningWindowEndMinute
                             if (inWindow && morningWakeLearningRepository.shouldScheduleBriefToday(epochDay)) {
+                                val delayMinutes = userPreferences.morningBriefDelayMinutes.toLong().coerceAtLeast(0L)
                                 val workRequest = OneTimeWorkRequestBuilder<MorningBriefWorker>()
+                                    .setInitialDelay(delayMinutes, java.util.concurrent.TimeUnit.MINUTES)
                                     .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                                     .build()
                                 WorkManager.getInstance(applicationContext).enqueueUniqueWork(

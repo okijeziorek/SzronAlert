@@ -57,8 +57,14 @@ class MorningUserPresentReceiver : BroadcastReceiver() {
 
                 val repo = MorningWakeLearningRepository(settingsDataStore)
 
-                // Record first unlock of the day (also updates learned window)
-                repo.recordFirstUnlockOfDay(epochDay, minuteOfDay)
+                // Record first unlock of the day. Returns false if today's unlock was already
+                // recorded, meaning this is a subsequent unlock — stop immediately so that
+                // scheduling is only gated on the *first* unlock of the day.
+                val isFirstUnlockToday = repo.recordFirstUnlockOfDay(epochDay, minuteOfDay)
+                if (!isFirstUnlockToday) {
+                    Log.d(TAG, "Not the first unlock today (epoch day $epochDay) — skipping")
+                    return@launch
+                }
 
                 // Anti-spam: skip if brief already sent today
                 if (!repo.shouldScheduleBriefToday(epochDay)) {

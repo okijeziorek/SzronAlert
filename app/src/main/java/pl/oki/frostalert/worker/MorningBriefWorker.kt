@@ -171,7 +171,15 @@ class MorningBriefWorker @AssistedInject constructor(
                 }
 
                 NotificationHelper.createNotificationChannel(applicationContext)
-                NotificationHelper.sendMorningBriefNotification(applicationContext, title, message)
+                val notificationPosted = NotificationHelper.sendMorningBriefNotification(applicationContext, title, message)
+
+                if (!notificationPosted) {
+                    // Permission denied or NotificationManager unavailable — do not mark as sent
+                    // so it can be retried when permission is granted.
+                    AppTelemetry.recordMorningBriefFailure(applicationContext, "Notification not posted (permission denied or manager unavailable)")
+                    Log.w(TAG, "Morning brief notification was not posted — not recording as sent")
+                    return Result.success()
+                }
 
                 // Refresh both widgets
                 try {
@@ -180,7 +188,7 @@ class MorningBriefWorker @AssistedInject constructor(
                     Log.w(TAG, "Widget update failed: ${e.message}")
                 }
 
-                // Record that today's notification was sent
+                // Record that today's notification was sent — only reached when notification was posted
                 morningWakeLearningRepository.recordNotificationSent(epochDay)
                 AppTelemetry.recordMorningBriefSuccess(applicationContext)
                 Log.i(TAG, "Morning brief sent: hasRisk=$hasRisk minTemp=$minTemp epochDay=$epochDay")

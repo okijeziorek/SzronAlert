@@ -193,7 +193,20 @@ class MorningBriefWorkerTest {
     // ── Weather fetch ─────────────────────────────────────────────────────────
 
     @Test
-    fun `API failure is handled gracefully`() = runTest {
+    fun `network unavailable returns retry without fetching location`() = runTest {
+        whenever(networkMonitor.isCurrentlyOnline()).thenReturn(false)
+        whenever(settingsDataStore.userPreferencesFlow)
+            .thenReturn(MutableStateFlow(buildPrefs(isMorningBriefEnabled = true)))
+        whenever(morningWakeLearningRepository.shouldScheduleBriefToday(any())).thenReturn(true)
+
+        val result = buildWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.retry(), result)
+        verify(locationRepository, never()).getEffectiveLocation()
+    }
+
+    @Test
+    fun `API network failure on first attempt returns retry`() = runTest {
         whenever(networkMonitor.isCurrentlyOnline()).thenReturn(true)
         whenever(settingsDataStore.userPreferencesFlow)
             .thenReturn(MutableStateFlow(buildPrefs(isMorningBriefEnabled = true)))
@@ -201,12 +214,14 @@ class MorningBriefWorkerTest {
         val loc = Location("test").apply { latitude = 52.0; longitude = 21.0 }
         whenever(locationRepository.getEffectiveLocation()).thenReturn(loc)
 
-        // OpenMeteoApi is a real singleton — network will fail in test env
+        // OpenMeteoApi is a real singleton — network call fails in test env.
+        // runAttemptCount == 0 < MAX_RETRIES (3), so the expected outcome is retry.
         val result = buildWorker().doWork()
 
-        val valid = result == ListenableWorker.Result.success() ||
-                result == ListenableWorker.Result.retry() ||
-                result == ListenableWorker.Result.failure()
-        assertTrue("Worker should return a valid result on network failure", valid)
+        assertEquals(
+            "API failure on first attempt should return retry (runAttemptCount=0 < MAX_RETRIES=3)",
+            ListenableWorker.Result.retry(),
+            result
+        )
     }
 }

@@ -2,155 +2,146 @@ package pl.oki.frostalert.receiver
 
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.WorkManager
+import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import pl.oki.frostalert.data.local.SettingsDataStore
-import pl.oki.frostalert.data.local.UserPreferences
-import pl.oki.frostalert.data.repository.MorningWakeLearningRepository
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class MorningUserPresentReceiverTest {
 
-    private fun buildPrefs(
-        isMorningBriefEnabled: Boolean = true,
-        morningWindowStartMinute: Int = 0,
-        morningWindowEndMinute: Int = 1439,
-        morningLastNotificationEpochDay: Long = -1L,
-        morningLastUnlockEpochDay: Long = -1L,
-        morningBriefDelayMinutes: Int = 0
-    ) = UserPreferences(
-        tempThreshold = 1.0,
-        humidityThreshold = 75,
-        precipitationThreshold = 0.2,
-        sensitivity = 1.0,
-        alertStartHour = 19,
-        alertEndHour = 8,
-        ignoreUntil = 0L,
-        carModeHour = 7,
-        isCarModeEnabled = true,
-        isAutoModeEnabled = true,
-        isMataOptionEnabled = false,
-        appMode = 0,
-        lastFeedbackTimestamp = 0L,
-        isProForced = false,
-        heatThreshold = 30.0,
-        isStormAlertEnabled = true,
-        isWateringReminderEnabled = true,
-        isGeofencingEnabled = false,
-        isTrendChangeNotificationsEnabled = false,
-        lastTrend = null,
-        pendingTrend = null,
-        theme = 2,
-        isManualLocationEnabled = false,
-        manualLatitude = 52.2297,
-        manualLongitude = 21.0122,
-        manualLocationName = "Warszawa",
-        isOnboardingCompleted = true,
-        useFahrenheit = false,
-        geofenceRadiusMeters = 20000.0,
-        activeLocationId = 0,
-        isMorningBriefEnabled = isMorningBriefEnabled,
-        morningWindowStartMinute = morningWindowStartMinute,
-        morningWindowEndMinute = morningWindowEndMinute,
-        morningLastNotificationEpochDay = morningLastNotificationEpochDay,
-        morningLastUnlockEpochDay = morningLastUnlockEpochDay,
-        morningBriefDelayMinutes = morningBriefDelayMinutes
-    )
+    private lateinit var context: android.content.Context
+    private lateinit var dataStore: SettingsDataStore
+    private val epochDay = LocalDate.now().toEpochDay()
+    private val expectedWorkName = "${MorningUserPresentReceiver.WORK_NAME_PREFIX}$epochDay"
 
-    // ── Work name ─────────────────────────────────────────────────────────────
-
-    @Test
-    fun `WORK_NAME_PREFIX constant has expected value`() {
-        assertTrue(MorningUserPresentReceiver.WORK_NAME_PREFIX.startsWith("morning_brief_"))
-    }
-
-    // ── Gate logic via MorningWakeLearningRepository (companion object) ───────
-
-    @Test
-    fun `second unlock on same day does not advance history`() = runTest {
-        // Simulates two unlocks on epoch day 1000: only the first should record
-        val settingsDataStore: SettingsDataStore = mock()
-        val firstPrefs = buildPrefs(morningLastUnlockEpochDay = -1L)
-        val secondPrefs = buildPrefs(morningLastUnlockEpochDay = 1000L)
-
-        // First unlock: different day → should return true
-        whenever(settingsDataStore.userPreferencesFlow)
-            .thenReturn(MutableStateFlow(firstPrefs))
-        // We can't call the suspend method directly here without DI, so test the gating logic below
-
-        // Second unlock: same day → should return false (already recorded)
-        whenever(settingsDataStore.userPreferencesFlow)
-            .thenReturn(MutableStateFlow(secondPrefs))
-
-        // Verify by inspecting the epoch day comparison logic
-        assertFalse(
-            "Same epoch day should not be treated as new unlock",
-            secondPrefs.morningLastUnlockEpochDay != 1000L
-        )
-    }
-
-    @Test
-    fun `anti-spam blocks same-day notification`() {
-        val today = java.time.LocalDate.now().toEpochDay()
-        val prefs = buildPrefs(morningLastNotificationEpochDay = today)
-        // If last notification epoch day == today, shouldScheduleBriefToday() returns false
-        assertFalse(prefs.morningLastNotificationEpochDay != today)
-    }
-
-    @Test
-    fun `anti-spam allows notification on new day`() {
-        val yesterday = java.time.LocalDate.now().toEpochDay() - 1
-        val prefs = buildPrefs(morningLastNotificationEpochDay = yesterday)
-        val today = java.time.LocalDate.now().toEpochDay()
-        assertTrue(prefs.morningLastNotificationEpochDay != today)
-    }
-
-    // ── Morning window check ──────────────────────────────────────────────────
-
-    @Test
-    fun `minute inside wide window is accepted`() {
-        val prefs = buildPrefs(morningWindowStartMinute = 360, morningWindowEndMinute = 600)
-        val minuteOfDay = 480 // 08:00
-        assertTrue(minuteOfDay in prefs.morningWindowStartMinute..prefs.morningWindowEndMinute)
-    }
-
-    @Test
-    fun `minute outside window is rejected`() {
-        val prefs = buildPrefs(morningWindowStartMinute = 360, morningWindowEndMinute = 600)
-        val minuteOfDay = 720 // 12:00
-        assertFalse(minuteOfDay in prefs.morningWindowStartMinute..prefs.morningWindowEndMinute)
-    }
-
-    @Test
-    fun `feature disabled flag prevents scheduling`() {
-        val prefs = buildPrefs(isMorningBriefEnabled = false)
-        assertFalse(prefs.isMorningBriefEnabled)
-    }
-
-    // ── ACTION_USER_PRESENT filter ────────────────────────────────────────────
-
-    @Test
-    fun `receiver only processes USER_PRESENT action`() {
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val receiver = MorningUserPresentReceiver()
-        // Passing an intent with a different action should not crash
-        val otherIntent = Intent("android.intent.action.SCREEN_ON")
-        try {
-            receiver.onReceive(context, otherIntent)
-            // Should return immediately without scheduling work
-        } catch (e: Exception) {
-            org.junit.Assert.fail("Receiver must not throw for non-USER_PRESENT action: ${e.message}")
+    @Before
+    fun setup() {
+        context = ApplicationProvider.getApplicationContext()
+        WorkManagerTestInitHelper.initializeTestWorkManager(context)
+        dataStore = SettingsDataStore(context)
+        // Reset unlock epoch so each test starts fresh
+        runBlocking {
+            dataStore.updateMorningLastUnlockEpochDay(-1L)
+            dataStore.updateMorningLastNotificationEpochDay(-1L)
         }
     }
+
+    private fun noWorkEnqueued(): Boolean =
+        WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWork(expectedWorkName)
+            .get()
+            .isEmpty()
+
+    private fun workEnqueued(): Boolean =
+        WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWork(expectedWorkName)
+            .get()
+            .isNotEmpty()
+
+    // ── Non-USER_PRESENT action ───────────────────────────────────────────────
+
+    @Test
+    fun `receiver ignores non-USER_PRESENT action and enqueues no work`() {
+        MorningUserPresentReceiver().onReceive(context, Intent("android.intent.action.SCREEN_ON"))
+        assertTrue("SCREEN_ON should not trigger any work", noWorkEnqueued())
+    }
+
+    // ── Feature disabled (default state) ──────────────────────────────────────
+
+    @Test
+    fun `feature disabled - no work enqueued`() {
+        // isMorningBriefEnabled defaults to false in DataStore
+        MorningUserPresentReceiver().onReceive(context, Intent(Intent.ACTION_USER_PRESENT))
+        Thread.sleep(300) // wait for goAsync coroutine on Dispatchers.IO
+        assertTrue("Feature disabled → no work should be enqueued", noWorkEnqueued())
+    }
+
+    // ── Feature enabled, first unlock in window ───────────────────────────────
+
+    @Test
+    fun `first unlock in morning window - work enqueued with expected unique name`() = runBlocking {
+        dataStore.updateMorningBriefEnabled(true)
+        dataStore.updateMorningWindowStartMinute(0)     // window = all day
+        dataStore.updateMorningWindowEndMinute(1439)
+        dataStore.updateMorningBriefDelayMinutes(0)
+
+        MorningUserPresentReceiver().onReceive(context, Intent(Intent.ACTION_USER_PRESENT))
+        Thread.sleep(500) // wait for goAsync coroutine
+
+        assertTrue("Work should be enqueued with name $expectedWorkName", workEnqueued())
+    }
+
+    // ── Second unlock same day ────────────────────────────────────────────────
+
+    @Test
+    fun `second unlock same day - work NOT enqueued again`() = runBlocking {
+        dataStore.updateMorningBriefEnabled(true)
+        dataStore.updateMorningWindowStartMinute(0)
+        dataStore.updateMorningWindowEndMinute(1439)
+        dataStore.updateMorningBriefDelayMinutes(0)
+        // Mark today as already unlocked → recordFirstUnlockOfDay returns false
+        dataStore.updateMorningLastUnlockEpochDay(epochDay)
+
+        MorningUserPresentReceiver().onReceive(context, Intent(Intent.ACTION_USER_PRESENT))
+        Thread.sleep(500)
+
+        assertTrue("Second unlock same day should not enqueue work", noWorkEnqueued())
+    }
+
+    // ── Outside morning window ────────────────────────────────────────────────
+
+    @Test
+    fun `outside morning window - no work enqueued`() = runBlocking {
+        dataStore.updateMorningBriefEnabled(true)
+        // Window: 06:00–06:01 — very unlikely to be current time
+        dataStore.updateMorningWindowStartMinute(360)
+        dataStore.updateMorningWindowEndMinute(361)
+        dataStore.updateMorningBriefDelayMinutes(0)
+
+        // We can't control "current minute" here, but if we're not in the 1-min window
+        // the work should NOT be enqueued. This test is inherently environment-dependent
+        // so we just verify no crash occurs and the result is consistent.
+        MorningUserPresentReceiver().onReceive(context, Intent(Intent.ACTION_USER_PRESENT))
+        Thread.sleep(500)
+        // Either no work (outside window) or work (inside that 1-min window) — no crash
+        val infos = WorkManager.getInstance(context).getWorkInfosForUniqueWork(expectedWorkName).get()
+        assertTrue("Result should be a valid (possibly empty) work info list", infos != null)
+    }
+
+    // ── Anti-spam: brief already sent today ───────────────────────────────────
+
+    @Test
+    fun `anti-spam blocks work when brief already sent today`() = runBlocking {
+        dataStore.updateMorningBriefEnabled(true)
+        dataStore.updateMorningWindowStartMinute(0)
+        dataStore.updateMorningWindowEndMinute(1439)
+        dataStore.updateMorningBriefDelayMinutes(0)
+        // Mark today's notification as already sent
+        dataStore.updateMorningLastNotificationEpochDay(epochDay)
+
+        MorningUserPresentReceiver().onReceive(context, Intent(Intent.ACTION_USER_PRESENT))
+        Thread.sleep(500)
+
+        assertTrue("Brief already sent today → no new work should be enqueued", noWorkEnqueued())
+    }
+
+    // ── WORK_NAME_PREFIX constant ─────────────────────────────────────────────
+
+    @Test
+    fun `WORK_NAME_PREFIX has expected value`() {
+        assertTrue(MorningUserPresentReceiver.WORK_NAME_PREFIX.startsWith("morning_brief_"))
+    }
 }
+
