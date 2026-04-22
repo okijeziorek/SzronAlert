@@ -18,6 +18,7 @@ object OpenMeteoApi {
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
+                coerceInputValues = true
             })
         }
         // Timeouts prevent the app from hanging on slow/unresponsive network connections.
@@ -66,20 +67,20 @@ data class CurrentWeather(
 @Serializable
 data class HourlyForecast(
     val time: List<String>,
-    @SerialName("temperature_2m") val temperature: List<Double>,
-    @SerialName("relative_humidity_2m") val humidity: List<Double>,
-    val precipitation: List<Double>,
-    @SerialName("weather_code") val weatherCode: List<Int>,
-    @SerialName("wind_speed_10m") val windSpeed: List<Double>,
-    @SerialName("uv_index") val uvIndex: List<Double> = emptyList()
+    @SerialName("temperature_2m") val temperature: List<Double?>,
+    @SerialName("relative_humidity_2m") val humidity: List<Double?>,
+    val precipitation: List<Double?>,
+    @SerialName("weather_code") val weatherCode: List<Int?>,
+    @SerialName("wind_speed_10m") val windSpeed: List<Double?>,
+    @SerialName("uv_index") val uvIndex: List<Double?> = emptyList()
 )
 
 @Serializable
 data class DailyForecast(
     val time: List<String>,
-    @SerialName("temperature_2m_min") val temperatureMin: List<Double> = emptyList(),
-    @SerialName("temperature_2m_max") val temperatureMax: List<Double> = emptyList(),
-    @SerialName("weather_code") val weatherCode: List<Int> = emptyList(),
-    @SerialName("uv_index_max") val uvIndexMax: List<Double>,
-    @SerialName("precipitation_sum") val precipitationSum: List<Double>
+    @SerialName("temperature_2m_min") val temperatureMin: List<Double?> = emptyList(),
+    @SerialName("temperature_2m_max") val temperatureMax: List<Double?> = emptyList(),
+    @SerialName("weather_code") val weatherCode: List<Int?> = emptyList(),
+    @SerialName("uv_index_max") val uvIndexMax: List<Double?> = emptyList(),
+    @SerialName("precipitation_sum") val precipitationSum: List<Double?> = emptyList()
 )

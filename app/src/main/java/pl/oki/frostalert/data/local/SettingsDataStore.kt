@@ -58,7 +58,7 @@ data class UserPreferences(
     val smartHomeThreshold: Int = 50,
     val smartHomeIftttKey: String = "",
     // Morning Brief feature
-    val isMorningBriefEnabled: Boolean = false,
+    val isMorningBriefEnabled: Boolean = true,
     val morningLearningDays: Int = 14,
     val morningBriefDelayMinutes: Int = 5,
     val morningWakeHistoryJson: String = "[]",
@@ -192,7 +192,7 @@ class SettingsDataStore(private val context: Context) {
                 smartHomeWebhookUrl = preferences[Keys.SMART_HOME_WEBHOOK_URL] ?: "",
                 smartHomeThreshold = preferences[Keys.SMART_HOME_THRESHOLD] ?: 50,
                 smartHomeIftttKey = preferences[Keys.SMART_HOME_IFTTT_KEY] ?: "",
-                isMorningBriefEnabled = preferences[Keys.IS_MORNING_BRIEF_ENABLED] ?: false,
+                isMorningBriefEnabled = preferences[Keys.IS_MORNING_BRIEF_ENABLED] ?: true,
                 morningLearningDays = preferences[Keys.MORNING_LEARNING_DAYS] ?: 14,
                 morningBriefDelayMinutes = preferences[Keys.MORNING_BRIEF_DELAY_MINUTES] ?: 5,
                 morningWakeHistoryJson = preferences[Keys.MORNING_WAKE_HISTORY_JSON] ?: "[]",

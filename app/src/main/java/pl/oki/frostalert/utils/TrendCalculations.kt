@@ -142,13 +142,14 @@ object TrendCalculations {
             for (hour in 20 until 32) { // 20:00 dziś do 08:00 jutro
                 val index = dayStartIndex + hour
                 if (index < hourly.temperature.size) {
-                    minTemp = minOf(minTemp, hourly.temperature[index])
+                    val t = hourly.temperature[index] ?: continue
+                    minTemp = minOf(minTemp, t)
                 }
             }
-            if (minTemp == Double.MAX_VALUE) minTemp = hourly.temperature.getOrElse(dayStartIndex + 20) { 0.0 }
+            if (minTemp == Double.MAX_VALUE) minTemp = hourly.temperature.getOrElse(dayStartIndex + 20) { null } ?: 0.0
 
             // Oblicz ryzyko szronu (uproszczone: temp < 2°C, humidity > 70)
-            val humidity = hourly.humidity.getOrElse(dayStartIndex + 20) { 80.0 }
+            val humidity = hourly.humidity.getOrElse(dayStartIndex + 20) { null } ?: 80.0
             val hasFrostRisk = minTemp < 2.0 && humidity > 70.0
 
             val timestamp = tomorrowStart + (day * 24 * 60 * 60 * 1000L)
@@ -331,10 +332,10 @@ object TrendCalculations {
         val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
         val points = daily.time.indices.drop(1).take(14).map { i ->
-            val minTemp = daily.temperatureMin.getOrElse(i) { 0.0 }
-            val maxTemp = daily.temperatureMax.getOrElse(i) { 0.0 }
-            val weatherCode = daily.weatherCode.getOrElse(i) { 0 }
-            val precip = daily.precipitationSum.getOrElse(i) { 0.0 }
+            val minTemp = daily.temperatureMin.getOrElse(i) { null } ?: 0.0
+            val maxTemp = daily.temperatureMax.getOrElse(i) { null } ?: 0.0
+            val weatherCode = daily.weatherCode.getOrElse(i) { null } ?: 0
+            val precip = daily.precipitationSum.getOrElse(i) { null } ?: 0.0
             val hasFrost = minTemp <= frostThreshold
             val dateStr = daily.time.getOrElse(i) { "" }
             val timestamp = try { sdf.parse(dateStr)?.time ?: 0L } catch (_: Exception) { 0L }

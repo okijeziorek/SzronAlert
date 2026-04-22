@@ -602,7 +602,7 @@ fun HourlyForecastSection(hourly: HourlyForecast, useFahrenheit: Boolean) {
         Spacer(Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             itemsIndexed(hourly.time.take(24)) { index, timeStr ->
-                val temp = hourly.temperature[index]
+                val temp = hourly.temperature[index] ?: return@itemsIndexed
                 val displayTemp = if (useFahrenheit) WeatherCalculations.celsiusToFahrenheit(temp) else temp
                 Column(
                     modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(12.dp),
@@ -614,7 +614,7 @@ fun HourlyForecastSection(hourly: HourlyForecast, useFahrenheit: Boolean) {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Icon(getWeatherIcon(hourly.weatherCode[index]), contentDescription = null, modifier = Modifier.size(24.dp).padding(vertical = 4.dp), tint = MaterialTheme.colorScheme.primary)
+                    Icon(getWeatherIcon(hourly.weatherCode[index] ?: 0), contentDescription = null, modifier = Modifier.size(24.dp).padding(vertical = 4.dp), tint = MaterialTheme.colorScheme.primary)
                     Text(
                         text = "%.0f°".format(Locale.US, displayTemp),
                         fontWeight = FontWeight.Bold,

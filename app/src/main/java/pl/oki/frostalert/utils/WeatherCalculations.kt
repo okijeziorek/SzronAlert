@@ -161,7 +161,7 @@ object WeatherCalculations {
      * Oblicza czas trwania przymrozku (ile godzin poniżej progu)
      */
     fun calculateFrostDuration(hourly: HourlyForecast, threshold: Double): Int {
-        return hourly.temperature.count { it <= threshold }
+        return hourly.temperature.count { it != null && it <= threshold }
     }
 
     /**
@@ -243,16 +243,17 @@ object WeatherCalculations {
         hourly.time.forEachIndexed { index, timeStr ->
             try {
                 if (index >= hourly.temperature.size) return@forEachIndexed
+                val temp = hourly.temperature[index] ?: return@forEachIndexed
                 val time = sdf.parse(timeStr)?.time ?: 0L
                 if (time in startTime..endTime) {
-                    nightTemps.add(hourly.temperature[index])
+                    nightTemps.add(temp)
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Error parsing time entry at index $index: ${e.message}")
             }
         }
         
-        val fallback = hourly.temperature.take(12).minOrNull()
+        val fallback = hourly.temperature.take(12).filterNotNull().minOrNull()
         if (fallback == null) {
             Log.w(TAG, "getNightMinTemp: no temperature data available in forecast, returning 0.0")
         } else if (nightTemps.isEmpty()) {
