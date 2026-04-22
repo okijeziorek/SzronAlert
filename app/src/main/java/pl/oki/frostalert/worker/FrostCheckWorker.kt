@@ -14,6 +14,7 @@ import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.data.repository.MorningWakeLearningRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.AppTelemetry
 import pl.oki.frostalert.utils.NetworkMonitor
@@ -22,7 +23,14 @@ import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.TrendCalculations
 import pl.oki.frostalert.widget.WidgetSyncHelper
 import pl.oki.frostalert.R
+import pl.oki.frostalert.receiver.MorningUserPresentReceiver
+import java.time.LocalDate
 import java.util.Calendar
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 
 @HiltWorker
 class FrostCheckWorker @AssistedInject constructor(
@@ -31,7 +39,8 @@ class FrostCheckWorker @AssistedInject constructor(
     private val settingsDataStore: SettingsDataStore,
     private val locationRepository: LocationRepository,
     private val temperatureDao: TemperatureDao,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    private val morningWakeLearningRepository: MorningWakeLearningRepository
 ) : CoroutineWorker(appContext, params) {
 
     companion object {
@@ -259,6 +268,33 @@ class FrostCheckWorker @AssistedInject constructor(
                         }
                     }
                     AppTelemetry.recordWorkerSuccess(applicationContext)
+
+                    // FALLBACK: Schedule morning brief if the USER_PRESENT broadcast was missed
+                    // (e.g., OEM battery optimizations) and conditions are met.
+                    if (!isCarMode && userPreferences.isMorningBriefEnabled) {
+                        try {
+                            val cal = Calendar.getInstance()
+                            val minuteOfDay = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+                            val epochDay = LocalDate.now().toEpochDay()
+                            val inWindow = minuteOfDay in userPreferences.morningWindowStartMinute..userPreferences.morningWindowEndMinute
+                            if (inWindow && morningWakeLearningRepository.shouldScheduleBriefToday(epochDay)) {
+                                val delayMinutes = userPreferences.morningBriefDelayMinutes.toLong().coerceAtLeast(0L)
+                                val workRequest = OneTimeWorkRequestBuilder<MorningBriefWorker>()
+                                    .setInitialDelay(delayMinutes, java.util.concurrent.TimeUnit.MINUTES)
+                                    .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                                    .build()
+                                WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+                                    "${MorningUserPresentReceiver.WORK_NAME_PREFIX}$epochDay",
+                                    ExistingWorkPolicy.KEEP,
+                                    workRequest
+                                )
+                                Log.d(TAG, "Fallback: scheduled MorningBriefWorker for epoch day $epochDay")
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Fallback morning brief scheduling failed: ${e.message}")
+                        }
+                    }
+
                     return Result.success()
                 }
             }

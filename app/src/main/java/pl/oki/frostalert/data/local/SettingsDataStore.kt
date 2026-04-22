@@ -56,7 +56,18 @@ data class UserPreferences(
     val isSmartHomeEnabled: Boolean = false,
     val smartHomeWebhookUrl: String = "",
     val smartHomeThreshold: Int = 50,
-    val smartHomeIftttKey: String = ""
+    val smartHomeIftttKey: String = "",
+    // Morning Brief feature
+    val isMorningBriefEnabled: Boolean = false,
+    val morningLearningDays: Int = 14,
+    val morningBriefDelayMinutes: Int = 5,
+    val morningWakeHistoryJson: String = "[]",
+    val morningMedianWakeMinute: Int = -1,
+    val morningWindowStartMinute: Int = 360,
+    val morningWindowEndMinute: Int = 600,
+    val morningLastNotificationEpochDay: Long = -1L,
+    val morningLastUnlockEpochDay: Long = -1L,
+    val morningLastScheduledAtMs: Long = 0L
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -107,6 +118,17 @@ class SettingsDataStore(private val context: Context) {
         val SMART_HOME_WEBHOOK_URL = stringPreferencesKey("smart_home_webhook_url")
         val SMART_HOME_THRESHOLD = intPreferencesKey("smart_home_threshold")
         val SMART_HOME_IFTTT_KEY = stringPreferencesKey("smart_home_ifttt_key")
+        // Morning Brief feature
+        val IS_MORNING_BRIEF_ENABLED = booleanPreferencesKey("is_morning_brief_enabled")
+        val MORNING_LEARNING_DAYS = intPreferencesKey("morning_learning_days")
+        val MORNING_BRIEF_DELAY_MINUTES = intPreferencesKey("morning_brief_delay_minutes")
+        val MORNING_WAKE_HISTORY_JSON = stringPreferencesKey("morning_wake_history_json")
+        val MORNING_MEDIAN_WAKE_MINUTE = intPreferencesKey("morning_median_wake_minute")
+        val MORNING_WINDOW_START_MINUTE = intPreferencesKey("morning_window_start_minute")
+        val MORNING_WINDOW_END_MINUTE = intPreferencesKey("morning_window_end_minute")
+        val MORNING_LAST_NOTIFICATION_EPOCH_DAY = longPreferencesKey("morning_last_notification_epoch_day")
+        val MORNING_LAST_UNLOCK_EPOCH_DAY = longPreferencesKey("morning_last_unlock_epoch_day")
+        val MORNING_LAST_SCHEDULED_AT_MS = longPreferencesKey("morning_last_scheduled_at_ms")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -169,7 +191,17 @@ class SettingsDataStore(private val context: Context) {
                 isSmartHomeEnabled = preferences[Keys.IS_SMART_HOME_ENABLED] ?: false,
                 smartHomeWebhookUrl = preferences[Keys.SMART_HOME_WEBHOOK_URL] ?: "",
                 smartHomeThreshold = preferences[Keys.SMART_HOME_THRESHOLD] ?: 50,
-                smartHomeIftttKey = preferences[Keys.SMART_HOME_IFTTT_KEY] ?: ""
+                smartHomeIftttKey = preferences[Keys.SMART_HOME_IFTTT_KEY] ?: "",
+                isMorningBriefEnabled = preferences[Keys.IS_MORNING_BRIEF_ENABLED] ?: false,
+                morningLearningDays = preferences[Keys.MORNING_LEARNING_DAYS] ?: 14,
+                morningBriefDelayMinutes = preferences[Keys.MORNING_BRIEF_DELAY_MINUTES] ?: 5,
+                morningWakeHistoryJson = preferences[Keys.MORNING_WAKE_HISTORY_JSON] ?: "[]",
+                morningMedianWakeMinute = preferences[Keys.MORNING_MEDIAN_WAKE_MINUTE] ?: -1,
+                morningWindowStartMinute = preferences[Keys.MORNING_WINDOW_START_MINUTE] ?: 360,
+                morningWindowEndMinute = preferences[Keys.MORNING_WINDOW_END_MINUTE] ?: 600,
+                morningLastNotificationEpochDay = preferences[Keys.MORNING_LAST_NOTIFICATION_EPOCH_DAY] ?: -1L,
+                morningLastUnlockEpochDay = preferences[Keys.MORNING_LAST_UNLOCK_EPOCH_DAY] ?: -1L,
+                morningLastScheduledAtMs = preferences[Keys.MORNING_LAST_SCHEDULED_AT_MS] ?: 0L
             )
         }
 
@@ -328,5 +360,47 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun updateSmartHomeIftttKey(key: String) {
         context.dataStore.edit { it[Keys.SMART_HOME_IFTTT_KEY] = key }
+    }
+
+    // ── Morning Brief ─────────────────────────────────────────────────────────
+
+    suspend fun updateMorningBriefEnabled(isEnabled: Boolean) {
+        context.dataStore.edit { it[Keys.IS_MORNING_BRIEF_ENABLED] = isEnabled }
+    }
+
+    suspend fun updateMorningLearningDays(days: Int) {
+        context.dataStore.edit { it[Keys.MORNING_LEARNING_DAYS] = days.coerceIn(3, 30) }
+    }
+
+    suspend fun updateMorningBriefDelayMinutes(minutes: Int) {
+        context.dataStore.edit { it[Keys.MORNING_BRIEF_DELAY_MINUTES] = minutes.coerceIn(0, 30) }
+    }
+
+    suspend fun updateMorningWakeHistoryJson(json: String) {
+        context.dataStore.edit { it[Keys.MORNING_WAKE_HISTORY_JSON] = json }
+    }
+
+    suspend fun updateMorningMedianWakeMinute(minute: Int) {
+        context.dataStore.edit { it[Keys.MORNING_MEDIAN_WAKE_MINUTE] = minute.coerceIn(0, 1439) }
+    }
+
+    suspend fun updateMorningWindowStartMinute(minute: Int) {
+        context.dataStore.edit { it[Keys.MORNING_WINDOW_START_MINUTE] = minute.coerceIn(0, 1439) }
+    }
+
+    suspend fun updateMorningWindowEndMinute(minute: Int) {
+        context.dataStore.edit { it[Keys.MORNING_WINDOW_END_MINUTE] = minute.coerceIn(0, 1439) }
+    }
+
+    suspend fun updateMorningLastNotificationEpochDay(epochDay: Long) {
+        context.dataStore.edit { it[Keys.MORNING_LAST_NOTIFICATION_EPOCH_DAY] = epochDay }
+    }
+
+    suspend fun updateMorningLastUnlockEpochDay(epochDay: Long) {
+        context.dataStore.edit { it[Keys.MORNING_LAST_UNLOCK_EPOCH_DAY] = epochDay }
+    }
+
+    suspend fun updateMorningLastScheduledAtMs(ms: Long) {
+        context.dataStore.edit { it[Keys.MORNING_LAST_SCHEDULED_AT_MS] = ms }
     }
 }

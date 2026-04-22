@@ -530,6 +530,56 @@ fun SettingsScreen(
                 }
 
                 Spacer(Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(16.dp))
+
+                SectionTitle(stringResource(R.string.section_morning_brief))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.morning_brief_label),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = stringResource(R.string.morning_brief_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    Switch(
+                        checked = prefs.isMorningBriefEnabled,
+                        onCheckedChange = { viewModel.updateMorningBriefEnabled(it) }
+                    )
+                }
+                if (prefs.isMorningBriefEnabled) {
+                    SettingSlider(
+                        label = stringResource(R.string.morning_brief_delay_label),
+                        value = prefs.morningBriefDelayMinutes.toFloat(),
+                        onValueChange = { viewModel.updateMorningBriefDelayMinutes(it.toInt()) },
+                        range = 0f..30f,
+                        steps = 29,
+                        format = "%.0f"
+                    )
+                    SettingSlider(
+                        label = stringResource(R.string.morning_brief_learning_days_label),
+                        value = prefs.morningLearningDays.toFloat(),
+                        onValueChange = { viewModel.updateMorningLearningDays(it.toInt()) },
+                        range = 3f..30f,
+                        steps = 27,
+                        format = "%.0f"
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
                 SectionTitle(stringResource(R.string.car_mode_title))
                 Row(
                     modifier = Modifier.fillMaxWidth(),

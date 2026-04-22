@@ -37,6 +37,13 @@ object AppTelemetry {
     private const val KEY_BILLING_ERROR_COUNT = "billing_error_count"
     private const val KEY_LAST_BILLING_EVENT_MS = "last_billing_event_ms"
 
+    // Morning Brief counters
+    private const val KEY_MORNING_BRIEF_SUCCESS_COUNT = "morning_brief_success_count"
+    private const val KEY_MORNING_BRIEF_FAILURE_COUNT = "morning_brief_failure_count"
+    private const val KEY_MORNING_BRIEF_RETRY_COUNT = "morning_brief_retry_count"
+    private const val KEY_LAST_MORNING_BRIEF_MS = "last_morning_brief_ms"
+    private const val KEY_LAST_MORNING_BRIEF_ERROR = "last_morning_brief_error"
+
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
@@ -167,4 +174,42 @@ object AppTelemetry {
     fun reset(context: Context) {
         prefs(context).edit().clear().apply()
     }
+
+    // ── Morning Brief telemetry ───────────────────────────────────────────────
+
+    fun recordMorningBriefSuccess(context: Context) {
+        prefs(context).edit()
+            .putInt(KEY_MORNING_BRIEF_SUCCESS_COUNT, getMorningBriefSuccessCount(context) + 1)
+            .putLong(KEY_LAST_MORNING_BRIEF_MS, System.currentTimeMillis())
+            .apply()
+    }
+
+    fun recordMorningBriefRetry(context: Context, errorMessage: String? = null) {
+        val edit = prefs(context).edit()
+            .putInt(KEY_MORNING_BRIEF_RETRY_COUNT, getMorningBriefRetryCount(context) + 1)
+        if (errorMessage != null) edit.putString(KEY_LAST_MORNING_BRIEF_ERROR, errorMessage)
+        edit.apply()
+    }
+
+    fun recordMorningBriefFailure(context: Context, errorMessage: String? = null) {
+        val edit = prefs(context).edit()
+            .putInt(KEY_MORNING_BRIEF_FAILURE_COUNT, getMorningBriefFailureCount(context) + 1)
+        if (errorMessage != null) edit.putString(KEY_LAST_MORNING_BRIEF_ERROR, errorMessage)
+        edit.apply()
+    }
+
+    fun getMorningBriefSuccessCount(context: Context): Int =
+        prefs(context).getInt(KEY_MORNING_BRIEF_SUCCESS_COUNT, 0)
+
+    fun getMorningBriefRetryCount(context: Context): Int =
+        prefs(context).getInt(KEY_MORNING_BRIEF_RETRY_COUNT, 0)
+
+    fun getMorningBriefFailureCount(context: Context): Int =
+        prefs(context).getInt(KEY_MORNING_BRIEF_FAILURE_COUNT, 0)
+
+    fun getLastMorningBriefMs(context: Context): Long =
+        prefs(context).getLong(KEY_LAST_MORNING_BRIEF_MS, 0L)
+
+    fun getLastMorningBriefError(context: Context): String? =
+        prefs(context).getString(KEY_LAST_MORNING_BRIEF_ERROR, null)
 }

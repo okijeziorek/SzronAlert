@@ -129,4 +129,34 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         verify(repository).updateSensitivity(1.5)
     }
+
+    // ── Morning Brief ─────────────────────────────────────────────────────────
+
+    @Test
+    fun `updateMorningBriefEnabled calls repository with true`() = runTest(testDispatcher) {
+        viewModel.updateMorningBriefEnabled(true)
+        advanceUntilIdle()
+        verify(repository).updateMorningBriefEnabled(true)
+    }
+
+    @Test
+    fun `updateMorningBriefEnabled calls repository with false`() = runTest(testDispatcher) {
+        viewModel.updateMorningBriefEnabled(false)
+        advanceUntilIdle()
+        verify(repository).updateMorningBriefEnabled(false)
+    }
+
+    @Test
+    fun `updateMorningLearningDays calls repository`() = runTest(testDispatcher) {
+        viewModel.updateMorningLearningDays(10)
+        advanceUntilIdle()
+        verify(repository).updateMorningLearningDays(10)
+    }
+
+    @Test
+    fun `updateMorningBriefDelayMinutes calls repository`() = runTest(testDispatcher) {
+        viewModel.updateMorningBriefDelayMinutes(5)
+        advanceUntilIdle()
+        verify(repository).updateMorningBriefDelayMinutes(5)
+    }
 }

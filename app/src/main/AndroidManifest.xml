@@ -107,6 +107,14 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".receiver.MorningUserPresentReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
