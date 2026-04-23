@@ -33,12 +33,15 @@ class SecurityManager @Inject constructor(
      *
      * Note: Requires Google Cloud project number to be configured.
      * For basic security without cloud setup, falls back to client-side checks.
+     *
+     * @param precomputedRootDetected when non-null, uses this value instead of calling
+     *   [RootDetector.isRooted] again to avoid duplicate expensive file-system scans.
      */
-    suspend fun checkAppIntegrity(): IntegrityResult {
+    suspend fun checkAppIntegrity(precomputedRootDetected: Boolean? = null): IntegrityResult {
         return try {
             // For now, use basic checks without Play Integrity API
             // To enable Play Integrity: Configure cloud project number and uncomment below
-            performBasicIntegrityCheck()
+            performBasicIntegrityCheck(precomputedRootDetected)
         } catch (e: Exception) {
             Log.e(TAG, "Integrity check failed", e)
             IntegrityResult(
@@ -54,10 +57,10 @@ class SecurityManager @Inject constructor(
      * Perform basic integrity checks without Play Integrity API.
      * Checks app signature, installer, and system properties.
      */
-    private fun performBasicIntegrityCheck(): IntegrityResult {
+    private fun performBasicIntegrityCheck(precomputedRootDetected: Boolean? = null): IntegrityResult {
         val signatureValid = IntegrityChecker.verifyAppSignature(context)
         val installerValid = IntegrityChecker.verifyInstaller(context)
-        val notRooted = !RootDetector.isRooted(context)
+        val notRooted = !(precomputedRootDetected ?: RootDetector.isRooted(context))
         val notEmulator = !HookDetector.isEmulator()
         val notHooked = !HookDetector.isXposedActive() && !HookDetector.isFridaRunning()
 
@@ -140,10 +143,12 @@ class SecurityManager @Inject constructor(
 
     /**
      * Perform comprehensive security check.
+     * Root status is computed once here and passed to the basic integrity check
+     * to avoid running the (expensive) root-detection scan twice.
      */
     suspend fun performSecurityCheck(): SecurityCheckResult {
-        val integrity = checkAppIntegrity()
         val rootDetected = RootDetector.isRooted(context)
+        val integrity = checkAppIntegrity(precomputedRootDetected = rootDetected)
         val tamperingResult = HookDetector.detectTampering(context)
 
         return SecurityCheckResult(

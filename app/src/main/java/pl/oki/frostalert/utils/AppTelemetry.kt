@@ -220,38 +220,44 @@ object AppTelemetry {
     private const val KEY_TAMPERING_DETECTED_COUNT = "tampering_detected_count"
     private const val KEY_INTEGRITY_FAILURE_COUNT = "integrity_failure_count"
     private const val KEY_LAST_SECURITY_EVENT_MS = "last_security_event_ms"
+    private const val MAX_SECURITY_EVENTS = 50
 
     /**
      * Record a security event for telemetry and diagnostics.
      * Events are stored with timestamp for analysis.
+     * At most MAX_SECURITY_EVENTS are retained; older entries are evicted.
      */
     fun recordSecurityEvent(context: Context, event: SecurityEvent) {
         val timestamp = System.currentTimeMillis()
-        val key = "${KEY_SECURITY_EVENT_PREFIX}$timestamp"
+        val p = prefs(context)
 
-        prefs(context).edit()
-            .putString(key, "${event.type}|${event.severity}|${event.details}")
+        // Evict oldest events if we're at the cap
+        val existingKeys = p.all.keys
+            .filter { it.startsWith(KEY_SECURITY_EVENT_PREFIX) }
+            .sortedByDescending { it.removePrefix(KEY_SECURITY_EVENT_PREFIX).toLongOrNull() ?: 0L }
+        val keysToDelete = existingKeys.drop(MAX_SECURITY_EVENTS - 1)
+
+        val edit = p.edit()
+        keysToDelete.forEach { edit.remove(it) }
+
+        // Encode as JSON to avoid delimiter collisions in details
+        val json = org.json.JSONObject()
+            .put("type", event.type)
+            .put("severity", event.severity)
+            .put("details", event.details)
+        edit.putString("${KEY_SECURITY_EVENT_PREFIX}$timestamp", json.toString())
             .putLong(KEY_LAST_SECURITY_EVENT_MS, timestamp)
-            .apply()
 
         // Update specific counters
         when (event.type) {
-            "root_detected" -> {
-                prefs(context).edit()
-                    .putInt(KEY_ROOT_DETECTED_COUNT, getRootDetectedCount(context) + 1)
-                    .apply()
-            }
-            "tampering_detected", "hook_detected", "frida_detected", "xposed_detected" -> {
-                prefs(context).edit()
-                    .putInt(KEY_TAMPERING_DETECTED_COUNT, getTamperingDetectedCount(context) + 1)
-                    .apply()
-            }
-            "integrity_failed", "signature_mismatch" -> {
-                prefs(context).edit()
-                    .putInt(KEY_INTEGRITY_FAILURE_COUNT, getIntegrityFailureCount(context) + 1)
-                    .apply()
-            }
+            "root_detected" -> edit.putInt(KEY_ROOT_DETECTED_COUNT, getRootDetectedCount(context) + 1)
+            "tampering_detected", "hook_detected", "frida_detected", "xposed_detected" ->
+                edit.putInt(KEY_TAMPERING_DETECTED_COUNT, getTamperingDetectedCount(context) + 1)
+            "integrity_failed", "signature_mismatch", "periodic_integrity_failed" ->
+                edit.putInt(KEY_INTEGRITY_FAILURE_COUNT, getIntegrityFailureCount(context) + 1)
         }
+
+        edit.apply()
     }
 
     fun getRootDetectedCount(context: Context): Int =
@@ -267,7 +273,7 @@ object AppTelemetry {
         prefs(context).getLong(KEY_LAST_SECURITY_EVENT_MS, 0L)
 
     /**
-     * Get recent security events (last 100).
+     * Get recent security events (last [MAX_SECURITY_EVENTS]).
      */
     fun getRecentSecurityEvents(context: Context): List<SecurityEvent> {
         val allPrefs = prefs(context).all
@@ -276,12 +282,11 @@ object AppTelemetry {
             .mapNotNull { (key, value) ->
                 try {
                     val timestamp = key.removePrefix(KEY_SECURITY_EVENT_PREFIX).toLong()
-                    val parts = (value as? String)?.split("|") ?: return@mapNotNull null
-                    if (parts.size < 3) return@mapNotNull null
+                    val json = org.json.JSONObject(value as? String ?: return@mapNotNull null)
                     SecurityEvent(
-                        type = parts[0],
-                        severity = parts[1],
-                        details = parts[2],
+                        type = json.getString("type"),
+                        severity = json.getString("severity"),
+                        details = json.getString("details"),
                         timestamp = timestamp
                     )
                 } catch (e: Exception) {
@@ -289,7 +294,7 @@ object AppTelemetry {
                 }
             }
             .sortedByDescending { it.timestamp }
-            .take(100)
+            .take(MAX_SECURITY_EVENTS)
     }
 
     data class SecurityEvent(

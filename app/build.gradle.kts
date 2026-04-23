@@ -47,6 +47,13 @@ android {
             // using environment variables or keystore file
             // signingConfig = signingConfigs.getByName("release")
             signingConfig = signingConfigs.getByName("debug")
+            // Set to the SHA-256 of the release certificate:
+            //   keytool -list -v -keystore release.keystore
+            // Leave empty to skip strict signature verification (development only)
+            buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
+        }
+        debug {
+            buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
         }
     }
 

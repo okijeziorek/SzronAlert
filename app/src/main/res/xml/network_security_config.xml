@@ -8,7 +8,9 @@
         </trust-anchors>
     </base-config>
 
-    <!-- Debug config: allow localhost for testing -->
+    <!-- Debug-only overrides: trust user-installed CAs in addition to system CAs.
+         This allows tools like Charles Proxy or mitmproxy to intercept traffic during
+         development. These overrides are NOT active in release builds. -->
     <debug-overrides>
         <trust-anchors>
             <certificates src="user" />

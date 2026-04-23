@@ -175,6 +175,110 @@ class AppTelemetryTest {
         assertEquals(1, AppTelemetry.getBillingErrorCount(context))
     }
 
+    // ── Security telemetry ────────────────────────────────────────────────────
+
+    @Test
+    fun `initial security counts are zero`() {
+        assertEquals(0, AppTelemetry.getRootDetectedCount(context))
+        assertEquals(0, AppTelemetry.getTamperingDetectedCount(context))
+        assertEquals(0, AppTelemetry.getIntegrityFailureCount(context))
+        assertEquals(0L, AppTelemetry.getLastSecurityEventMs(context))
+    }
+
+    @Test
+    fun `recordSecurityEvent increments root counter for root_detected type`() {
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "root_detected", severity = "high", details = "su binary found")
+        )
+        assertEquals(1, AppTelemetry.getRootDetectedCount(context))
+    }
+
+    @Test
+    fun `recordSecurityEvent increments tampering counter for hook types`() {
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "hook_detected", severity = "critical", details = "Xposed")
+        )
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "frida_detected", severity = "critical", details = "port 27042")
+        )
+        assertEquals(2, AppTelemetry.getTamperingDetectedCount(context))
+    }
+
+    @Test
+    fun `recordSecurityEvent increments integrity counter for integrity_failed type`() {
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "integrity_failed", severity = "critical", details = "verdict NOK")
+        )
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "periodic_integrity_failed", severity = "critical", details = "details")
+        )
+        assertEquals(2, AppTelemetry.getIntegrityFailureCount(context))
+    }
+
+    @Test
+    fun `recordSecurityEvent updates last security event timestamp`() {
+        val before = System.currentTimeMillis()
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "root_detected", severity = "high", details = "test")
+        )
+        val after = System.currentTimeMillis()
+        assertTrue(AppTelemetry.getLastSecurityEventMs(context) in before..after)
+    }
+
+    @Test
+    fun `getRecentSecurityEvents returns recorded events in descending timestamp order`() {
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "root_detected", severity = "high", details = "first")
+        )
+        Thread.sleep(5) // ensure different timestamp
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "hook_detected", severity = "critical", details = "second")
+        )
+
+        val events = AppTelemetry.getRecentSecurityEvents(context)
+        assertEquals(2, events.size)
+        // Most recent first
+        assertEquals("hook_detected", events[0].type)
+        assertEquals("root_detected", events[1].type)
+    }
+
+    @Test
+    fun `getRecentSecurityEvents correctly parses fields with pipe characters in details`() {
+        val details = "Issues: App modified | Verdict: HOOKED"
+        AppTelemetry.recordSecurityEvent(
+            context,
+            AppTelemetry.SecurityEvent(type = "periodic_integrity_failed", severity = "critical", details = details)
+        )
+
+        val events = AppTelemetry.getRecentSecurityEvents(context)
+        assertEquals(1, events.size)
+        assertEquals("periodic_integrity_failed", events[0].type)
+        assertEquals("critical", events[0].severity)
+        assertEquals(details, events[0].details)
+    }
+
+    @Test
+    fun `getRecentSecurityEvents caps stored events at MAX_SECURITY_EVENTS`() {
+        // Record 55 events (above the 50-event cap)
+        repeat(55) { i ->
+            AppTelemetry.recordSecurityEvent(
+                context,
+                AppTelemetry.SecurityEvent(type = "root_detected", severity = "high", details = "event $i")
+            )
+        }
+
+        val events = AppTelemetry.getRecentSecurityEvents(context)
+        assertTrue("Expected at most 50 events, got ${events.size}", events.size <= 50)
+    }
+
     // ── Reset ─────────────────────────────────────────────────────────────────
 
     @Test

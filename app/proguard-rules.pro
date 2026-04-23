@@ -59,7 +59,7 @@
 -keep @androidx.hilt.work.HiltWorker class * { *; }
 
 # ====== COMPOSE ======
--keep class androidx.compose.** { *; }
+# Only keep Kotlin metadata needed by Compose; do not blanket-keep all of androidx.compose.**
 -keep class kotlin.Metadata { *; }
 
 # ====== ROOM DATABASE ======
@@ -72,9 +72,10 @@
 -keep class * extends androidx.glance.appwidget.GlanceAppWidget { *; }
 
 # ====== KTOR ======
--keep class io.ktor.** { *; }
--keepclassmembers class io.ktor.** { *; }
--keep class kotlinx.coroutines.** { *; }
+# Ktor and coroutines ship their own consumer ProGuard rules; no blanket keeps needed here.
+# Only suppress warnings for internal classes that may be stripped.
+-dontwarn io.ktor.**
+-dontwarn kotlinx.coroutines.**
 
 # ====== REMOVE METADATA ======
 -keepattributes !SourceDebugExtension

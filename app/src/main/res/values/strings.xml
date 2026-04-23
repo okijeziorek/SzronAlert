@@ -220,6 +220,12 @@
     <!-- Security notifications -->
     <string name="security_warning_title">⚠️ Ostrzeżenie bezpieczeństwa</string>
     <string name="security_warning_message">Wykryto problemy: %1$s. Funkcje PRO zostały wyłączone.</string>
+    <string name="security_warning_root_message">Wykryto urządzenie z dostępem root. Zalecamy ostrożność podczas korzystania z aplikacji.</string>
+    <string name="security_issue_app_modified">Aplikacja zmodyfikowana</string>
+    <string name="security_issue_non_genuine">Nieoryginalne urządzenie</string>
+    <string name="security_issue_root_detected">Wykryto root</string>
+    <string name="security_issue_invalid_signature">Nieprawidłowy podpis aplikacji</string>
+    <string name="security_issue_non_play_installer">Instalacja poza Play Store</string>
 
     <!-- Morning Brief settings -->
     <string name="section_morning_brief">Poranne podsumowanie</string>

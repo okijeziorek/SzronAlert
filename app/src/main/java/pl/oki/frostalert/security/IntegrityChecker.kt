@@ -3,8 +3,7 @@ package pl.oki.frostalert.security
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Base64
-import org.json.JSONObject
+import pl.oki.frostalert.BuildConfig
 import java.security.MessageDigest
 
 /**
@@ -13,16 +12,19 @@ import java.security.MessageDigest
 object IntegrityChecker {
 
     /**
-     * Verify that the app signature matches the expected signature.
-     * Helps detect repackaged/modified APKs.
+     * Verify that the app signature matches the expected certificate SHA-256.
+     *
+     * The expected certificate hash is supplied via [BuildConfig.EXPECTED_SIGNING_CERT_SHA256].
+     * When that field is empty (e.g. during development or when not yet configured),
+     * strict matching is skipped and we only verify that *some* signature exists.
+     * Set the field to the release certificate SHA-256 (hex string, colon-separated bytes)
+     * before publishing to production:
+     *   keytool -list -v -keystore release.keystore
      *
      * @param context Application context
-     * @return true if signature is valid, false if tampered
+     * @return true if signature is valid / matches expected, false if tampered or missing
      */
     fun verifyAppSignature(context: Context): Boolean {
-        // Note: In production, replace this with your actual release certificate SHA-256
-        // To get your signature: keytool -list -v -keystore release.keystore
-        // For now, we skip strict checking to avoid blocking debug builds
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 context.packageManager.getPackageInfo(
@@ -44,9 +46,21 @@ object IntegrityChecker {
                 packageInfo.signatures
             }
 
-            // For now, just verify we have a signature
-            // In production, compare with expected SHA-256 hash
-            signatures != null && signatures.isNotEmpty()
+            if (signatures.isNullOrEmpty()) return false
+
+            val expectedSha256 = BuildConfig.EXPECTED_SIGNING_CERT_SHA256
+            if (expectedSha256.isBlank()) {
+                // No expected value configured — only verify a signature is present
+                return true
+            }
+
+            // Compare each signing certificate's SHA-256 against the expected value
+            val digest = MessageDigest.getInstance("SHA-256")
+            signatures.any { signature ->
+                val certSha256 = digest.digest(signature.toByteArray())
+                    .joinToString(":") { "%02X".format(it) }
+                certSha256.equals(expectedSha256, ignoreCase = true)
+            }
 
         } catch (e: Exception) {
             false

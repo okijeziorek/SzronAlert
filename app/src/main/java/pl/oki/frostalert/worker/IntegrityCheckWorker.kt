@@ -7,13 +7,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import pl.oki.frostalert.billing.BillingClientWrapper
 import pl.oki.frostalert.data.local.SettingsDataStore
-import pl.oki.frostalert.security.HookDetector
 import pl.oki.frostalert.security.IntegrityChecker
-import pl.oki.frostalert.security.RootDetector
 import pl.oki.frostalert.security.SecurityManager
 import pl.oki.frostalert.utils.AppTelemetry
 import pl.oki.frostalert.utils.NotificationHelper
@@ -25,16 +20,15 @@ import pl.oki.frostalert.R
  *
  * If security issues are detected:
  * - Logs security event to telemetry
- * - Optionally shows warning notification
- * - Invalidates PRO status if tampering detected
+ * - Shows warning notification for all detected threats
+ * - Invalidates PRO status only if tampering or signature modification is detected
  */
 @HiltWorker
 class IntegrityCheckWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
     @Assisted params: WorkerParameters,
     private val securityManager: SecurityManager,
-    private val settingsDataStore: SettingsDataStore,
-    private val billingClientWrapper: BillingClientWrapper
+    private val settingsDataStore: SettingsDataStore
 ) : CoroutineWorker(appContext, params) {
 
     companion object {
@@ -56,16 +50,15 @@ class IntegrityCheckWorker @AssistedInject constructor(
                     "tampering=${securityResult.tamperingDetected}")
 
             // Check individual security aspects
-            val integrityFailed = !securityResult.integrity.isUnmodified ||
-                                  !securityResult.integrity.isGenuine
             val signatureFailed = !IntegrityChecker.verifyAppSignature(appContext)
             val installerFailed = !IntegrityChecker.verifyInstaller(appContext)
 
             // Handle security failures
-            if (integrityFailed || securityResult.rootDetected || securityResult.tamperingDetected) {
-                handleSecurityFailure(securityResult)
-            } else if (signatureFailed || installerFailed) {
-                handleSignatureFailure(signatureFailed, installerFailed)
+            if (!securityResult.integrity.isUnmodified || securityResult.tamperingDetected ||
+                signatureFailed || installerFailed) {
+                handleTamperingFailure(securityResult, signatureFailed, installerFailed)
+            } else if (securityResult.rootDetected) {
+                handleRootOnlyDetection()
             } else {
                 Log.i(TAG, "Integrity check passed - no security issues detected")
             }
@@ -85,94 +78,79 @@ class IntegrityCheckWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun handleSecurityFailure(securityResult: SecurityManager.SecurityCheckResult) {
+    /**
+     * Handles cases where the app appears modified, hooked, or has an invalid signature.
+     * Invalidates PRO status and shows a warning notification.
+     */
+    private suspend fun handleTamperingFailure(
+        securityResult: SecurityManager.SecurityCheckResult,
+        signatureFailed: Boolean,
+        installerFailed: Boolean
+    ) {
         val issues = mutableListOf<String>()
 
         if (!securityResult.integrity.isUnmodified) {
-            issues.add("App modified")
+            issues.add(appContext.getString(R.string.security_issue_app_modified))
         }
         if (!securityResult.integrity.isGenuine) {
-            issues.add("Non-genuine device")
+            issues.add(appContext.getString(R.string.security_issue_non_genuine))
         }
         if (securityResult.rootDetected) {
-            issues.add("Root detected")
+            issues.add(appContext.getString(R.string.security_issue_root_detected))
         }
         if (securityResult.tamperingDetected) {
             issues.addAll(securityResult.tamperingIssues)
         }
+        if (signatureFailed) {
+            issues.add(appContext.getString(R.string.security_issue_invalid_signature))
+        }
+        if (installerFailed) {
+            issues.add(appContext.getString(R.string.security_issue_non_play_installer))
+        }
 
         val issuesSummary = issues.joinToString(", ")
-
         Log.w(TAG, "Security issues detected: $issuesSummary")
 
-        // Record security event with all detected issues
+        // Record security event
         AppTelemetry.recordSecurityEvent(
             appContext,
             AppTelemetry.SecurityEvent(
                 type = "periodic_integrity_failed",
                 severity = "critical",
-                details = "Issues: $issuesSummary | Verdict: ${securityResult.integrity.verdict}"
+                details = "Issues: $issuesSummary; Verdict: ${securityResult.integrity.verdict}"
             )
         )
 
-        // For critical tampering (modified app), invalidate PRO status
-        if (!securityResult.integrity.isUnmodified || securityResult.tamperingDetected) {
-            withContext(Dispatchers.Main) {
-                // Force disable PRO if app was modified or hooked
-                settingsDataStore.updateIsProForced(false)
-                Log.w(TAG, "PRO status invalidated due to tampering")
-            }
+        // Invalidate PRO status — DataStore suspends on its own IO dispatcher; no Main switch needed
+        settingsDataStore.updateIsProForced(false)
+        Log.w(TAG, "PRO status invalidated due to tampering")
 
-            // Show security warning notification
-            showSecurityWarning(issuesSummary)
-        }
-
-        // For root detection only (less severe), just log and warn
-        if (securityResult.rootDetected && securityResult.integrity.isUnmodified) {
-            Log.i(TAG, "Root detected but app not modified - logging only")
-            AppTelemetry.recordSecurityEvent(
-                appContext,
-                AppTelemetry.SecurityEvent(
-                    type = "root_detected",
-                    severity = "high",
-                    details = "Periodic check found root"
-                )
-            )
-        }
+        // Notify the user
+        showSecurityWarning(issuesSummary)
     }
 
-    private suspend fun handleSignatureFailure(signatureFailed: Boolean, installerFailed: Boolean) {
-        val issues = mutableListOf<String>()
-
-        if (signatureFailed) {
-            issues.add("Invalid signature")
-        }
-        if (installerFailed) {
-            issues.add("Non-Play Store installer")
-        }
-
-        Log.w(TAG, "Signature/installer issues: ${issues.joinToString(", ")}")
+    /**
+     * Handles the case where root is detected but the app itself appears unmodified.
+     * Logs the event and warns the user without invalidating PRO status.
+     */
+    private suspend fun handleRootOnlyDetection() {
+        Log.i(TAG, "Root detected but app not modified - warning user")
 
         AppTelemetry.recordSecurityEvent(
             appContext,
             AppTelemetry.SecurityEvent(
-                type = "signature_mismatch",
-                severity = if (signatureFailed) "critical" else "medium",
-                details = issues.joinToString(", ")
+                type = "root_detected",
+                severity = "high",
+                details = "Periodic check found root on unmodified app"
             )
         )
 
-        // Only invalidate PRO for actual signature tampering
-        if (signatureFailed) {
-            settingsDataStore.updateIsProForced(false)
-            showSecurityWarning("Wykryto modyfikację aplikacji")
-        }
+        showRootWarning()
     }
 
     private suspend fun showSecurityWarning(issues: String) {
         try {
             NotificationHelper.createNotificationChannel(appContext)
-            // Use the suspend version of sendNotification
             NotificationHelper.sendNotification(
                 appContext,
                 title = appContext.getString(R.string.security_warning_title),
@@ -182,4 +160,18 @@ class IntegrityCheckWorker @AssistedInject constructor(
             Log.e(TAG, "Failed to show security notification", e)
         }
     }
+
+    private suspend fun showRootWarning() {
+        try {
+            NotificationHelper.createNotificationChannel(appContext)
+            NotificationHelper.sendNotification(
+                appContext,
+                title = appContext.getString(R.string.security_warning_title),
+                message = appContext.getString(R.string.security_warning_root_message)
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to show root warning notification", e)
+        }
+    }
 }
+
