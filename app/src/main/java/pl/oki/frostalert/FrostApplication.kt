@@ -17,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.geofence.GeofenceRegistrarContract
 import pl.oki.frostalert.worker.FrostCheckWorker
+import pl.oki.frostalert.worker.IntegrityCheckWorker
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -57,6 +58,7 @@ class FrostApplication : Application(), Configuration.Provider {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
+        // 1. Frost check worker (hourly)
         val repeatingRequest = PeriodicWorkRequestBuilder<FrostCheckWorker>(
             1, TimeUnit.HOURS
         )
@@ -70,6 +72,24 @@ class FrostApplication : Application(), Configuration.Provider {
             "frost_check_work",
             ExistingPeriodicWorkPolicy.KEEP,
             repeatingRequest
+        )
+
+        // 2. Security integrity check worker (every 24 hours)
+        val integrityCheckRequest = PeriodicWorkRequestBuilder<IntegrityCheckWorker>(
+            24, TimeUnit.HOURS,
+            15, TimeUnit.MINUTES // flex interval - can run within 15 min window
+        )
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            IntegrityCheckWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            integrityCheckRequest
         )
     }
 }
