@@ -20,6 +20,19 @@ class SmartHomeRepository @Inject constructor() {
         locationName: String
     ): AppResult<Boolean> {
         if (webhookUrl.isBlank()) return AppResult.Error(AppError.ValidationError("Webhook URL is empty"))
+
+        // Security: Enforce HTTPS for webhooks
+        if (!webhookUrl.startsWith("https://", ignoreCase = true)) {
+            return AppResult.Error(AppError.ValidationError("Webhook URL must use HTTPS"))
+        }
+
+        // Validate URL format
+        try {
+            java.net.URL(webhookUrl).toURI()
+        } catch (e: Exception) {
+            return AppResult.Error(AppError.ValidationError("Invalid webhook URL format"))
+        }
+
         return try {
             val body = buildJsonObject {
                 put("frost_probability", frostProbability)

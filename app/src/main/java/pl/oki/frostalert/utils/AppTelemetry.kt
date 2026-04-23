@@ -212,4 +212,90 @@ object AppTelemetry {
 
     fun getLastMorningBriefError(context: Context): String? =
         prefs(context).getString(KEY_LAST_MORNING_BRIEF_ERROR, null)
+
+    // ── Security telemetry ────────────────────────────────────────────────────
+
+    private const val KEY_SECURITY_EVENT_PREFIX = "security_event_"
+    private const val KEY_ROOT_DETECTED_COUNT = "root_detected_count"
+    private const val KEY_TAMPERING_DETECTED_COUNT = "tampering_detected_count"
+    private const val KEY_INTEGRITY_FAILURE_COUNT = "integrity_failure_count"
+    private const val KEY_LAST_SECURITY_EVENT_MS = "last_security_event_ms"
+
+    /**
+     * Record a security event for telemetry and diagnostics.
+     * Events are stored with timestamp for analysis.
+     */
+    fun recordSecurityEvent(context: Context, event: SecurityEvent) {
+        val timestamp = System.currentTimeMillis()
+        val key = "${KEY_SECURITY_EVENT_PREFIX}$timestamp"
+
+        prefs(context).edit()
+            .putString(key, "${event.type}|${event.severity}|${event.details}")
+            .putLong(KEY_LAST_SECURITY_EVENT_MS, timestamp)
+            .apply()
+
+        // Update specific counters
+        when (event.type) {
+            "root_detected" -> {
+                prefs(context).edit()
+                    .putInt(KEY_ROOT_DETECTED_COUNT, getRootDetectedCount(context) + 1)
+                    .apply()
+            }
+            "tampering_detected", "hook_detected", "frida_detected", "xposed_detected" -> {
+                prefs(context).edit()
+                    .putInt(KEY_TAMPERING_DETECTED_COUNT, getTamperingDetectedCount(context) + 1)
+                    .apply()
+            }
+            "integrity_failed", "signature_mismatch" -> {
+                prefs(context).edit()
+                    .putInt(KEY_INTEGRITY_FAILURE_COUNT, getIntegrityFailureCount(context) + 1)
+                    .apply()
+            }
+        }
+    }
+
+    fun getRootDetectedCount(context: Context): Int =
+        prefs(context).getInt(KEY_ROOT_DETECTED_COUNT, 0)
+
+    fun getTamperingDetectedCount(context: Context): Int =
+        prefs(context).getInt(KEY_TAMPERING_DETECTED_COUNT, 0)
+
+    fun getIntegrityFailureCount(context: Context): Int =
+        prefs(context).getInt(KEY_INTEGRITY_FAILURE_COUNT, 0)
+
+    fun getLastSecurityEventMs(context: Context): Long =
+        prefs(context).getLong(KEY_LAST_SECURITY_EVENT_MS, 0L)
+
+    /**
+     * Get recent security events (last 100).
+     */
+    fun getRecentSecurityEvents(context: Context): List<SecurityEvent> {
+        val allPrefs = prefs(context).all
+        return allPrefs
+            .filterKeys { it.startsWith(KEY_SECURITY_EVENT_PREFIX) }
+            .mapNotNull { (key, value) ->
+                try {
+                    val timestamp = key.removePrefix(KEY_SECURITY_EVENT_PREFIX).toLong()
+                    val parts = (value as? String)?.split("|") ?: return@mapNotNull null
+                    if (parts.size < 3) return@mapNotNull null
+                    SecurityEvent(
+                        type = parts[0],
+                        severity = parts[1],
+                        details = parts[2],
+                        timestamp = timestamp
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            .sortedByDescending { it.timestamp }
+            .take(100)
+    }
+
+    data class SecurityEvent(
+        val type: String, // "root_detected", "integrity_failed", "hook_detected", etc.
+        val severity: String, // "low", "medium", "high", "critical"
+        val details: String,
+        val timestamp: Long = System.currentTimeMillis()
+    )
 }
