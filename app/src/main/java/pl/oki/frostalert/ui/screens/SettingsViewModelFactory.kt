@@ -7,6 +7,7 @@ import pl.oki.frostalert.billing.BillingClientWrapper
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.repository.SettingsRepositoryImpl
 import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.security.SecurityManager
 
 class SettingsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -15,7 +16,8 @@ class SettingsViewModelFactory(private val context: Context) : ViewModelProvider
             val settingsRepository = SettingsRepositoryImpl(settingsDataStore)
             val locationRepo = LocationRepository(context, settingsDataStore)
             val geofenceRegistrar: pl.oki.frostalert.geofence.GeofenceRegistrarContract = pl.oki.frostalert.geofence.GeofenceRegistrar(context, settingsDataStore, locationRepo)
-            val billingManager = BillingClientWrapper(context)
+            val securityManager = SecurityManager(context)
+            val billingManager = BillingClientWrapper(context, securityManager)
             val database = pl.oki.frostalert.data.local.FrostDatabase.getDatabase(context)
             val savedLocationDao = database.savedLocationDao()
             @Suppress("UNCHECKED_CAST")

@@ -6,7 +6,6 @@ import android.util.Log
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.IntegrityTokenRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 import java.security.SecureRandom
 import javax.inject.Inject
