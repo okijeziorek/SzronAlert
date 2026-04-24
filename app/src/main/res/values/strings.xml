@@ -411,4 +411,24 @@
     <string name="smart_home_ifttt_key">Klucz IFTTT</string>
     <string name="smart_home_save">Zapisz ustawienia</string>
     <string name="smart_home_saved">Ustawienia zapisane</string>
+
+    <!-- B3: Offline cache banner -->
+    <string name="offline_cache_banner_title">Dane offline</string>
+    <string name="offline_cache_banner_desc">Ostatnie znane dane: %s</string>
+
+    <!-- C1: Daily forecast section -->
+    <string name="daily_forecast_title">Prognoza tygodniowa</string>
+
+    <!-- A3: Onboarding enhancements -->
+    <string name="onboarding_mode_title">Wybierz profil</string>
+    <string name="onboarding_mode_desc">Skonfiguruj aplikację pod swoje potrzeby już teraz.</string>
+    <string name="onboarding_mode_car_label">Samochód</string>
+    <string name="onboarding_mode_car_desc">Szron na szybach auta rano.</string>
+    <string name="onboarding_mode_garden_label">Ogród</string>
+    <string name="onboarding_mode_garden_desc">Przymrozki zagrażające roślinom.</string>
+    <string name="onboarding_permissions_title">Uprawnienia</string>
+    <string name="onboarding_permissions_desc">FrostAlert potrzebuje dostępu do lokalizacji i możliwości wysyłania powiadomień, aby ostrzegać Cię o ryzyku szronu.</string>
+    <string name="onboarding_grant_location">Zezwól na lokalizację</string>
+    <string name="onboarding_grant_notifications">Zezwól na powiadomienia</string>
+    <string name="onboarding_permissions_note">Możesz zmienić te ustawienia później w Ustawieniach.</string>
 </resources>

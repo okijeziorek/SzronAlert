@@ -265,4 +265,24 @@
     <string name="security_issue_root_detected">Root detected</string>
     <string name="security_issue_invalid_signature">Invalid app signature</string>
     <string name="security_issue_non_play_installer">Installed outside Play Store</string>
+
+    <!-- B3: Offline cache banner -->
+    <string name="offline_cache_banner_title">Offline data</string>
+    <string name="offline_cache_banner_desc">Last known data: %s</string>
+
+    <!-- C1: Daily forecast section -->
+    <string name="daily_forecast_title">Weekly forecast</string>
+
+    <!-- A3: Onboarding enhancements -->
+    <string name="onboarding_mode_title">Choose your profile</string>
+    <string name="onboarding_mode_desc">Configure the app for your needs right now.</string>
+    <string name="onboarding_mode_car_label">Car</string>
+    <string name="onboarding_mode_car_desc">Frost on car windshields in the morning.</string>
+    <string name="onboarding_mode_garden_label">Garden</string>
+    <string name="onboarding_mode_garden_desc">Frost threatening garden plants.</string>
+    <string name="onboarding_permissions_title">Permissions</string>
+    <string name="onboarding_permissions_desc">FrostAlert needs access to your location and the ability to send notifications to warn you about frost risk.</string>
+    <string name="onboarding_grant_location">Allow location</string>
+    <string name="onboarding_grant_notifications">Allow notifications</string>
+    <string name="onboarding_permissions_note">You can change these settings later in Settings.</string>
 </resources>

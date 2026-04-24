@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,6 +22,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,9 +38,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.UserPreferences
+import pl.oki.frostalert.data.remote.DailyForecast
 import pl.oki.frostalert.data.remote.HourlyForecast
+import pl.oki.frostalert.ui.theme.RiskHigh
+import pl.oki.frostalert.ui.theme.RiskModerate
+import pl.oki.frostalert.ui.theme.RiskNone
+import pl.oki.frostalert.ui.theme.RiskVeryHigh
 import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.utils.SummerCalculations
+import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -159,6 +171,12 @@ fun WeatherSuccessContent(
         allKnownKeys.filter { it !in storedOrder }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+
+        // --- Offline cache banner ---
+        if (state.isFromCache && state.cacheTimestamp != null) {
+            OfflineCacheBanner(cacheTimestamp = state.cacheTimestamp)
+        }
+
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = if (isGarden) Icons.Default.Agriculture else Icons.Default.DirectionsCar,
@@ -200,6 +218,15 @@ fun WeatherSuccessContent(
                 "weather" -> {
                     MinTemperatureCard(minTemp = state.minTemp, useFahrenheit = state.useFahrenheit, isGarden = isGarden)
                     HourlyForecastSection(hourly = state.weather.hourly, useFahrenheit = state.useFahrenheit)
+                    // Daily 7-day forecast (C1)
+                    state.weather.daily?.let { daily ->
+                        Spacer(Modifier.height(4.dp))
+                        DailyForecastSection(
+                            daily = daily,
+                            useFahrenheit = state.useFahrenheit,
+                            userPrefs = userPrefs
+                        )
+                    }
                 }
                 "trend" -> {
                     HistoricalComparisonCard(data = yearAgoData, useFahrenheit = state.useFahrenheit)
@@ -341,9 +368,146 @@ fun WeatherSuccessContent(
     }
 }
 
+/** Banner shown when weather data is loaded from local cache (offline mode). */
 @Composable
-fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden: Boolean, enabledCards: Set<String> = emptySet()) {
-    val summerMsg = SummerCalculations.getSummerWarningMessage(
+fun OfflineCacheBanner(cacheTimestamp: Long) {
+    val sdf = remember { SimpleDateFormat("HH:mm, d MMM", Locale.getDefault()) }
+    val timeStr = remember(cacheTimestamp) { sdf.format(Date(cacheTimestamp)) }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.CloudOff,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.offline_cache_banner_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = stringResource(R.string.offline_cache_banner_desc, timeStr),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Horizontal scrolling row of daily forecast cards (C1).
+ * Shows up to 7 days with min/max temperature and frost-risk colour coding.
+ */
+@Composable
+fun DailyForecastSection(
+    daily: DailyForecast,
+    useFahrenheit: Boolean,
+    userPrefs: UserPreferences
+) {
+    Column {
+        Text(
+            text = stringResource(R.string.daily_forecast_title),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.height(10.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            val days = daily.time.take(7)
+            itemsIndexed(days, key = { _, d -> d }) { index, dateStr ->
+                val minTemp = daily.temperatureMin.getOrNull(index) ?: return@itemsIndexed
+                val maxTemp = daily.temperatureMax.getOrNull(index) ?: return@itemsIndexed
+                val wCode = daily.weatherCode.getOrNull(index) ?: 0
+                val hasRisk = minTemp <= userPrefs.tempThreshold
+                val displayMin = if (useFahrenheit) WeatherCalculations.celsiusToFahrenheit(minTemp) else minTemp
+                val displayMax = if (useFahrenheit) WeatherCalculations.celsiusToFahrenheit(maxTemp) else maxTemp
+                val unit = if (useFahrenheit) "°F" else "°C"
+                // Parse date string (yyyy-MM-dd)
+                val dayLabel = remember(dateStr) {
+                    runCatching {
+                        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        val parsed = sdf.parse(dateStr)
+                        SimpleDateFormat("E", Locale.getDefault()).format(parsed!!)
+                    }.getOrDefault(dateStr.takeLast(2))
+                }
+                val bgColor = when {
+                    hasRisk && minTemp < -2 -> RiskVeryHigh.copy(alpha = 0.18f)
+                    hasRisk -> RiskHigh.copy(alpha = 0.15f)
+                    minTemp < 4 -> RiskModerate.copy(alpha = 0.12f)
+                    else -> MaterialTheme.colorScheme.surfaceContainerHigh
+                }
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(bgColor)
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                        .width(56.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = dayLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Icon(
+                        getWeatherIcon(wCode ?: 0),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = if (hasRisk) RiskHigh else MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "%.0f$unit".format(Locale.US, displayMax),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "%.0f$unit".format(Locale.US, displayMin),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (hasRisk) RiskHigh else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (hasRisk) FontWeight.Bold else FontWeight.Normal,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (hasRisk) {
+                        Spacer(Modifier.height(2.dp))
+                        Icon(
+                            Icons.Default.AcUnit,
+                            contentDescription = stringResource(R.string.frost_risk_icon),
+                            modifier = Modifier.size(12.dp),
+                            tint = RiskHigh
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden: Boolean, enabledCards: Set<String> = emptySet()) {    val summerMsg = SummerCalculations.getSummerWarningMessage(
         state.weather.current.temperature,
         state.weather.current.weatherCode,
         state.weather.current.uvIndex,
@@ -503,56 +667,103 @@ fun FeedbackSection(onCorrection: (Boolean) -> Unit) {
 
 @Composable
 fun FrostWarningCard(hasRisk: Boolean, frostProbability: Int, warningMessage: String, windSpeed: Double, isGarden: Boolean) {
+    // Compute risk-level color for gradient
+    val riskColor = when {
+        frostProbability >= 75 -> RiskVeryHigh
+        frostProbability >= 50 -> RiskHigh
+        frostProbability >= 25 -> RiskModerate
+        hasRisk -> RiskModerate
+        else -> RiskNone
+    }
+    val targetGradientStart = if (hasRisk) riskColor.copy(alpha = 0.25f) else RiskNone.copy(alpha = 0.12f)
+    val animatedGradientStart by androidx.compose.animation.animateColorAsState(
+        targetValue = targetGradientStart,
+        animationSpec = tween(durationMillis = 600),
+        label = "risk_gradient_start"
+    )
     val containerColor = if (hasRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
     val icon = if (hasRisk) (if (isGarden) Icons.Default.Warning else Icons.Default.AcUnit) else Icons.Default.CheckCircle
     
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(28.dp)
     ) {
-        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(64.dp), tint = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "${frostProbability}%",
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Black,
-                color = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = when (WeatherCalculations.getFrostProbabilityLevel(frostProbability)) {
-                    WeatherCalculations.FrostProbabilityLevel.VERY_HIGH -> stringResource(R.string.frost_probability_very_high)
-                    WeatherCalculations.FrostProbabilityLevel.HIGH -> stringResource(R.string.frost_probability_high)
-                    WeatherCalculations.FrostProbabilityLevel.MODERATE -> stringResource(R.string.frost_probability_moderate)
-                    WeatherCalculations.FrostProbabilityLevel.LOW -> stringResource(R.string.frost_probability_low)
-                    WeatherCalculations.FrostProbabilityLevel.MINIMAL -> stringResource(R.string.frost_probability_minimal)
-                },
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = if (isGarden && hasRisk) warningMessage.replace("Wysokie ryzyko szronu!", stringResource(R.string.risk_garden)) else warningMessage,
-                style = MaterialTheme.typography.titleLarge, 
-                fontWeight = FontWeight.ExtraBold, 
-                textAlign = TextAlign.Center,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            if (windSpeed > 10.0) {
-                Spacer(Modifier.height(12.dp))
-                Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), shape = CircleShape) {
-                    Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Air, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = stringResource(R.string.wind_speed_format, "%.1f".format(Locale.US, windSpeed)),
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBehind {
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(animatedGradientStart, containerColor)
                         )
+                    )
+                }
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = if (hasRisk) stringResource(R.string.frost_risk_icon) else stringResource(R.string.no_frost_risk_icon),
+                    modifier = Modifier.size(64.dp),
+                    tint = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "${frostProbability}%",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Black,
+                    color = if (hasRisk) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = when (WeatherCalculations.getFrostProbabilityLevel(frostProbability)) {
+                        WeatherCalculations.FrostProbabilityLevel.VERY_HIGH -> stringResource(R.string.frost_probability_very_high)
+                        WeatherCalculations.FrostProbabilityLevel.HIGH -> stringResource(R.string.frost_probability_high)
+                        WeatherCalculations.FrostProbabilityLevel.MODERATE -> stringResource(R.string.frost_probability_moderate)
+                        WeatherCalculations.FrostProbabilityLevel.LOW -> stringResource(R.string.frost_probability_low)
+                        WeatherCalculations.FrostProbabilityLevel.MINIMAL -> stringResource(R.string.frost_probability_minimal)
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(8.dp))
+                // Risk level bar
+                val animatedProgress by animateFloatAsState(
+                    targetValue = frostProbability / 100f,
+                    animationSpec = tween(durationMillis = 800),
+                    label = "risk_progress"
+                )
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier.fillMaxWidth(0.8f).height(8.dp).clip(CircleShape),
+                    color = riskColor,
+                    trackColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = if (isGarden && hasRisk) warningMessage.replace("Wysokie ryzyko szronu!", stringResource(R.string.risk_garden)) else warningMessage,
+                    style = MaterialTheme.typography.titleLarge, 
+                    fontWeight = FontWeight.ExtraBold, 
+                    textAlign = TextAlign.Center,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                if (windSpeed > 10.0) {
+                    Spacer(Modifier.height(12.dp))
+                    Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), shape = CircleShape) {
+                        Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Air, contentDescription = stringResource(R.string.wind_icon_description), modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(R.string.wind_speed_format, "%.1f".format(Locale.US, windSpeed)),
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
             }

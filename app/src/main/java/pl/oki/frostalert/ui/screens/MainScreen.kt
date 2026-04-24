@@ -49,11 +49,17 @@ internal fun buildMainTabs(isDebugBuild: Boolean): List<MainTabSpec> = buildList
     add(MainTabSpec(2, Icons.Default.History,   R.string.tab_history,       TabContent.HISTORY))
     add(MainTabSpec(3, Icons.AutoMirrored.Filled.ShowChart, R.string.trend_screen_title, TabContent.TREND))
     add(MainTabSpec(4, Icons.Default.Yard,      R.string.garden_tab_title,  TabContent.GARDEN))
+    // Map is kept in the pager (accessible via swipe) but not shown in the bottom nav
+    // to keep the nav bar within the recommended 5-item limit.
     add(MainTabSpec(5, Icons.Default.Map,       R.string.tab_map,           TabContent.MAP))
     if (isDebugBuild) {
         add(MainTabSpec(6, Icons.Default.BugReport, R.string.tab_debug, TabContent.DEBUG))
     }
 }
+
+/** Tabs shown in the bottom navigation bar (max 5 visible items). */
+internal fun bottomNavTabs(allTabs: List<MainTabSpec>): List<MainTabSpec> =
+    allTabs.filter { it.content !in setOf(TabContent.MAP, TabContent.DEBUG) }
 
 @Composable
 @Suppress("DEPRECATION")
@@ -64,6 +70,7 @@ fun MainScreen(initialTab: Int = 0) {
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val isPro by settingsViewModel.isPro.collectAsState()
     val tabs = remember { buildMainTabs(BuildConfig.DEBUG) }
+    val navTabs = remember(tabs) { bottomNavTabs(tabs) }
 
     val pagerState = rememberPagerState(initialPage = initialTab) { tabs.size }
     val scope = rememberCoroutineScope()
@@ -175,7 +182,7 @@ fun MainScreen(initialTab: Int = 0) {
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     tonalElevation = 0.dp
                 ) {
-                    tabs.forEach { tab ->
+                    navTabs.forEach { tab ->
                         NavigationBarItem(
                             icon = { Icon(tab.icon, contentDescription = stringResource(tab.labelRes)) },
                             label = {
