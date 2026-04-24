@@ -114,6 +114,15 @@ fun SettingsScreen(
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
+                // PRO Status Card (if user has PRO)
+                if (isPro) {
+                    SubscriptionStatusCard(
+                        subscriptionState = subscriptionState,
+                        isPro = isPro,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
                 if (!isPro) {
                     Button(onClick = {
                         showPurchaseDialog = true
