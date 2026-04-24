@@ -62,9 +62,9 @@ fun OnboardingScreen(
     // Selected app mode: 0 = car, 1 = garden
     var selectedMode by remember { mutableIntStateOf(0) }
 
-    // Save mode selection when leaving that page
+    // Save mode selection only once — when the user moves away from the mode page
     LaunchedEffect(step) {
-        if (step > PAGE_MODE) {
+        if (step == PAGE_MODE + 1) {
             settingsViewModel.updateAppMode(selectedMode)
         }
     }

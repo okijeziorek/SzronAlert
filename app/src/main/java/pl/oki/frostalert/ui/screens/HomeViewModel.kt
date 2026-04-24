@@ -266,32 +266,38 @@ class HomeViewModel @Inject constructor(
                 } else {
                     // API failed — try to show cached data (offline mode)
                     Log.w(TAG, "API call failed, trying cache")
-                    val cached = weatherCacheRepository.getAnyCachedWeather()
-                    if (cached != null) {
-                        val (cachedWeather, cacheTs) = cached
-                        if (_weatherData.value == null) {
-                            // Only replace if we have no live data yet
-                            _weatherData.value = cachedWeather
-                            _cacheTimestamp.value = cacheTs
-                            Log.i(TAG, "Loaded weather from cache (ts=$cacheTs)")
-                        }
-                    }
+                    loadFromCache()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error refreshing weather data: ${e.message}", e)
-                // Try cache on unexpected errors too
-                if (_weatherData.value == null) {
-                    runCatching {
-                        val cached = weatherCacheRepository.getAnyCachedWeather()
-                        if (cached != null) {
-                            _weatherData.value = cached.first
-                            _cacheTimestamp.value = cached.second
-                        }
-                    }
-                }
+                loadFromCache()
             } finally {
                 _isRefreshing.value = false
             }
+        }
+    }
+
+    /**
+     * Loads the latest cached weather data and marks it as an offline source.
+     * Called when the live API call fails or throws an exception.
+     * Always updates so the freshest available cache is shown even if live data was
+     * previously displayed.
+     */
+    private suspend fun loadFromCache() {
+        runCatching {
+            val cached = weatherCacheRepository.getAnyCachedWeather()
+            if (cached != null) {
+                val (cachedWeather, cacheTs) = cached
+                // Always update: prefer cache with newer timestamp over stale live data
+                val currentCacheTs = _cacheTimestamp.value
+                if (currentCacheTs == null || cacheTs > currentCacheTs) {
+                    _weatherData.value = cachedWeather
+                    _cacheTimestamp.value = cacheTs
+                    Log.i(TAG, "Loaded weather from cache (ts=$cacheTs)")
+                }
+            }
+        }.onFailure { e ->
+            Log.w(TAG, "Failed to load from cache: ${e.message}")
         }
     }
 

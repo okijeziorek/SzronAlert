@@ -371,8 +371,11 @@ fun WeatherSuccessContent(
 /** Banner shown when weather data is loaded from local cache (offline mode). */
 @Composable
 fun OfflineCacheBanner(cacheTimestamp: Long) {
-    val sdf = remember { SimpleDateFormat("HH:mm, d MMM", Locale.getDefault()) }
-    val timeStr = remember(cacheTimestamp) { sdf.format(Date(cacheTimestamp)) }
+    val timeStr = remember(cacheTimestamp) {
+        // DateTimeFormatter (API 26+) is thread-safe; format inside remember to avoid
+        // stale values across recompositions with a different timestamp.
+        SimpleDateFormat("HH:mm, d MMM", Locale.getDefault()).format(Date(cacheTimestamp))
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
@@ -444,7 +447,8 @@ fun DailyForecastSection(
                     runCatching {
                         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                         val parsed = sdf.parse(dateStr)
-                        SimpleDateFormat("E", Locale.getDefault()).format(parsed!!)
+                        parsed?.let { SimpleDateFormat("E", Locale.getDefault()).format(it) }
+                            ?: dateStr.takeLast(2)
                     }.getOrDefault(dateStr.takeLast(2))
                 }
                 val bgColor = when {
@@ -701,7 +705,7 @@ fun FrostWarningCard(hasRisk: Boolean, frostProbability: Int, warningMessage: St
                 }
         ) {
             Column(
-                modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
