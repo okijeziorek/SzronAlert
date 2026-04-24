@@ -280,21 +280,22 @@ class HomeViewModel @Inject constructor(
     /**
      * Loads the latest cached weather data and marks it as an offline source.
      * Called when the live API call fails or throws an exception.
-     * Always updates so the freshest available cache is shown even if live data was
-     * previously displayed.
+     * Only falls back to cache when no weather is currently displayed, so older cached
+     * data cannot overwrite newer live data after a transient failure.
      */
     private suspend fun loadFromCache() {
         runCatching {
+            if (_weatherData.value != null) {
+                Log.i(TAG, "Skipping cache load because weather data is already available")
+                return@runCatching
+            }
+
             val cached = weatherCacheRepository.getAnyCachedWeather()
             if (cached != null) {
                 val (cachedWeather, cacheTs) = cached
-                // Always update: prefer cache with newer timestamp over stale live data
-                val currentCacheTs = _cacheTimestamp.value
-                if (currentCacheTs == null || cacheTs > currentCacheTs) {
-                    _weatherData.value = cachedWeather
-                    _cacheTimestamp.value = cacheTs
-                    Log.i(TAG, "Loaded weather from cache (ts=$cacheTs)")
-                }
+                _weatherData.value = cachedWeather
+                _cacheTimestamp.value = cacheTs
+                Log.i(TAG, "Loaded weather from cache (ts=$cacheTs)")
             }
         }.onFailure { e ->
             Log.w(TAG, "Failed to load from cache: ${e.message}")

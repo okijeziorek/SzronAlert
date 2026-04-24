@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -372,8 +371,9 @@ fun WeatherSuccessContent(
 @Composable
 fun OfflineCacheBanner(cacheTimestamp: Long) {
     val timeStr = remember(cacheTimestamp) {
-        // DateTimeFormatter (API 26+) is thread-safe; format inside remember to avoid
-        // stale values across recompositions with a different timestamp.
+        // Create a fresh SimpleDateFormat inside remember(cacheTimestamp) so it is not
+        // shared across threads; this block also re-runs whenever the timestamp changes
+        // across recompositions, preventing stale values.
         SimpleDateFormat("HH:mm, d MMM", Locale.getDefault()).format(Date(cacheTimestamp))
     }
     Card(
@@ -474,7 +474,7 @@ fun DailyForecastSection(
                     )
                     Spacer(Modifier.height(4.dp))
                     Icon(
-                        getWeatherIcon(wCode ?: 0),
+                        getWeatherIcon(wCode),
                         contentDescription = null,
                         modifier = Modifier.size(22.dp),
                         tint = if (hasRisk) RiskHigh else MaterialTheme.colorScheme.primary
@@ -511,7 +511,13 @@ fun DailyForecastSection(
 }
 
 @Composable
-fun SummerRiskCard(state: HomeUiState.Success, prefs: UserPreferences, isGarden: Boolean, enabledCards: Set<String> = emptySet()) {    val summerMsg = SummerCalculations.getSummerWarningMessage(
+fun SummerRiskCard(
+    state: HomeUiState.Success,
+    prefs: UserPreferences,
+    isGarden: Boolean,
+    enabledCards: Set<String> = emptySet()
+) {
+    val summerMsg = SummerCalculations.getSummerWarningMessage(
         state.weather.current.temperature,
         state.weather.current.weatherCode,
         state.weather.current.uvIndex,

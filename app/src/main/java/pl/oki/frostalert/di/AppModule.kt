@@ -17,7 +17,6 @@ import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.data.repository.MorningWakeLearningRepository
 import pl.oki.frostalert.data.repository.SettingsRepository
 import pl.oki.frostalert.data.repository.SettingsRepositoryImpl
-import pl.oki.frostalert.data.repository.WeatherCacheRepository
 import pl.oki.frostalert.utils.NetworkMonitor
 import javax.inject.Singleton
 
@@ -137,12 +136,6 @@ object AppModule {
     @Singleton
     fun provideSmartHomeRepository(): pl.oki.frostalert.data.repository.SmartHomeRepository {
         return pl.oki.frostalert.data.repository.SmartHomeRepository()
-    }
-
-    @Provides
-    @Singleton
-    fun provideWeatherCacheRepository(@ApplicationContext context: Context): WeatherCacheRepository {
-        return WeatherCacheRepository(context)
     }
 
     @Provides
