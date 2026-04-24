@@ -7,6 +7,7 @@
 [![Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blue)](https://developer.android.com/jetpack/compose)
 [![API](https://img.shields.io/badge/Weather%20API-Open--Meteo%20(free)-orange)](https://open-meteo.com)
 [![Version](https://img.shields.io/badge/Version-1.3-lightgrey)](https://github.com/okijeziorek/SzronAlert)
+[![DB](https://img.shields.io/badge/Room%20DB-v8-blue)](https://developer.android.com/training/data-storage/room)
 
 ---
 
@@ -39,7 +40,10 @@
 | **Historia** | Wykres liniowy ostatnich nocy (yCharts), eksport CSV, statystyki sezonu |
 | **Trend (7 dni)** | Kierunek trendu: UP / STABLE / DOWN z wizualizacją |
 | **Ogród** | Monitorowanie roślin, alerty upałów/burz, przypomnienia o podlewaniu |
-| **Mapa szronu** | Wizualizacja geograficzna ryzyka (PRO) |
+| **Mapa szronu** | Wizualizacja geograficzna ryzyka – OpenStreetMap (OSMDroid, PRO) |
+| **Mikroklimat** | Analiza lokalnych warunków i korekt temperatury dla stref ogrodu |
+| **Konfiguracja dashboardu** | Personalizacja widocznych kafelków i ich kolejności |
+| **Smart Home** | Integracja z urządzeniami przez webhook IFTTT |
 | **Debug** *(tylko debug build)* | Symulator, generowanie danych, diagnostyka widgetów, geofencing |
 
 ### 🔔 System powiadomień
@@ -52,6 +56,8 @@
 
 ### 🗓️ Praca w tle
 - **WorkManager** z cyklicznym `FrostCheckWorker` (co godzinę)
+- **`MorningBriefWorker`** – inteligentne poranne podsumowanie ryzyka (uczy się pory wstawania)
+- **`IntegrityCheckWorker`** – weryfikacja integralności środowiska (root/hook detection)
 - Ograniczenie: wymaga połączenia z siecią
 - Retry z backoffem przy błędach API
 - Monitor sieci (`NetworkMonitor`) – pomija wykonanie offline
@@ -63,12 +69,21 @@
 - **App Shortcuts** – skrót do historii z ikony aplikacji
 - **Splash Screen API** – płynny start
 
+### 🔒 Bezpieczeństwo
+- **Szyfrowana baza danych** (SQLCipher) – chroni dane użytkownika w spoczynku
+- **Play Integrity API** (`IntegrityChecker`) – weryfikuje integralność instalacji
+- **Root Detection** (`RootDetector`) – wykrywa roota/odblokowany bootloader
+- **Hook Detection** (`HookDetector`) – wykrywa frameworki do hooking'u (np. Magisk, Xposed)
+- `SecurityManager` orkiestruje wszystkie powyższe kontrole
+
 ### 🌱 Tryb ogrodowy
 - Baza roślin z progami mrozoodporności (Room DB)
 - Strefy ogrodu (`GardenZone`) z indywidualnymi ustawieniami
+- Dziennik podlewania (`WateringLog`) – historia nawodnień dla każdej rośliny
 - Alerty upałów (konfigurowalny próg, domyślnie 30°C)
 - Detekcja burz/gradu (kody WMO: 95, 96, 99)
 - Przypomnienia o podlewaniu (< 2 mm opadu AND jutrzejsza temp. > 25°C)
+- Sezonowe porady ogrodnicze (`GardenSeasonalTips`)
 - Dokumentacja fotograficzna ogrodu (`PhotoDocumentationScreen`)
 
 ### 📍 Geofencing i lokalizacje
@@ -77,6 +92,12 @@
 - Geofencing – monitoring ryzyka w promieniu N metrów
 - `GeofenceRateLimiter` – maks. 8 wywołań API na zdarzenie geofence
 - Historia zdarzeń geofencingu (`GeofenceHistoryScreen`)
+
+### 🏠 Smart Home
+- Integracja z systemami automatyki domowej przez **webhook** (HTTP POST)
+- Obsługa **IFTTT** (`smartHomeIftttKey`)
+- Konfigurowalny próg ryzyka szronu wywołujący automatyzację (`smartHomeThreshold`)
+- Dedykowany ekran konfiguracji (`SmartHomeSettingsScreen`)
 
 ### 💳 PRO i monetyzacja
 - Google Play Billing (`BillingClientWrapper`) z subskrypcją PRO
@@ -119,15 +140,17 @@ Szczegółowy opis architektury → [`ARCHITECTURE.md`](ARCHITECTURE.md)
 | UI | Jetpack Compose + Material 3 + Dynamic Colors |
 | Architektura | MVVM (ViewModel, Repository, StateFlow) |
 | DI | Hilt (+ Hilt WorkManager) |
-| Baza danych | Room (wersja 6, z migracjami) |
+| Baza danych | Room (wersja **8**, z migracjami) + SQLCipher (szyfrowanie) |
 | Preferencje | Jetpack DataStore (`DataStore<Preferences>`) |
 | Sieć | Ktor Client + Kotlinx Serialization |
 | Praca w tle | WorkManager (HiltWorker) |
 | Widgety | Jetpack Glance + classic AppWidget |
 | Wykresy | yCharts |
+| Mapy | OSMDroid (OpenStreetMap) |
 | Lokalizacja | Google Play Services Location |
 | Reklamy | Google Mobile Ads |
 | Zakupy | Google Play Billing KTX |
+| Bezpieczeństwo | SQLCipher, Play Integrity API, Security Crypto |
 | Testy | JUnit 4, Mockito-kotlin, Robolectric, Espresso |
 
 ---
@@ -213,13 +236,14 @@ app/src/main/java/pl/oki/frostalert/
 │   └── repository/              # LocationRepository, SettingsRepository
 ├── di/                          # Hilt modules (@Provides)
 ├── geofence/                    # GeofenceManager, GeofenceRegistrar
-├── receiver/                    # BroadcastReceivers (powiadomienia, alarmy, bootup)
+├── receiver/                    # BroadcastReceivers (powiadomienia, alarmy, bootup, morning brief)
+├── security/                    # RootDetector, HookDetector, IntegrityChecker, SecurityManager
 ├── ui/
 │   ├── screens/                 # Wszystkie ekrany Compose + ViewModels
 │   └── theme/                   # Material 3 theme
-├── utils/                       # WeatherCalculations, SummerCalculations, NotificationHelper, ...
+├── utils/                       # WeatherCalculations, SummerCalculations, NotificationHelper, TtsHelper, ...
 ├── widget/                      # FrostGlanceWidget, FrostWidgetProvider
-└── worker/                      # FrostCheckWorker
+└── worker/                      # FrostCheckWorker, MorningBriefWorker, IntegrityCheckWorker
 ```
 
 ---
@@ -231,7 +255,7 @@ Szczegółowy przewodnik → [`CONTRIBUTING.md`](CONTRIBUTING.md)
 Krótkie zasady:
 1. Zachowaj wzorzec **MVVM** (UI → ViewModel → Repository → Data).
 2. Nowe ustawienia dodawaj do `UserPreferences` + `SettingsDataStore`.
-3. Zmiany schematu bazy danych wymagają **migracji Room** (kolejna wersja: `MIGRATION_6_7`).
+3. Zmiany schematu bazy danych wymagają **migracji Room** (kolejna wersja: `MIGRATION_8_9`; bieżąca: v8).
 4. Po zapisie danych zawsze aktualizuj **oba widgety** (Glance + AppWidget).
 5. Workerzy Hilt wymagają `@HiltWorker` + `@Assisted` w konstruktorze.
 6. Uruchom testy przed PR: `./gradlew :app:testDebugUnitTest`.
