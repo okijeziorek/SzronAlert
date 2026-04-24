@@ -125,6 +125,42 @@
     <string name="export_error">Export error</string>
     <string name="buy_pro">Buy Pro and remove ads</string>
 
+    <!-- Billing & Subscriptions -->
+    <string name="product_lifetime_title">PRO Lifetime</string>
+    <string name="product_lifetime_desc">One-time purchase • Ad-free • All PRO features forever</string>
+    <string name="product_monthly_title">PRO Monthly</string>
+    <string name="product_monthly_desc">Monthly subscription • Cancel anytime • All PRO features</string>
+    <string name="product_yearly_title">PRO Yearly</string>
+    <string name="product_yearly_desc">Annual subscription • Best price • Save up to 40%</string>
+    <string name="purchase_dialog_title">Choose PRO Plan</string>
+    <string name="purchase_best_value">BEST VALUE</string>
+    <string name="purchase_most_popular">MOST POPULAR</string>
+    <string name="purchase_button">Buy now</string>
+    <string name="purchase_restore">Restore purchases</string>
+    <string name="purchase_success">Thank you for purchasing PRO!</string>
+    <string name="purchase_success_desc">PRO features have been unlocked</string>
+    <string name="purchase_pending">Processing payment…</string>
+    <string name="purchase_cancelled">Purchase cancelled</string>
+    <string name="subscription_active">Active PRO subscription</string>
+    <string name="subscription_expires">Expires: %1$s</string>
+    <string name="subscription_auto_renew_on">Renews automatically</string>
+    <string name="subscription_auto_renew_off">Won\'t renew automatically</string>
+    <string name="subscription_manage">Manage subscription</string>
+    <string name="subscription_grace_period">In grace period</string>
+    <string name="pro_features_title">PRO Features</string>
+    <string name="pro_feature_no_ads">🚫 Ad-free</string>
+    <string name="pro_feature_frost_map">🗺️ Frost map in your area</string>
+    <string name="pro_feature_extended_forecast">📅 14-day forecast</string>
+    <string name="pro_feature_multi_location">📍 Multiple saved locations</string>
+    <string name="pro_feature_pdf_reports">📄 PDF reports</string>
+    <string name="pro_feature_priority_support">⚡ Priority support</string>
+    <string name="price_per_month">%1$s/month</string>
+    <string name="price_per_year">%1$s/year</string>
+    <string name="price_one_time">%1$s one-time</string>
+    <string name="billing_error_generic">Payment error. Please try again.</string>
+    <string name="billing_error_network">No connection. Check internet.</string>
+    <string name="billing_unavailable">Payments unavailable</string>
+
     <!-- Trend Screen (NEW) -->
     <string name="trend_screen_title">7-Day Trend</string>
     <string name="trend_high_risk">⚠️ Very high frost risk this week</string>

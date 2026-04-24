@@ -34,8 +34,17 @@ class BillingClientWrapper @Inject constructor(
 ) : BillingManagerInterface, PurchasesUpdatedListener {
 
     companion object {
-        /** Production in-app product ID registered in Google Play Console. */
+        /** Legacy production in-app product ID (backwards compatibility). */
         const val PRO_PRODUCT_ID = "frostalert_pro"
+
+        /** All supported product IDs for PRO features. */
+        val ALL_PRO_PRODUCT_IDS = listOf(
+            ProductOffering.Lifetime.productId,
+            ProductOffering.Monthly.productId,
+            ProductOffering.Yearly.productId,
+            PRO_PRODUCT_ID  // Legacy support
+        )
+
         private const val MAX_RETRY_ATTEMPTS = 3
         private const val TAG = "BillingClientWrapper"
     }
@@ -47,6 +56,12 @@ class BillingClientWrapper @Inject constructor(
 
     private val _purchaseError = MutableStateFlow<String?>(null)
     override val purchaseError = _purchaseError.asStateFlow()
+
+    private val _availableProducts = MutableStateFlow<List<ProductInfo>>(emptyList())
+    val availableProducts = _availableProducts.asStateFlow()
+
+    private val _subscriptionState = MutableStateFlow(SubscriptionState.inactive())
+    val subscriptionState = _subscriptionState.asStateFlow()
 
     private var retryCount = 0
 
@@ -61,6 +76,7 @@ class BillingClientWrapper @Inject constructor(
 
     init {
         connectWithRetry()
+        queryAllProductDetails()
     }
 
     private fun connectWithRetry() {
@@ -68,7 +84,8 @@ class BillingClientWrapper @Inject constructor(
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 retryCount = 0
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    queryPurchases()
+                    queryAllPurchases()
+                    queryAllProductDetails()
                 }
             }
 
@@ -146,6 +163,7 @@ class BillingClientWrapper @Inject constructor(
     }
 
     override fun queryProductDetails(onDetailsReady: (ProductDetails?) -> Unit) {
+        // Query for legacy product (backwards compatibility)
         val productList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(PRO_PRODUCT_ID)
@@ -166,21 +184,156 @@ class BillingClientWrapper @Inject constructor(
         }
     }
 
-    private fun queryPurchases() {
-        val params = QueryPurchasesParams.newBuilder()
+    /**
+     * Queries all available PRO product offerings (subscriptions + one-time purchases).
+     */
+    private fun queryAllProductDetails() {
+        if (!billingClient.isReady) return
+
+        scope.launch {
+            val products = mutableListOf<ProductInfo>()
+
+            // Query INAPP products (one-time purchases)
+            val inAppProducts = ProductOffering.allOfferings()
+                .filter { it.productType == BillingClient.ProductType.INAPP }
+                .map { offering ->
+                    QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId(offering.productId)
+                        .setProductType(BillingClient.ProductType.INAPP)
+                        .build()
+                }
+
+            if (inAppProducts.isNotEmpty()) {
+                val inAppParams = QueryProductDetailsParams.newBuilder()
+                    .setProductList(inAppProducts)
+                    .build()
+
+                billingClient.queryProductDetailsAsync(inAppParams) { result, detailsList ->
+                    if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                        detailsList.forEach { details ->
+                            val offering = ProductOffering.fromProductId(details.productId)
+                            if (offering != null) {
+                                val oneTimeOffer = details.oneTimePurchaseOfferDetails
+                                if (oneTimeOffer != null) {
+                                    products.add(
+                                        ProductInfo(
+                                            offering = offering,
+                                            productDetails = details,
+                                            priceFormatted = oneTimeOffer.formattedPrice,
+                                            priceAmountMicros = oneTimeOffer.priceAmountMicros,
+                                            priceCurrencyCode = oneTimeOffer.priceCurrencyCode
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                        _availableProducts.value = products.toList()
+                    }
+                }
+            }
+
+            // Query SUBS products (subscriptions)
+            val subsProducts = ProductOffering.allOfferings()
+                .filter { it.productType == BillingClient.ProductType.SUBS }
+                .map { offering ->
+                    QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId(offering.productId)
+                        .setProductType(BillingClient.ProductType.SUBS)
+                        .build()
+                }
+
+            if (subsProducts.isNotEmpty()) {
+                val subsParams = QueryProductDetailsParams.newBuilder()
+                    .setProductList(subsProducts)
+                    .build()
+
+                billingClient.queryProductDetailsAsync(subsParams) { result, detailsList ->
+                    if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                        detailsList.forEach { details ->
+                            val offering = ProductOffering.fromProductId(details.productId)
+                            if (offering != null) {
+                                // Get the base plan offer (first subscription offer)
+                                val subscriptionOffer = details.subscriptionOfferDetails?.firstOrNull()
+                                val pricingPhase = subscriptionOffer?.pricingPhases?.pricingPhaseList?.firstOrNull()
+                                if (pricingPhase != null) {
+                                    products.add(
+                                        ProductInfo(
+                                            offering = offering,
+                                            productDetails = details,
+                                            priceFormatted = pricingPhase.formattedPrice,
+                                            priceAmountMicros = pricingPhase.priceAmountMicros,
+                                            priceCurrencyCode = pricingPhase.priceCurrencyCode
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                        _availableProducts.value = products.toList()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Queries all purchases (both INAPP and SUBS) and updates PRO status.
+     */
+    private fun queryAllPurchases() {
+        var hasProFromInApp = false
+        var hasProFromSubs = false
+
+        // Query INAPP purchases
+        val inAppParams = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.INAPP)
             .build()
-        billingClient.queryPurchasesAsync(params) { billingResult, purchases ->
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val hasPro = purchases.any { purchase ->
-                    purchase.purchaseState == Purchase.PurchaseState.PURCHASED && purchase.isAcknowledged
+        billingClient.queryPurchasesAsync(inAppParams) { result, purchases ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                hasProFromInApp = purchases.any { purchase ->
+                    ALL_PRO_PRODUCT_IDS.contains(purchase.products.firstOrNull()) &&
+                            purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                            purchase.isAcknowledged
                 }
-                _isPro.value = hasPro
-                if (hasPro) {
+                _isPro.value = hasProFromInApp || hasProFromSubs
+                if (hasProFromInApp) {
                     AppTelemetry.recordBillingRestore(appContext)
                 }
             }
         }
+
+        // Query SUBS purchases
+        val subsParams = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.SUBS)
+            .build()
+        billingClient.queryPurchasesAsync(subsParams) { result, purchases ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                val activeSub = purchases.firstOrNull { purchase ->
+                    ALL_PRO_PRODUCT_IDS.contains(purchase.products.firstOrNull()) &&
+                            purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+                }
+
+                if (activeSub != null) {
+                    hasProFromSubs = true
+                    _subscriptionState.value = SubscriptionState(
+                        isActive = true,
+                        productId = activeSub.products.firstOrNull(),
+                        purchaseToken = activeSub.purchaseToken,
+                        expiryTimeMillis = null, // Would need server-side verification for exact expiry
+                        isAutoRenewing = activeSub.isAutoRenewing,
+                        isGracePeriod = false
+                    )
+                    AppTelemetry.recordBillingRestore(appContext)
+                } else {
+                    _subscriptionState.value = SubscriptionState.inactive()
+                }
+
+                _isPro.value = hasProFromInApp || hasProFromSubs
+            }
+        }
+    }
+
+    private fun queryPurchases() {
+        // Legacy method for backward compatibility
+        queryAllPurchases()
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
@@ -228,7 +381,7 @@ class BillingClientWrapper @Inject constructor(
             connectWithRetry()
             return
         }
-        queryPurchases()
+        queryAllPurchases()
     }
 
     override fun disconnect() {

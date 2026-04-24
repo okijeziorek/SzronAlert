@@ -127,6 +127,42 @@
     <string name="export_error">Błąd eksportu danych</string>
     <string name="buy_pro">Kup Pro i usuń reklamy</string>
 
+    <!-- Billing & Subscriptions -->
+    <string name="product_lifetime_title">PRO Dożywotni</string>
+    <string name="product_lifetime_desc">Jednorazowy zakup • Bez reklam • Wszystkie funkcje PRO na zawsze</string>
+    <string name="product_monthly_title">PRO Miesięczny</string>
+    <string name="product_monthly_desc">Subskrypcja miesięczna • Anuluj w każdej chwili • Wszystkie funkcje PRO</string>
+    <string name="product_yearly_title">PRO Roczny</string>
+    <string name="product_yearly_desc">Subskrypcja roczna • Najlepsza cena • Oszczędź do 40%</string>
+    <string name="purchase_dialog_title">Wybierz plan PRO</string>
+    <string name="purchase_best_value">NAJLEPSZA OFERTA</string>
+    <string name="purchase_most_popular">NAJPOPULARNIEJSZE</string>
+    <string name="purchase_button">Kup teraz</string>
+    <string name="purchase_restore">Przywróć zakupy</string>
+    <string name="purchase_success">Dziękujemy za zakup PRO!</string>
+    <string name="purchase_success_desc">Funkcje PRO zostały odblokowane</string>
+    <string name="purchase_pending">Przetwarzanie płatności…</string>
+    <string name="purchase_cancelled">Zakup anulowany</string>
+    <string name="subscription_active">Aktywna subskrypcja PRO</string>
+    <string name="subscription_expires">Wygasa: %1$s</string>
+    <string name="subscription_auto_renew_on">Odnawia się automatycznie</string>
+    <string name="subscription_auto_renew_off">Nie odnowi się automatycznie</string>
+    <string name="subscription_manage">Zarządzaj subskrypcją</string>
+    <string name="subscription_grace_period">W okresie prolongaty</string>
+    <string name="pro_features_title">Funkcje PRO</string>
+    <string name="pro_feature_no_ads">🚫 Bez reklam</string>
+    <string name="pro_feature_frost_map">🗺️ Mapa szronu w okolicy</string>
+    <string name="pro_feature_extended_forecast">📅 Prognoza 14-dniowa</string>
+    <string name="pro_feature_multi_location">📍 Wiele zapisanych lokalizacji</string>
+    <string name="pro_feature_pdf_reports">📄 Raporty PDF</string>
+    <string name="pro_feature_priority_support">⚡ Priorytetowe wsparcie</string>
+    <string name="price_per_month">%1$s/miesiąc</string>
+    <string name="price_per_year">%1$s/rok</string>
+    <string name="price_one_time">%1$s jednorazowo</string>
+    <string name="billing_error_generic">Błąd płatności. Spróbuj ponownie.</string>
+    <string name="billing_error_network">Brak połączenia. Sprawdź internet.</string>
+    <string name="billing_unavailable">Płatności niedostępne</string>
+
     <!-- Trend Screen (NEW) -->
     <string name="trend_screen_title">Trend 7-dniowy</string>
     <string name="trend_high_risk">⚠️ Bardzo wysokie ryzyko szronu w tym tygodniu</string>
