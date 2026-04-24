@@ -57,7 +57,10 @@ fun PurchaseScreen(
                 fontWeight = FontWeight.Bold
             )
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = "Close")
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = stringResource(android.R.string.cancel)
+                )
             }
         }
 
