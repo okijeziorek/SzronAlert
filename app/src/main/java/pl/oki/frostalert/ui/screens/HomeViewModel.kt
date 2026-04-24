@@ -17,6 +17,7 @@ import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.remote.WeatherResponse
 import pl.oki.frostalert.data.repository.LocationRepository
+import pl.oki.frostalert.data.repository.WeatherCacheRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.CalibrationEngine
 import pl.oki.frostalert.utils.WeatherCalculations
@@ -36,7 +37,11 @@ sealed class HomeUiState {
         val appMode: Int,
         val useFahrenheit: Boolean,
         val showCalibrationDialog: Boolean = false,
-        val lastWeatherData: WeatherDataForCalibration? = null
+        val lastWeatherData: WeatherDataForCalibration? = null,
+        /** True when the weather data comes from local cache (device is offline). */
+        val isFromCache: Boolean = false,
+        /** Epoch-ms timestamp of the cached response; null when data is live. */
+        val cacheTimestamp: Long? = null
     ) : HomeUiState()
     data class Error(val message: String) : HomeUiState()
 }
@@ -66,7 +71,8 @@ class HomeViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
     private val temperatureDao: TemperatureDao,
     private val calibrationDao: CalibrationDao,
-    private val savedLocationDao: pl.oki.frostalert.data.local.SavedLocationDao
+    private val savedLocationDao: pl.oki.frostalert.data.local.SavedLocationDao,
+    private val weatherCacheRepository: WeatherCacheRepository
 ) : ViewModel() {
 
     companion object {
@@ -79,6 +85,8 @@ class HomeViewModel @Inject constructor(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
+    /** Non-null when displayed weather comes from local cache (offline mode). */
+    private val _cacheTimestamp = MutableStateFlow<Long?>(null)
 
     private val _yearAgoData = MutableStateFlow<HistoricalComparisonData?>(null)
     val yearAgoData: StateFlow<HistoricalComparisonData?> = _yearAgoData.asStateFlow()
@@ -96,8 +104,9 @@ class HomeViewModel @Inject constructor(
         settingsDataStore.userPreferencesFlow,
         _weatherData,
         _isRefreshing,
-        _showCalibrationDialog
-    ) { prefs, weather, refreshing, showDialog ->
+        _showCalibrationDialog,
+        _cacheTimestamp
+    ) { prefs, weather, refreshing, showDialog, cacheTs ->
         if (weather == null) {
             if (refreshing) HomeUiState.Loading else HomeUiState.Error(context.getString(R.string.home_pull_to_refresh))
         } else {
@@ -138,7 +147,9 @@ class HomeViewModel @Inject constructor(
 
             HomeUiState.Success(
                 weather, minTemp, hasRisk, frostProbability, warningMessage, prefs.appMode, prefs.useFahrenheit,
-                showCalibrationDialog = showDialog
+                showCalibrationDialog = showDialog,
+                isFromCache = cacheTs != null,
+                cacheTimestamp = cacheTs
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState.Loading)
@@ -177,6 +188,12 @@ class HomeViewModel @Inject constructor(
                 if (weatherResult is AppResult.Success) {
                     val weather = weatherResult.data
                     _weatherData.value = weather
+                    _cacheTimestamp.value = null // live data — no cache indicator
+
+                    // Save fresh data to cache for offline use
+                    try { weatherCacheRepository.saveWeatherData(weather) } catch (e: Exception) {
+                        Log.w(TAG, "Failed to save weather to cache: ${e.message}")
+                    }
                     
                     // Compute risk once for DB record; the UI recalculates reactively
                     // through the `uiState` combine whenever preferences or weather change.
@@ -211,7 +228,7 @@ class HomeViewModel @Inject constructor(
                     // Update both widgets atomically via WidgetSyncHelper
                     WidgetSyncHelper.updateAll(context)
 
-                    // B3: Load year-ago comparison data (±1 day window)
+                    // Load year-ago comparison data (±1 day window)
                     try {
                         val oneDayMs = 24 * 60 * 60 * 1000L
                         val yearAgoCal = java.util.Calendar.getInstance()
@@ -241,20 +258,47 @@ class HomeViewModel @Inject constructor(
                     )
 
                     if (shouldAskForFeedback) {
-                        // Pokaż dialog kalibracji w następnym cyklu życia UI
-                        // Ustawimy flagę, która zostanie sprawdzona w UI
                         viewModelScope.launch {
-                            // Opóźnienie aby dać czas na zakończenie animacji odświeżania
                             kotlinx.coroutines.delay(1000)
                             _showCalibrationDialog.value = true
                         }
                     }
+                } else {
+                    // API failed — try to show cached data (offline mode)
+                    Log.w(TAG, "API call failed, trying cache")
+                    loadFromCache()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error refreshing weather data: ${e.message}", e)
+                loadFromCache()
             } finally {
                 _isRefreshing.value = false
             }
+        }
+    }
+
+    /**
+     * Loads the latest cached weather data and marks it as an offline source.
+     * Called when the live API call fails or throws an exception.
+     * Only falls back to cache when no weather is currently displayed, so older cached
+     * data cannot overwrite newer live data after a transient failure.
+     */
+    private suspend fun loadFromCache() {
+        runCatching {
+            if (_weatherData.value != null) {
+                Log.i(TAG, "Skipping cache load because weather data is already available")
+                return@runCatching
+            }
+
+            val cached = weatherCacheRepository.getAnyCachedWeather()
+            if (cached != null) {
+                val (cachedWeather, cacheTs) = cached
+                _weatherData.value = cachedWeather
+                _cacheTimestamp.value = cacheTs
+                Log.i(TAG, "Loaded weather from cache (ts=$cacheTs)")
+            }
+        }.onFailure { e ->
+            Log.w(TAG, "Failed to load from cache: ${e.message}")
         }
     }
 

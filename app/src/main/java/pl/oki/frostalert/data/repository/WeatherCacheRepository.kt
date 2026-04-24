@@ -10,15 +10,15 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import pl.oki.frostalert.data.remote.WeatherResponse
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 private val Context.weatherCacheDataStore: DataStore<Preferences> by preferencesDataStore(name = "weather_cache")
 
 @Singleton
 class WeatherCacheRepository @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -49,6 +49,25 @@ class WeatherCacheRepository @Inject constructor(
 
         return try {
             json.decodeFromString<WeatherResponse>(jsonString)
+        } catch (e: Exception) {
+            clearCache()
+            null
+        }
+    }
+
+    /**
+     * Returns cached weather data together with its timestamp, regardless of whether
+     * the cache has expired. Useful for offline mode — shows the last known state even
+     * when the TTL has elapsed.
+     *
+     * @return Pair of (WeatherResponse, cacheTimestampMs) or null if no cache exists.
+     */
+    suspend fun getAnyCachedWeather(): Pair<WeatherResponse, Long>? {
+        val preferences = context.weatherCacheDataStore.data.first()
+        val jsonString = preferences[WEATHER_DATA_KEY] ?: return null
+        val timestamp = preferences[CACHE_TIMESTAMP_KEY] ?: return null
+        return try {
+            json.decodeFromString<WeatherResponse>(jsonString) to timestamp
         } catch (e: Exception) {
             clearCache()
             null

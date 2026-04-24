@@ -10,22 +10,29 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+/**
+ * Frost-branded dark color scheme — used on Android < 12 (no dynamic color).
+ * Primary: icy blue, secondary: cool grey, tertiary: frosty mint.
+ */
+private val FrostDarkColorScheme = darkColorScheme(
+    primary = FrostIcyBlue80,
+    secondary = FrostCoolGrey80,
+    tertiary = FrostMint80
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+/**
+ * Frost-branded light color scheme — used on Android < 12 (no dynamic color).
+ */
+private val FrostLightColorScheme = lightColorScheme(
+    primary = FrostIcyBlue40,
+    secondary = FrostCoolGrey40,
+    tertiary = FrostMint40
 )
 
 @Composable
 fun FrostAlertTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is now enabled by default to support Material You
+    // Dynamic color is enabled by default to support Material You on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -34,8 +41,8 @@ fun FrostAlertTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> FrostDarkColorScheme
+        else -> FrostLightColorScheme
     }
 
     MaterialTheme(
