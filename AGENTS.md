@@ -67,24 +67,28 @@
 ## 📊 Data Storage Pattern
 
 ### Room Database
-- Multi-entity schema (version 7): `TemperatureRecord`, `CalibrationFeedback`, `GeofenceRecord`, `Plant`, `UserPlant`, `SavedLocation`, `FrostPhoto`, `GardenZone`
+- Multi-entity schema (version **8**): `TemperatureRecord`, `CalibrationFeedback`, `GeofenceRecord`, `Plant`, `UserPlant`, `SavedLocation`, `FrostPhoto`, `GardenZone`, `WateringLog`
 - Key queries in `TemperatureDao`:
   - `getRecentRecords()`: Last 30 records (reactive Flow for UI)
   - `getAllRecords()`: Full history for stats
   - `getAbsoluteMinTemp()`: Lowest temperature ever recorded
-- Additional DAOs: `CalibrationDao`, `GeofenceDao`, `PlantDao`, `UserPlantDao`, `SavedLocationDao`, `FrostPhotoDao`, `GardenZoneDao`
-- Migrations are explicit (1→2→3→4→5→6→7); next migration: `MIGRATION_7_8`. **No `fallbackToDestructiveMigration`** — missing migration = hard error
+- Additional DAOs: `CalibrationDao`, `GeofenceDao`, `PlantDao`, `UserPlantDao`, `SavedLocationDao`, `FrostPhotoDao`, `GardenZoneDao`, `WateringLogDao`
+- Migrations are explicit (1→2→3→4→5→6→7→8); next migration: `MIGRATION_8_9`. **No `fallbackToDestructiveMigration`** — missing migration = hard error
+- Database is encrypted with **SQLCipher** (`net.zetetic:sqlcipher-android`)
 
 ### SettingsDataStore (Preferences)
 - Uses `DataStore<Preferences>` not Proto (easier for migrations)
-- `UserPreferences` data class contains 25+ settings:
+- `UserPreferences` data class contains 40+ settings:
   - Risk thresholds: `tempThreshold`, `humidityThreshold`, `precipitationThreshold`, `sensitivity`
+  - Mode: `appMode` (0=car, 1=garden), `isCarModeEnabled`, `carModeHour`
   - Summer mode: `heatThreshold` (e.g., 30°C), `isStormAlertEnabled`, `isWateringReminderEnabled`
-  - Time ranges: `alertStartHour`, `alertEndHour`, `carModeHour`
-  - Feature flags: `isAutoModeEnabled`, `isMataOptionEnabled`, `isProForced`, `useFahrenheit`
-  - Geofencing/trend flags: `isGeofencingEnabled`, `geofenceRadiusMeters`, `isTrendChangeNotificationsEnabled`, `lastTrend`
-  - Location: `manualLatitude`, `manualLongitude`, `manualLocationName`, `isManualLocationEnabled`
-  - UI: `theme` (0=light, 1=dark, 2=system default), `isOnboardingCompleted`
+  - Time ranges: `alertStartHour`, `alertEndHour`, `ignoreUntil`
+  - Feature flags: `isAutoModeEnabled`, `isMataOptionEnabled`, `isProForced`, `useFahrenheit`, `isTtsEnabled`, `isCalendarSyncEnabled`
+  - Geofencing/trend flags: `isGeofencingEnabled`, `geofenceRadiusMeters`, `isTrendChangeNotificationsEnabled`, `lastTrend`, `pendingTrend`
+  - Location: `manualLatitude`, `manualLongitude`, `manualLocationName`, `isManualLocationEnabled`, `activeLocationId`
+  - UI: `theme` (0=light, 1=dark, 2=system default), `isOnboardingCompleted`, `enabledDashboardCards`, `dashboardCardOrder`
+  - Smart Home: `isSmartHomeEnabled`, `smartHomeWebhookUrl`, `smartHomeThreshold`, `smartHomeIftttKey`
+  - Morning Brief: `isMorningBriefEnabled`, `morningLearningDays`, `morningBriefDelayMinutes`, `morningWakeHistoryJson`, `morningMedianWakeMinute`, `morningWindowStartMinute`, `morningWindowEndMinute`, `morningLastNotificationEpochDay`, `morningLastUnlockEpochDay`, `morningLastScheduledAtMs`
 
 ### Reactive Flow Strategy
 - All data access returns `Flow<T>` or `StateFlow<T>` for reactive updates
@@ -240,6 +244,8 @@ File → Sync Now (or ./gradlew help)
 | `WeatherCalculations.kt` | Physics engine for frost risk (dew point, surface cooling) |
 | `SummerCalculations.kt` | Heat risk, storm/hail detection (WMO 95/96/99), watering logic |
 | `FrostCheckWorker.kt` | Hourly background job (fetch weather, check risk, notify) |
+| `MorningBriefWorker.kt` | Morning summary worker (learns user's wake-up time) |
+| `IntegrityCheckWorker.kt` | Daily security integrity check (root/hook/Play Integrity) |
 | `TrendCalculations.kt` | Weekly trend calculation (daily aggregation + direction detection) |
 | `HomeViewModel.kt` | Main screen state (weather data, refresh control) |
 | `HistoryViewModel.kt` | Stats screen state (monthly aggregations, trends) |
@@ -253,6 +259,10 @@ File → Sync Now (or ./gradlew help)
 | `FrostWidgetProvider.kt` | Classic RemoteViews widget update path |
 | `BillingClientWrapper.kt` | Google Play Billing for PRO subscription |
 | `FrostTileService.kt` | Quick Settings Tile for one-tap frost check |
+| `SecurityManager.kt` | Orchestrates root/hook/Play Integrity checks |
+| `TtsHelper.kt` | Text-to-Speech synthesis helper |
+| `ReportGenerator.kt` | CSV/text report export |
+| `GardenSeasonalTips.kt` | Seasonal garden tips based on month/conditions |
 
 ## 🚀 Quick Start for Contributors
 

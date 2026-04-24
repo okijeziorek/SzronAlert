@@ -66,20 +66,25 @@ Dokument opisuje warstwową architekturę aplikacji, przepływ danych i kluczowe
 - Serializacja przez **Kotlinx Serialization** (`@Serializable`, `@SerialName`).
 
 #### 4b. Local DB – `FrostDatabase` (`data/local/`)
-- **Room** wersja 6, z jawnie zdefiniowanymi migracjami.
-- Encje: `TemperatureRecord`, `Plant`, `GardenZone`, `GeofenceRecord`, `SavedLocation`, `CalibrationFeedback`, `FrostPhoto`.
-- DAOs: `TemperatureDao`, `PlantDao`, `GeofenceDao`, `CalibrationDao`.
+- **Room** wersja **8**, z jawnie zdefiniowanymi migracjami (brak `fallbackToDestructiveMigration`).
+- Encje: `TemperatureRecord`, `Plant`, `UserPlant`, `GardenZone`, `GeofenceRecord`, `SavedLocation`, `CalibrationFeedback`, `FrostPhoto`, `WateringLog`.
+- DAOs: `TemperatureDao`, `PlantDao`, `UserPlantDao`, `GardenZoneDao`, `GeofenceDao`, `SavedLocationDao`, `CalibrationDao`, `FrostPhotoDao`, `WateringLogDao`.
+- Baza jest szyfrowana przy użyciu **SQLCipher** (`net.zetetic:sqlcipher-android`).
 - Reaktywne zapytania zwracają `Flow<List<T>>`.
 
 #### 4c. Settings – `SettingsDataStore`
 - `DataStore<Preferences>` (nie Proto – łatwiejsze migracje).
-- `UserPreferences` – data class z 25+ polami:
+- `UserPreferences` – data class z 40+ polami:
   - Progi: `tempThreshold`, `humidityThreshold`, `precipitationThreshold`, `sensitivity`
-  - Czas alertów: `alertStartHour`, `alertEndHour`, `carModeHour`
-  - Flagi: `isAutoModeEnabled`, `isMataOptionEnabled`, `isProForced`, `useFahrenheit`
-  - Geofencing: `isGeofencingEnabled`, `geofenceRadiusMeters`, `lastTrend`, `isTrendChangeNotificationsEnabled`
+  - Tryb: `appMode` (0=auto, 1=ogród), `isCarModeEnabled`, `carModeHour`
+  - Czas alertów: `alertStartHour`, `alertEndHour`, `ignoreUntil`
+  - Flagi: `isAutoModeEnabled`, `isMataOptionEnabled`, `isProForced`, `useFahrenheit`, `isTtsEnabled`, `isCalendarSyncEnabled`
+  - Letnie: `heatThreshold`, `isStormAlertEnabled`, `isWateringReminderEnabled`
+  - Geofencing: `isGeofencingEnabled`, `geofenceRadiusMeters`, `lastTrend`, `pendingTrend`, `isTrendChangeNotificationsEnabled`
   - Lokalizacja: `manualLatitude`, `manualLongitude`, `manualLocationName`, `isManualLocationEnabled`, `activeLocationId`
-  - UI: `theme` (0=light, 1=dark, 2=system), `isOnboardingCompleted`
+  - UI: `theme` (0=light, 1=dark, 2=system), `isOnboardingCompleted`, `enabledDashboardCards`, `dashboardCardOrder`
+  - Smart Home: `isSmartHomeEnabled`, `smartHomeWebhookUrl`, `smartHomeThreshold`, `smartHomeIftttKey`
+  - Morning Brief: `isMorningBriefEnabled`, `morningLearningDays`, `morningBriefDelayMinutes`, `morningWakeHistoryJson`, `morningMedianWakeMinute`, `morningWindowStartMinute`, `morningWindowEndMinute`, `morningLastNotificationEpochDay`, `morningLastUnlockEpochDay`, `morningLastScheduledAtMs`
 
 ---
 
@@ -118,6 +123,7 @@ Input: temperature (°C), humidity (%), weatherCode (WMO), windSpeed (km/h)
 FrostApplication.onCreate()
   └── WorkManager.initialize() z HiltWorkerFactory
   └── enqueueUniquePeriodicWork("FrostCheck", KEEP, hourlyRequest)
+  └── enqueueUniquePeriodicWork("IntegrityCheck", KEEP, dailyRequest)
 
 FrostCheckWorker.doWork():
   1. Check NetworkMonitor → skip if offline
@@ -129,6 +135,17 @@ FrostCheckWorker.doWork():
   7. FrostGlanceWidget().updateAll()  +  FrostWidgetProvider.update()
   8. TrendCalculations → send trend-change notification [optional]
   9. LocationRepository.checkGeofencingRisk() [optional]
+ 10. SmartHome webhook trigger [if isSmartHomeEnabled AND risk >= threshold]
+
+MorningBriefWorker.doWork():
+  1. Sprawdza historię budzenia (morningWakeHistoryJson)
+  2. Oblicza medianę pory wstawania
+  3. Jeśli użytkownik w oknie aktywności → wysyła podsumowanie ryzyka
+
+IntegrityCheckWorker.doWork():
+  1. SecurityManager.runChecks()
+  2. RootDetector, HookDetector, IntegrityChecker
+  3. Loguje wynik w AppTelemetry (brak zewnętrznego serwera)
 ```
 
 ### Triggery poza cyklem
@@ -139,6 +156,7 @@ FrostCheckWorker.doWork():
 | Kafelek szybkich ustawień | `FrostTileService` → worker one-time |
 | Ręczne odświeżenie widgetu | `RefreshActionCallback` → worker one-time |
 | Akcje z powiadomienia | `NotificationActionReceiver` → `SettingsDataStore.update*()` |
+| Morning Brief (odblokowanie) | `MorningUserPresentReceiver` → `MorningBriefWorker` one-time |
 
 ---
 
@@ -218,16 +236,34 @@ Dostęp przez `DiagnosticsHelper` w DebugScreen.
 
 ---
 
+## Moduł bezpieczeństwa (`security/`)
+
+Wszystkie kontrole są wykonywane lokalnie – brak zewnętrznego serwera.
+
+| Klasa | Odpowiedzialność |
+|---|---|
+| `RootDetector` | Wykrywa root/odblokowany bootloader (sprawdza ścieżki su, uprawnienia) |
+| `HookDetector` | Wykrywa frameworki hook'ujące (Magisk, Xposed, Frida) |
+| `IntegrityChecker` | Wywołuje **Play Integrity API** – weryfikuje autentyczność instalacji z Google Play |
+| `SecurityManager` | Orkiestruje wszystkie kontrole; zwraca zbiorczy wynik bezpieczeństwa |
+
+Baza danych jest szyfrowana przy użyciu **SQLCipher** (`net.zetetic:sqlcipher-android:4.5.4`).  
+Klucz przechowywany przez `androidx.security:security-crypto` (EncryptedSharedPreferences).
+
+---
+
 ## Migracje bazy danych
 
 | Wersja | Zmiana |
 |---|---|
-| 1 → 2 | Baza inicjalna |
-| 2 → 3 | Dodano `GeofenceRecord`, `CalibrationFeedback` |
+| 1 → 2 | Dodano `calibration_feedback` |
+| 2 → 3 | Dodano `geofence_record` |
 | 3 → 4 | Dodano kolumnę `frostProbability` do `temperature_records` |
 | 4 → 5 | Dodano tabele `plants`, `user_plants` (tryb ogrodowy) |
 | 5 → 6 | Dodano tabelę `saved_locations` (multi-lokalizacja) |
-| **→ 7** | Następna migracja: `MIGRATION_6_7` |
+| 6 → 7 | Dodano tabele `frost_photos`, `garden_zones` |
+| 7 → 8 | Dodano tabelę `watering_log` (dziennik podlewania roślin) |
+| **→ 9** | Następna migracja: `MIGRATION_8_9` |
 
 ---
 
@@ -238,6 +274,8 @@ Dostęp przez `DiagnosticsHelper` w DebugScreen.
 | `WeatherCalculations.kt` | Silnik fizyczny – punkt rosy, wychłodzenie, ryzyko szronu |
 | `SummerCalculations.kt` | Upały, burze (WMO 95/96/99), podlewanie |
 | `FrostCheckWorker.kt` | Godzinne zadanie w tle |
+| `MorningBriefWorker.kt` | Poranne podsumowanie ryzyka (uczące się pory wstawania) |
+| `IntegrityCheckWorker.kt` | Dzienne sprawdzenie integralności środowiska |
 | `TrendCalculations.kt` | Trend 7-dniowy (UP/STABLE/DOWN) |
 | `HomeViewModel.kt` | Stan ekranu głównego |
 | `GeofenceRegistrar.kt` | Reaktywny sync geofenców z ustawieniami |
@@ -250,3 +288,7 @@ Dostęp przez `DiagnosticsHelper` w DebugScreen.
 | `BillingClientWrapper.kt` | Subskrypcja PRO (Google Play Billing) |
 | `FrostTileService.kt` | Kafelek szybkich ustawień |
 | `AppTelemetry.kt` | Diagnostyka wewnętrzna |
+| `SecurityManager.kt` | Orkiestrator kontroli bezpieczeństwa (root/hook/integrity) |
+| `TtsHelper.kt` | Synteza mowy (Text-to-Speech) |
+| `ReportGenerator.kt` | Eksport raportów (CSV/tekst) |
+| `GardenSeasonalTips.kt` | Sezonowe porady ogrodnicze |

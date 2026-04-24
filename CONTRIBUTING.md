@@ -69,7 +69,7 @@ cd SzronAlert
 ### Baza danych
 
 - Każda zmiana schematu Room wymaga **jawnej migracji** (`MIGRATION_X_Y` w `FrostDatabase.kt`).
-- Następna migracja to **`MIGRATION_6_7`** (bieżąca wersja DB: 6).
+- Następna migracja to **`MIGRATION_8_9`** (bieżąca wersja DB: **8**).
 - Dodawaj testy migracji dla każdej zmiany schematu.
 
 ### Ustawienia
