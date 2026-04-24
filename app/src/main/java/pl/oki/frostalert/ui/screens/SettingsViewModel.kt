@@ -11,8 +11,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.billing.BillingManagerInterface
+import pl.oki.frostalert.billing.BillingClientWrapper
+import pl.oki.frostalert.billing.ProductInfo
+import pl.oki.frostalert.billing.SubscriptionState
 import pl.oki.frostalert.data.local.UserPreferences
 import pl.oki.frostalert.data.repository.SettingsRepository
+import com.android.billingclient.api.ProductDetails
 import javax.inject.Inject
 
 @HiltViewModel
@@ -60,11 +64,31 @@ class SettingsViewModel @Inject constructor(
             initialValue = null
         )
 
-    /** Initiates the Play Billing purchase flow for PRO. */
+    /** Available PRO product offerings (subscriptions + one-time). */
+    val availableProducts: StateFlow<List<ProductInfo>> =
+        (billingManager as? BillingClientWrapper)?.availableProducts
+            ?: kotlinx.coroutines.flow.MutableStateFlow(emptyList())
+
+    /** Current subscription state (if user has active subscription). */
+    val subscriptionState: StateFlow<SubscriptionState> =
+        (billingManager as? BillingClientWrapper)?.subscriptionState
+            ?: kotlinx.coroutines.flow.MutableStateFlow(SubscriptionState.inactive())
+
+    /** Initiates the Play Billing purchase flow for a specific product. */
+    fun launchPurchaseFlow(activity: Activity, productInfo: ProductInfo) {
+        billingManager.launchPurchaseFlow(activity, productInfo.productDetails)
+    }
+
+    /** Initiates the Play Billing purchase flow for PRO (legacy - shows first available product). */
     fun launchPurchaseFlow(activity: Activity) {
         billingManager.queryProductDetails { productDetails ->
             productDetails?.let { billingManager.launchPurchaseFlow(activity, it) }
         }
+    }
+
+    /** Restores previous purchases from Google Play. */
+    fun restorePurchases() {
+        billingManager.restorePurchases()
     }
 
     /** Clears the last purchase error (e.g. after showing a snackbar). */
