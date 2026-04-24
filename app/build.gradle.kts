@@ -37,13 +37,23 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true 
-            isShrinkResources = true 
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Note: For production, replace with proper release signing config
+            // using environment variables or keystore file
+            // signingConfig = signingConfigs.getByName("release")
             signingConfig = signingConfigs.getByName("debug")
+            // Set to the SHA-256 of the release certificate:
+            //   keytool -list -v -keystore release.keystore
+            // Leave empty to skip strict signature verification (development only)
+            buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
+        }
+        debug {
+            buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
         }
     }
 
@@ -134,6 +144,11 @@ dependencies {
     // Ads & Billing
     implementation(libs.play.services.ads)
     implementation(libs.billing.ktx)
+
+    // Security
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("net.zetetic:sqlcipher-android:4.5.4@aar")
+    implementation("com.google.android.play:integrity:1.3.0")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

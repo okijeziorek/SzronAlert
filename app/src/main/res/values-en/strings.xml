@@ -221,4 +221,12 @@
     <string name="morning_brief_desc">Send a weather summary shortly after the first phone unlock</string>
     <string name="morning_brief_delay_label">Delay after unlock (min)</string>
     <string name="morning_brief_learning_days_label">Learning history (days)</string>
+    <string name="security_warning_title">⚠️ Security Warning</string>
+    <string name="security_warning_message">Issues detected: %1$s. PRO features have been disabled.</string>
+    <string name="security_warning_root_message">A rooted device has been detected. Please exercise caution when using the app.</string>
+    <string name="security_issue_app_modified">App modified</string>
+    <string name="security_issue_non_genuine">Non-genuine device</string>
+    <string name="security_issue_root_detected">Root detected</string>
+    <string name="security_issue_invalid_signature">Invalid app signature</string>
+    <string name="security_issue_non_play_installer">Installed outside Play Store</string>
 </resources>

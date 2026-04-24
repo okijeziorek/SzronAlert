@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Network Security Configuration: Enforce HTTPS and protect against MITM attacks -->
+<network-security-config>
+    <!-- Base config: only HTTPS allowed by default -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Debug-only overrides: trust user-installed CAs in addition to system CAs.
+         This allows tools like Charles Proxy or mitmproxy to intercept traffic during
+         development. These overrides are NOT active in release builds. -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

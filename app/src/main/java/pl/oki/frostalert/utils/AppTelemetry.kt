@@ -212,4 +212,95 @@ object AppTelemetry {
 
     fun getLastMorningBriefError(context: Context): String? =
         prefs(context).getString(KEY_LAST_MORNING_BRIEF_ERROR, null)
+
+    // ── Security telemetry ────────────────────────────────────────────────────
+
+    private const val KEY_SECURITY_EVENT_PREFIX = "security_event_"
+    private const val KEY_ROOT_DETECTED_COUNT = "root_detected_count"
+    private const val KEY_TAMPERING_DETECTED_COUNT = "tampering_detected_count"
+    private const val KEY_INTEGRITY_FAILURE_COUNT = "integrity_failure_count"
+    private const val KEY_LAST_SECURITY_EVENT_MS = "last_security_event_ms"
+    private const val MAX_SECURITY_EVENTS = 50
+
+    /**
+     * Record a security event for telemetry and diagnostics.
+     * Events are stored with timestamp for analysis.
+     * At most MAX_SECURITY_EVENTS are retained; older entries are evicted.
+     */
+    fun recordSecurityEvent(context: Context, event: SecurityEvent) {
+        val timestamp = System.currentTimeMillis()
+        val p = prefs(context)
+
+        // Evict oldest events if we're at the cap
+        val existingKeys = p.all.keys
+            .filter { it.startsWith(KEY_SECURITY_EVENT_PREFIX) }
+            .sortedByDescending { it.removePrefix(KEY_SECURITY_EVENT_PREFIX).toLongOrNull() ?: 0L }
+        val keysToDelete = existingKeys.drop(MAX_SECURITY_EVENTS - 1)
+
+        val edit = p.edit()
+        keysToDelete.forEach { edit.remove(it) }
+
+        // Encode as JSON to avoid delimiter collisions in details
+        val json = org.json.JSONObject()
+            .put("type", event.type)
+            .put("severity", event.severity)
+            .put("details", event.details)
+        edit.putString("${KEY_SECURITY_EVENT_PREFIX}$timestamp", json.toString())
+            .putLong(KEY_LAST_SECURITY_EVENT_MS, timestamp)
+
+        // Update specific counters
+        when (event.type) {
+            "root_detected" -> edit.putInt(KEY_ROOT_DETECTED_COUNT, getRootDetectedCount(context) + 1)
+            "tampering_detected", "hook_detected", "frida_detected", "xposed_detected" ->
+                edit.putInt(KEY_TAMPERING_DETECTED_COUNT, getTamperingDetectedCount(context) + 1)
+            "integrity_failed", "signature_mismatch", "periodic_integrity_failed" ->
+                edit.putInt(KEY_INTEGRITY_FAILURE_COUNT, getIntegrityFailureCount(context) + 1)
+        }
+
+        edit.apply()
+    }
+
+    fun getRootDetectedCount(context: Context): Int =
+        prefs(context).getInt(KEY_ROOT_DETECTED_COUNT, 0)
+
+    fun getTamperingDetectedCount(context: Context): Int =
+        prefs(context).getInt(KEY_TAMPERING_DETECTED_COUNT, 0)
+
+    fun getIntegrityFailureCount(context: Context): Int =
+        prefs(context).getInt(KEY_INTEGRITY_FAILURE_COUNT, 0)
+
+    fun getLastSecurityEventMs(context: Context): Long =
+        prefs(context).getLong(KEY_LAST_SECURITY_EVENT_MS, 0L)
+
+    /**
+     * Get recent security events (last [MAX_SECURITY_EVENTS]).
+     */
+    fun getRecentSecurityEvents(context: Context): List<SecurityEvent> {
+        val allPrefs = prefs(context).all
+        return allPrefs
+            .filterKeys { it.startsWith(KEY_SECURITY_EVENT_PREFIX) }
+            .mapNotNull { (key, value) ->
+                try {
+                    val timestamp = key.removePrefix(KEY_SECURITY_EVENT_PREFIX).toLong()
+                    val json = org.json.JSONObject(value as? String ?: return@mapNotNull null)
+                    SecurityEvent(
+                        type = json.getString("type"),
+                        severity = json.getString("severity"),
+                        details = json.getString("details"),
+                        timestamp = timestamp
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            .sortedByDescending { it.timestamp }
+            .take(MAX_SECURITY_EVENTS)
+    }
+
+    data class SecurityEvent(
+        val type: String, // "root_detected", "integrity_failed", "hook_detected", etc.
+        val severity: String, // "low", "medium", "high", "critical"
+        val details: String,
+        val timestamp: Long = System.currentTimeMillis()
+    )
 }

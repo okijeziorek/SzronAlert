@@ -2,6 +2,7 @@ package pl.oki.frostalert.billing
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -14,22 +15,32 @@ import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import pl.oki.frostalert.security.RootDetector
+import pl.oki.frostalert.security.SecurityManager
 import pl.oki.frostalert.utils.AppTelemetry
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BillingClientWrapper @Inject constructor(
-    @ApplicationContext private val appContext: Context
+    @ApplicationContext private val appContext: Context,
+    private val securityManager: SecurityManager
 ) : BillingManagerInterface, PurchasesUpdatedListener {
 
     companion object {
         /** Production in-app product ID registered in Google Play Console. */
         const val PRO_PRODUCT_ID = "frostalert_pro"
         private const val MAX_RETRY_ATTEMPTS = 3
+        private const val TAG = "BillingClientWrapper"
     }
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private val _isPro = MutableStateFlow(false)
     override val isPro = _isPro.asStateFlow()
@@ -71,15 +82,67 @@ class BillingClientWrapper @Inject constructor(
     }
 
     override fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails) {
-        val productDetailsParamsList = listOf(
-            BillingFlowParams.ProductDetailsParams.newBuilder()
-                .setProductDetails(productDetails)
-                .build()
-        )
-        val billingFlowParams = BillingFlowParams.newBuilder()
-            .setProductDetailsParamsList(productDetailsParamsList)
-            .build()
-        billingClient.launchBillingFlow(activity, billingFlowParams)
+        // Security: Check for root before allowing purchases
+        if (RootDetector.isRooted(appContext)) {
+            _purchaseError.value = "Zakupy niedostępne na urządzeniach z rootem"
+            AppTelemetry.recordSecurityEvent(
+                appContext,
+                AppTelemetry.SecurityEvent(
+                    type = "root_detected",
+                    severity = "high",
+                    details = "Purchase attempt blocked - rooted device"
+                )
+            )
+            return
+        }
+
+        // Security: Perform integrity check before purchase
+        scope.launch {
+            try {
+                val integrityResult = securityManager.checkAppIntegrity()
+
+                if (!integrityResult.isUnmodified) {
+                    _purchaseError.value = "Aplikacja została zmodyfikowana. Zakup niemożliwy."
+                    AppTelemetry.recordSecurityEvent(
+                        appContext,
+                        AppTelemetry.SecurityEvent(
+                            type = "integrity_failed",
+                            severity = "critical",
+                            details = "Purchase blocked - app modified: ${integrityResult.verdict}"
+                        )
+                    )
+                    return@launch
+                }
+
+                if (!integrityResult.isGenuine) {
+                    _purchaseError.value = "Wykryto nieautoryzowane urządzenie."
+                    AppTelemetry.recordSecurityEvent(
+                        appContext,
+                        AppTelemetry.SecurityEvent(
+                            type = "integrity_failed",
+                            severity = "high",
+                            details = "Purchase blocked - non-genuine device: ${integrityResult.verdict}"
+                        )
+                    )
+                    return@launch
+                }
+
+                // Proceed with purchase flow
+                val productDetailsParamsList = listOf(
+                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(productDetails)
+                        .build()
+                )
+                val billingFlowParams = BillingFlowParams.newBuilder()
+                    .setProductDetailsParamsList(productDetailsParamsList)
+                    .build()
+                billingClient.launchBillingFlow(activity, billingFlowParams)
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Security check failed", e)
+                _purchaseError.value = "Błąd weryfikacji bezpieczeństwa"
+            }
+        }
     }
 
     override fun queryProductDetails(onDetailsReady: (ProductDetails?) -> Unit) {
