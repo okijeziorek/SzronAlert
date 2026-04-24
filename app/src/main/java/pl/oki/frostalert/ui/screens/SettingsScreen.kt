@@ -45,7 +45,11 @@ fun SettingsScreen(
     val isPro by viewModel.isPro.collectAsState()
     val purchaseError by viewModel.purchaseError.collectAsState()
     val locationLimitReached by viewModel.locationLimitReached.collectAsState()
+    val availableProducts by viewModel.availableProducts.collectAsState()
+    val subscriptionState by viewModel.subscriptionState.collectAsState()
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+    var showPurchaseDialog by remember { mutableStateOf(false) }
+    var isPurchasing by remember { mutableStateOf(false) }
 
     purchaseError?.let { error ->
         LaunchedEffect(error) {
@@ -112,7 +116,7 @@ fun SettingsScreen(
             ) {
                 if (!isPro) {
                     Button(onClick = {
-                        viewModel.launchPurchaseFlow(context as Activity)
+                        showPurchaseDialog = true
                     }, modifier = Modifier.fillMaxWidth()) {
                         SingleLineText(text = stringResource(R.string.buy_pro), style = MaterialTheme.typography.bodyLarge)
                     }
@@ -742,6 +746,40 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // Purchase Dialog
+    if (showPurchaseDialog) {
+        Dialog(onDismissRequest = { showPurchaseDialog = false }) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.9f),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                PurchaseScreen(
+                    availableProducts = availableProducts,
+                    isPurchasing = isPurchasing,
+                    onProductSelected = { productInfo ->
+                        isPurchasing = true
+                        viewModel.launchPurchaseFlow(context as Activity, productInfo)
+                        // Reset purchasing state after a delay (purchase flow is async)
+                        scope.launch {
+                            kotlinx.coroutines.delay(2000)
+                            isPurchasing = false
+                            showPurchaseDialog = false
+                        }
+                    },
+                    onRestorePurchases = {
+                        viewModel.restorePurchases()
+                    },
+                    onDismiss = {
+                        showPurchaseDialog = false
+                    }
+                )
             }
         }
     }

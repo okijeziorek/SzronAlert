@@ -125,7 +125,7 @@
     <string name="days_count_label">%d dni</string>
     <string name="export_csv">Eksportuj do CSV</string>
     <string name="export_error">Błąd eksportu danych</string>
-    <string name="buy_pro">Kup Pro i usuń reklamy</string>
+    <string name="buy_pro">Odblokuj PRO i usuń reklamy</string>
 
     <!-- Billing & Subscriptions -->
     <string name="product_lifetime_title">PRO Dożywotni</string>

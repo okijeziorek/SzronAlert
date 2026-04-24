@@ -123,7 +123,7 @@
     <string name="days_count_label">%d days</string>
     <string name="export_csv">Export to CSV</string>
     <string name="export_error">Export error</string>
-    <string name="buy_pro">Buy Pro and remove ads</string>
+    <string name="buy_pro">Unlock PRO and remove ads</string>
 
     <!-- Billing & Subscriptions -->
     <string name="product_lifetime_title">PRO Lifetime</string>
