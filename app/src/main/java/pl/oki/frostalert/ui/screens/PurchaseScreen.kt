@@ -80,7 +80,7 @@ fun PurchaseScreen(
             items(availableProducts.sortedBy { getProductPriority(it.offering) }) { product ->
                 ProductCard(
                     productInfo = product,
-                    isRecommended = product.offering is ProductOffering.Yearly,
+                    isRecommended = false,
                     isBestValue = product.offering is ProductOffering.Yearly,
                     onClick = {
                         if (activity != null && !isPurchasing) {
