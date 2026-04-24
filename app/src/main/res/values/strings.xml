@@ -139,6 +139,8 @@
     <string name="purchase_most_popular">NAJPOPULARNIEJSZE</string>
     <string name="purchase_button">Kup teraz</string>
     <string name="purchase_restore">Przywróć zakupy</string>
+    <string name="purchase_loading_price">Pobieranie ceny…</string>
+    <string name="purchase_debug_no_products">🛠 DEBUG: Produkty nie załadowane z Play Store. Skonfiguruj produkty w Play Console lub użyj isProForced w ustawieniach debugowania.</string>
     <string name="purchase_success">Dziękujemy za zakup PRO!</string>
     <string name="purchase_success_desc">Funkcje PRO zostały odblokowane</string>
     <string name="purchase_pending">Przetwarzanie płatności…</string>

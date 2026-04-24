@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,18 +14,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import pl.oki.frostalert.BuildConfig
 import pl.oki.frostalert.R
 import pl.oki.frostalert.billing.ProductInfo
 import pl.oki.frostalert.billing.ProductOffering
 
 /**
  * Purchase screen displaying all PRO plan options with feature comparison.
+ * Always shows all three tiers (Monthly, Yearly, Lifetime).
+ * When [availableProducts] haven't loaded from Play Store yet, purchase buttons
+ * are disabled and a loading indicator is shown instead of the price.
  */
 @Composable
 fun PurchaseScreen(
@@ -38,6 +39,19 @@ fun PurchaseScreen(
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
+    val productsLoaded = availableProducts.isNotEmpty()
+
+    // Map of productId -> ProductInfo for quick lookup
+    val productMap = remember(availableProducts) {
+        availableProducts.associateBy { it.offering.productId }
+    }
+
+    // Display order defined in ProductOffering
+    val allOfferings = remember { listOf(
+        ProductOffering.Yearly,
+        ProductOffering.Lifetime,
+        ProductOffering.Monthly
+    ) }
 
     Column(
         modifier = Modifier
@@ -70,33 +84,65 @@ fun PurchaseScreen(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Debug banner – shown only when products haven't loaded in debug builds
+            if (BuildConfig.DEBUG && !productsLoaded) {
+                item {
+                    Surface(
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.BugReport,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.purchase_debug_no_products),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
             // PRO Features Section
             item {
                 ProFeaturesCard()
             }
 
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
+            item { Spacer(modifier = Modifier.height(4.dp)) }
 
-            // Product Cards
-            items(availableProducts.sortedBy { getProductPriority(it.offering) }) { product ->
-                ProductCard(
-                    productInfo = product,
-                    isRecommended = false,
-                    isBestValue = product.offering is ProductOffering.Yearly,
+            // One card per offering – always show all three
+            items(
+                count = allOfferings.size,
+                key = { allOfferings[it].productId }
+            ) { index ->
+                val offering = allOfferings[index]
+                val productInfo = productMap[offering.productId]
+                OfferingCard(
+                    offering = offering,
+                    productInfo = productInfo,
+                    isBestValue = offering is ProductOffering.Yearly,
+                    isPurchasing = isPurchasing,
                     onClick = {
-                        if (activity != null && !isPurchasing) {
-                            onProductSelected(product)
+                        if (productInfo != null && activity != null && !isPurchasing) {
+                            onProductSelected(productInfo)
                         }
-                    },
-                    enabled = !isPurchasing
+                    }
                 )
             }
 
             // Restore Purchases Button
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 TextButton(
                     onClick = onRestorePurchases,
                     modifier = Modifier.fillMaxWidth(),
@@ -158,22 +204,24 @@ private fun ProFeatureItem(text: String) {
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Text(text = text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
+/**
+ * Card for a single offering. Shows real price when [productInfo] is available,
+ * or a loading placeholder otherwise.
+ */
 @Composable
-private fun ProductCard(
-    productInfo: ProductInfo,
-    isRecommended: Boolean,
+private fun OfferingCard(
+    offering: ProductOffering,
+    productInfo: ProductInfo?,
     isBestValue: Boolean,
-    onClick: () -> Unit,
-    enabled: Boolean
+    isPurchasing: Boolean,
+    onClick: () -> Unit
 ) {
-    val borderColor = if (isRecommended) {
+    val isAvailable = productInfo != null
+    val borderColor = if (isBestValue && isAvailable) {
         MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
@@ -184,9 +232,12 @@ private fun ProductCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .border(2.dp, borderColor, RoundedCornerShape(12.dp))
-            .clickable(enabled = enabled, onClick = onClick),
+            .then(
+                if (isAvailable && !isPurchasing) Modifier.clickable(onClick = onClick)
+                else Modifier
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = if (isRecommended) {
+            containerColor = if (isBestValue && isAvailable) {
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
             } else {
                 MaterialTheme.colorScheme.surfaceVariant
@@ -195,20 +246,18 @@ private fun ProductCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Badge
-            if (isBestValue || isRecommended) {
+            if (isBestValue) {
                 Surface(
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (isAvailable) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outlineVariant,
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     Text(
-                        text = if (isBestValue) {
-                            stringResource(R.string.purchase_best_value)
-                        } else {
-                            stringResource(R.string.purchase_most_popular)
-                        },
+                        text = stringResource(R.string.purchase_best_value),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = if (isAvailable) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -216,62 +265,69 @@ private fun ProductCard(
 
             // Product Name
             Text(
-                text = stringResource(productInfo.offering.titleResId),
+                text = stringResource(offering.titleResId),
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = if (isAvailable) MaterialTheme.colorScheme.onSurface
+                        else MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             // Description
             Text(
-                text = stringResource(productInfo.offering.descriptionResId),
+                text = stringResource(offering.descriptionResId),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Pricing
+            // Pricing row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = productInfo.priceFormatted,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    productInfo.monthlyPriceFormatted?.let { monthly ->
+                if (isAvailable) {
+                    Column {
                         Text(
-                            text = monthly,
-                            style = MaterialTheme.typography.bodySmall,
+                            text = productInfo.priceFormatted,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        productInfo.monthlyPriceFormatted?.let { monthly ->
+                            Text(
+                                text = monthly,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Button(onClick = onClick, enabled = !isPurchasing) {
+                        Text(stringResource(R.string.purchase_button))
+                    }
+                } else {
+                    // Loading placeholder
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.purchase_loading_price),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
-
-                Button(
-                    onClick = onClick,
-                    enabled = enabled
-                ) {
-                    Text(stringResource(R.string.purchase_button))
+                    Button(onClick = {}, enabled = false) {
+                        Text(stringResource(R.string.purchase_button))
+                    }
                 }
             }
         }
-    }
-}
-
-/**
- * Returns display priority (lower = higher priority).
- */
-private fun getProductPriority(offering: ProductOffering): Int {
-    return when (offering) {
-        is ProductOffering.Yearly -> 1    // Show first (most popular)
-        is ProductOffering.Lifetime -> 2  // Show second
-        is ProductOffering.Monthly -> 3   // Show third
     }
 }

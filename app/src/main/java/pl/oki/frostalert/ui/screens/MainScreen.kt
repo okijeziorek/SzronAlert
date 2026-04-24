@@ -1,6 +1,5 @@
 package pl.oki.frostalert.ui.screens
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
 import android.widget.Toast
@@ -57,9 +56,17 @@ internal fun buildMainTabs(isDebugBuild: Boolean): List<MainTabSpec> = buildList
     }
 }
 
-/** Tabs shown in the bottom navigation bar (max 5 visible items). */
-internal fun bottomNavTabs(allTabs: List<MainTabSpec>): List<MainTabSpec> =
-    allTabs.filter { it.content !in setOf(TabContent.MAP, TabContent.DEBUG) }
+/**
+ * Tabs shown in the bottom navigation bar.
+ * Release: HOME, SETTINGS, HISTORY, TREND, GARDEN, MAP  (6 items – map always discoverable)
+ * Debug:   HOME, SETTINGS, HISTORY, TREND, GARDEN, DEBUG (6 items – MAP still reachable via swipe)
+ */
+internal fun bottomNavTabs(allTabs: List<MainTabSpec>, isDebugBuild: Boolean): List<MainTabSpec> =
+    if (isDebugBuild) {
+        allTabs.filter { it.content != TabContent.MAP }
+    } else {
+        allTabs.filter { it.content != TabContent.DEBUG }
+    }
 
 @Composable
 @Suppress("DEPRECATION")
@@ -70,7 +77,7 @@ fun MainScreen(initialTab: Int = 0) {
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val isPro by settingsViewModel.isPro.collectAsState()
     val tabs = remember { buildMainTabs(BuildConfig.DEBUG) }
-    val navTabs = remember(tabs) { bottomNavTabs(tabs) }
+    val navTabs = remember(tabs) { bottomNavTabs(tabs, BuildConfig.DEBUG) }
 
     val pagerState = rememberPagerState(initialPage = initialTab) { tabs.size }
     val scope = rememberCoroutineScope()

@@ -209,7 +209,7 @@ fun WeatherSuccessContent(
                             windSpeed = state.weather.current.windSpeed,
                             isGarden = isGarden
                         )
-                        if (!isSummer && isGarden && state.hasFrostRisk) {
+                        if (isGarden && state.hasFrostRisk) {
                             GardenAdviceCard(state.minTemp)
                         }
                     }
@@ -530,7 +530,7 @@ fun SummerRiskCard(
     // Nie pokazuj podlewania w SummerRiskCard, jeśli karta "watering" jest włączona osobno
     val showWatering = "watering" !in enabledCards && isGarden && state.weather.daily != null
     val needsWatering = if (showWatering) {
-        SummerCalculations.needsWatering(state.weather.daily?.precipitationSum?.firstOrNull() ?: 0.0, 26.0)
+        SummerCalculations.needsWatering(state.weather.daily.precipitationSum.firstOrNull() ?: 0.0, 26.0)
     } else false
 
     Card(
@@ -548,7 +548,7 @@ fun SummerRiskCard(
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = if (summerMsg.isEmpty()) stringResource(R.string.summer_optimal) else summerMsg,
+                text = summerMsg.ifEmpty { stringResource(R.string.summer_optimal) },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
