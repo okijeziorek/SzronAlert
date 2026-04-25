@@ -313,11 +313,11 @@ private fun exportToCsv(context: Context, records: List<TemperatureRecord>) {
         
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/csv"
-            putExtra(Intent.EXTRA_SUBJECT, "Historia FrostAlert")
+            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.history_csv_subject))
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Udostępnij historię"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.history_csv_chooser)))
     } catch (e: Exception) {
         Toast.makeText(context, "Błąd eksportu: ${e.message}", Toast.LENGTH_LONG).show()
     }

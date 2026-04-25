@@ -214,11 +214,11 @@ fun DebugScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = onOpenTrendRequested != null
                             ) {
-                                Text("Otwórz ekran Trendu (4. tab)")
+                                Text(stringResource(R.string.debug_open_trend_screen))
                             }
                         }
                     } else {
-                        Text("Ładowanie trendu...")
+                        Text(stringResource(R.string.debug_loading_trend))
                     }
                 }
 
