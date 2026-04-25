@@ -422,6 +422,17 @@
     <string name="daily_forecast_title">Prognoza tygodniowa</string>
 
     <!-- A3: Onboarding enhancements -->
+    <string name="onboarding_language_title">Wybierz język</string>
+    <string name="onboarding_language_desc">Dostosuj aplikację do swoich potrzeb językowych.</string>
+    <string name="language_system">Systemowy</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_czech">Čeština</string>
     <string name="onboarding_mode_title">Wybierz profil</string>
     <string name="onboarding_mode_desc">Skonfiguruj aplikację pod swoje potrzeby już teraz.</string>
     <string name="onboarding_mode_car_label">Samochód</string>

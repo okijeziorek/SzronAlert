@@ -361,4 +361,10 @@ class SettingsViewModel @Inject constructor(
             android.util.Log.w("SettingsViewModel", "Failed to register geofence: ${e.message}")
         }
     }
+
+    fun updateAppLanguage(languageCode: String) {
+        viewModelScope.launch {
+            settingsRepository.updateAppLanguage(languageCode)
+        }
+    }
 }

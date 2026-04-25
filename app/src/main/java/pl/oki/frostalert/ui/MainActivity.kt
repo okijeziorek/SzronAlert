@@ -5,6 +5,7 @@ import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -29,6 +30,7 @@ import pl.oki.frostalert.ui.screens.OnboardingScreen
 import pl.oki.frostalert.ui.screens.SettingsViewModel
 import pl.oki.frostalert.ui.theme.FrostAlertTheme
 import pl.oki.frostalert.utils.NotificationHelper
+import pl.oki.frostalert.utils.LocaleHelper
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -64,7 +66,12 @@ class MainActivity : ComponentActivity() {
                 }
             } else {
                 val prefs = userPreferences!!
-                
+
+                // Apply the locale based on user preferences
+                LaunchedEffect(prefs.appLanguage) {
+                    LocaleHelper.setLocale(this@MainActivity, prefs.appLanguage)
+                }
+
                 LaunchedEffect(Unit) {
                     val permissionsToRequest = mutableListOf(
                         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -93,6 +100,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        // Apply locale from preferences before attaching base context
+        super.attachBaseContext(newBase)
     }
 
     override fun onNewIntent(intent: Intent) {

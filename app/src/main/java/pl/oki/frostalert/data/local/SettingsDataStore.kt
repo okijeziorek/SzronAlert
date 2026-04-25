@@ -45,7 +45,8 @@ data class UserPreferences(
     val manualLongitude: Double,
     val manualLocationName: String,
     val isOnboardingCompleted: Boolean,
-    val useFahrenheit: Boolean
+    val useFahrenheit: Boolean,
+    val appLanguage: String = "system", // Language code (e.g., "pl", "en", "de", "fr", "system")
     ,
     val geofenceRadiusMeters: Double,
     val activeLocationId: Int,
@@ -109,6 +110,7 @@ class SettingsDataStore(private val context: Context) {
         val MANUAL_LOCATION_NAME = stringPreferencesKey("manual_location_name")
         val IS_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
         val USE_FAHRENHEIT = booleanPreferencesKey("use_fahrenheit")
+        val APP_LANGUAGE = stringPreferencesKey("app_language")
         val ACTIVE_LOCATION_ID = intPreferencesKey("active_location_id")
         val IS_TTS_ENABLED = booleanPreferencesKey("is_tts_enabled")
         val IS_CALENDAR_SYNC_ENABLED = booleanPreferencesKey("is_calendar_sync_enabled")
@@ -180,7 +182,8 @@ class SettingsDataStore(private val context: Context) {
                 manualLongitude = preferences[Keys.MANUAL_LONGITUDE] ?: 21.0122,
                 manualLocationName = preferences[Keys.MANUAL_LOCATION_NAME] ?: "Warszawa",
                 isOnboardingCompleted = preferences[Keys.IS_ONBOARDING_COMPLETED] ?: false,
-                useFahrenheit = preferences[Keys.USE_FAHRENHEIT] ?: false
+                useFahrenheit = preferences[Keys.USE_FAHRENHEIT] ?: false,
+                appLanguage = preferences[Keys.APP_LANGUAGE] ?: "system"
                 ,
                 geofenceRadiusMeters = preferences[Keys.GEOFENCE_RADIUS] ?: 20000.0,
                 activeLocationId = preferences[Keys.ACTIVE_LOCATION_ID] ?: 0,
@@ -402,5 +405,9 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun updateMorningLastScheduledAtMs(ms: Long) {
         context.dataStore.edit { it[Keys.MORNING_LAST_SCHEDULED_AT_MS] = ms }
+    }
+
+    suspend fun updateAppLanguage(languageCode: String) {
+        context.dataStore.edit { it[Keys.APP_LANGUAGE] = languageCode }
     }
 }
