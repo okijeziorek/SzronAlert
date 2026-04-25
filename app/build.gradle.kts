@@ -163,7 +163,7 @@ dependencies {
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    implementation("net.zetetic:sqlcipher-android:4.5.4@aar")
+    implementation("net.zetetic:sqlcipher-android:4.6.1@aar")
     implementation("com.google.android.play:integrity:1.3.0")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
