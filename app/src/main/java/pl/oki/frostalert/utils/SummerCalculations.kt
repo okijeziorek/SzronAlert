@@ -55,6 +55,37 @@ object SummerCalculations {
     }
 
     /**
+     * Generuje komunikat ostrzegawczy dla trybu letniego (bez kontekstu – hardcoded).
+     * Używany w testach jednostkowych i kodzie niewymagającym lokalizacji.
+     */
+    fun getSummerWarningMessage(
+        currentTemp: Double,
+        weatherCode: Int,
+        uvIndex: Double,
+        heatThreshold: Double,
+        appMode: Int // 0: Car, 1: Garden
+    ): String {
+        val sb = StringBuilder()
+
+        if (hasStormOrHailRisk(weatherCode)) {
+            sb.append(if (weatherCode >= 96) "⛈️ GRAD! Schroń pojazd." else "⛈️ BURZA! Zachowaj ostrożność.")
+        }
+
+        if (appMode == 0) { // Tryb Samochód
+            if (hasHeatRisk(currentTemp, heatThreshold)) {
+                sb.append("🌡️ UPAŁ! Samochód nagrzewa się niebezpiecznie.")
+            }
+        }
+
+        if (uvIndex >= 6) {
+            val formattedUv = String.format(Locale.US, "%.1f", uvIndex)
+            sb.append("☀️ Wysokie UV: $formattedUv. Chroń skórę.")
+        }
+
+        return sb.toString().trim()
+    }
+
+    /**
      * Generuje komunikat ostrzegawczy dla trybu letniego.
      */
     fun getSummerWarningMessage(

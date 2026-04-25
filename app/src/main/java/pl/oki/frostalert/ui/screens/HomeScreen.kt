@@ -517,12 +517,14 @@ fun SummerRiskCard(
     isGarden: Boolean,
     enabledCards: Set<String> = emptySet()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val summerMsg = SummerCalculations.getSummerWarningMessage(
-        state.weather.current.temperature,
-        state.weather.current.weatherCode,
-        state.weather.current.uvIndex,
-        prefs.heatThreshold,
-        state.appMode
+        context = context,
+        currentTemp = state.weather.current.temperature,
+        weatherCode = state.weather.current.weatherCode,
+        uvIndex = state.weather.current.uvIndex,
+        heatThreshold = prefs.heatThreshold,
+        appMode = state.appMode
     )
     val hasHeat = SummerCalculations.hasHeatRisk(state.weather.current.temperature, prefs.heatThreshold)
     val hasStorm = SummerCalculations.hasStormOrHailRisk(state.weather.current.weatherCode)

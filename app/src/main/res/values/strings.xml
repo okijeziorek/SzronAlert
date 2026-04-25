@@ -501,12 +501,22 @@
     <string name="day_label_days_ago">%d dni temu</string>
     <string name="day_label_tomorrow">Jutro</string>
     <string name="day_label_day_after_tomorrow">Pojutrze</string>
+    <string name="day_label_in_n_days">Za %d dni</string>
     <string name="day_label_in_3_days">Za 3 dni</string>
     <string name="day_label_in_4_days">Za 4 dni</string>
     <string name="day_label_in_5_days">Za 5 dni</string>
     <string name="day_label_in_6_days">Za 6 dni</string>
     <string name="day_label_in_7_days">Za 7 dni</string>
     <string name="day_label_later">Później</string>
+
+    <!-- Day of Week Abbreviations -->
+    <string name="day_of_week_mon">Pn</string>
+    <string name="day_of_week_tue">Wt</string>
+    <string name="day_of_week_wed">Śr</string>
+    <string name="day_of_week_thu">Czw</string>
+    <string name="day_of_week_fri">Pt</string>
+    <string name="day_of_week_sat">Sb</string>
+    <string name="day_of_week_sun">Nd</string>
 
     <!-- Notification Channel Names -->
     <string name="notification_channel_frost_name">Frost Alerts</string>

@@ -179,15 +179,36 @@ object TrendCalculations {
     }
 
     /**
+     * Zwraca opis trendu w naturalnym języku (bez kontekstu – polskie stringi)
+     */
+    fun getTrendDescription(stats: WeeklyTrendStats): String {
+        return when {
+            stats.frostRiskPercentage > 70 -> "⚠️ Bardzo wysokie ryzyko szronu w tym tygodniu"
+            stats.frostRiskPercentage > 40 -> "⚡ Umiarkowane ryzyko szronu"
+            stats.frostRiskPercentage > 0 -> "🧊 Sporadyczne przymrozki"
+            else -> "✅ Brak ryzyka szronu"
+        }
+    }
+
+    /**
      * Zwraca opis trendu w naturalnym języku
      */
     fun getTrendDescription(context: Context, stats: WeeklyTrendStats): String {
         return when {
             stats.frostRiskPercentage > 70 -> context.getString(R.string.trend_description_very_high)
             stats.frostRiskPercentage > 40 -> context.getString(R.string.trend_description_moderate)
-            stats.frostRiskPercentage > 0 -> context.getString(R.string.trend_description_occasional)
-            else -> context.getString(R.string.trend_description_no_risk)
+            stats.frostRiskPercentage > 0 -> context.getString(R.string.trend_description_low)
+            else -> context.getString(R.string.trend_description_none)
         }
+    }
+
+    /**
+     * Zwraca emotikonę dla kierunku trendu (bez kontekstu – hardcoded)
+     */
+    fun getTrendEmoji(trend: TrendDirection): String = when (trend) {
+        TrendDirection.UP -> "📈 Robi się cieplej"
+        TrendDirection.DOWN -> "📉 Robi się chłodniej"
+        TrendDirection.STABLE -> "➡️ Brak zmian"
     }
 
     /**

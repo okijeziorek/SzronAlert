@@ -142,6 +142,7 @@ fun DebugScreen(
                         )
 
                         val summerMsg = SummerCalculations.getSummerWarningMessage(
+                            context = context,
                             currentTemp = simTemp.toDouble(),
                             weatherCode = 0,
                             uvIndex = simUv.toDouble(),
@@ -208,7 +209,7 @@ fun DebugScreen(
                             Text("Noce z ryzykiem: ${stats.nightsWithFrostRisk}/7")
                             Text("Średnia min: ${"%.1f".format(stats.averageMinTemp)}°C")
                             Text("Najniższa: ${"%.1f".format(stats.lowestTemp)}°C")
-                            Text("Trend: ${TrendCalculations.getTrendEmoji(stats.trend)}")
+                            Text("Trend: ${TrendCalculations.getTrendEmoji(context, stats.trend)}")
                             Button(
                                 onClick = { onOpenTrendRequested?.invoke() },
                                 modifier = Modifier.fillMaxWidth(),
