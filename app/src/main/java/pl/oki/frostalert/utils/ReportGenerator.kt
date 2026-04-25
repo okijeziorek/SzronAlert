@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import androidx.core.content.FileProvider
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.TemperatureRecord
 import java.io.File
 import java.io.FileOutputStream
@@ -45,7 +46,7 @@ object ReportGenerator {
         var y = 60f
 
         // Title
-        canvas.drawText("FrostAlert — Raport Sezonowy", 40f, y, titlePaint)
+        canvas.drawText(context.getString(R.string.report_title), 40f, y, titlePaint)
         y += 30f
         canvas.drawText(seasonLabel, 40f, y, bodyPaint)
         y += 40f
@@ -56,25 +57,25 @@ object ReportGenerator {
         val absoluteMin = records.minOf { it.minTemp }
         val totalNights = records.size
 
-        canvas.drawText("Podsumowanie", 40f, y, headerPaint)
+        canvas.drawText(context.getString(R.string.report_summary), 40f, y, headerPaint)
         y += 25f
-        canvas.drawText("Łączna liczba nocy: $totalNights", 40f, y, bodyPaint)
+        canvas.drawText(context.getString(R.string.report_total_nights, totalNights), 40f, y, bodyPaint)
         y += 20f
-        canvas.drawText("Noce z ryzykiem szronu: $frostNights", 40f, y, bodyPaint)
+        canvas.drawText(context.getString(R.string.report_frost_nights, frostNights), 40f, y, bodyPaint)
         y += 20f
         canvas.drawText(
-            "Średnie minimum: ${String.format(Locale.US, "%.1f°C", avgMin)}",
+            context.getString(R.string.report_avg_min, String.format(Locale.US, "%.1f°C", avgMin)),
             40f, y, bodyPaint
         )
         y += 20f
         canvas.drawText(
-            "Absolutne minimum: ${String.format(Locale.US, "%.1f°C", absoluteMin)}",
+            context.getString(R.string.report_abs_min, String.format(Locale.US, "%.1f°C", absoluteMin)),
             40f, y, bodyPaint
         )
         y += 40f
 
         // Table header
-        canvas.drawText("Szczegóły rekordów", 40f, y, headerPaint)
+        canvas.drawText(context.getString(R.string.report_details), 40f, y, headerPaint)
         y += 25f
 
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
@@ -83,10 +84,10 @@ object ReportGenerator {
             textSize = 12f
             isFakeBoldText = true
         }
-        canvas.drawText("Data", 40f, y, tableHeaderPaint)
-        canvas.drawText("Min °C", 200f, y, tableHeaderPaint)
-        canvas.drawText("Ryzyko", 300f, y, tableHeaderPaint)
-        canvas.drawText("Prawdop.", 400f, y, tableHeaderPaint)
+        canvas.drawText(context.getString(R.string.report_table_date), 40f, y, tableHeaderPaint)
+        canvas.drawText(context.getString(R.string.report_table_min), 200f, y, tableHeaderPaint)
+        canvas.drawText(context.getString(R.string.report_table_risk), 300f, y, tableHeaderPaint)
+        canvas.drawText(context.getString(R.string.report_table_probability), 400f, y, tableHeaderPaint)
         y += 18f
 
         // Draw line
@@ -102,7 +103,10 @@ object ReportGenerator {
                 String.format(Locale.US, "%.1f", record.minTemp),
                 200f, y, bodyPaint
             )
-            canvas.drawText(if (record.hasRisk) "TAK" else "NIE", 300f, y, bodyPaint)
+            canvas.drawText(
+                if (record.hasRisk) context.getString(R.string.report_yes) else context.getString(R.string.report_no),
+                300f, y, bodyPaint
+            )
             canvas.drawText("${record.frostProbability}%", 400f, y, bodyPaint)
             y += 16f
         }
@@ -111,7 +115,7 @@ object ReportGenerator {
         y = 820f
         val footerPaint = Paint().apply { color = Color.GRAY; textSize = 10f }
         canvas.drawText(
-            "Wygenerowano przez FrostAlert • ${dateFormat.format(Date())}",
+            context.getString(R.string.report_footer, dateFormat.format(Date())),
             40f, y, footerPaint
         )
 
@@ -133,6 +137,6 @@ object ReportGenerator {
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Udostępnij raport"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.report_share_chooser)))
     }
 }

@@ -636,6 +636,27 @@
     <string name="diagnostics_failure_count">Porażek: %d</string>
     <string name="diagnostics_last_error">Ostatni błąd: %s</string>
     <string name="diagnostics_footer">=== Koniec raportu ===</string>
+    <string name="diagnostics_precip_threshold">Próg opadów: %s mm</string>
+    <string name="diagnostics_alert_time">Alert od-do: %1$d:00–%2$d:00</string>
+    <string name="diagnostics_auto_mode">Tryb auto: %s</string>
+    <string name="diagnostics_pro_forced">Tryb PRO (wymuszony): %s</string>
+    <string name="diagnostics_geofencing">Geofencing: %s</string>
+    <string name="diagnostics_trend_notif">Trend powiadomienia: %s</string>
+    <string name="diagnostics_manual_location">Lokalizacja ręczna: %s</string>
+    <string name="diagnostics_manual_location_name"> (%s)</string>
+    <string name="diagnostics_temp_unit">Jednostka temp: %s</string>
+    <string name="diagnostics_theme">Motyw: %s</string>
+    <string name="diagnostics_theme_light">Jasny</string>
+    <string name="diagnostics_theme_dark">Ciemny</string>
+    <string name="diagnostics_theme_system">Systemowy</string>
+    <string name="diagnostics_read_error">Błąd odczytu ustawień: %s</string>
+    <string name="diagnostics_risk_count">Ryzyk szronu: %d</string>
+    <string name="diagnostics_calibration_count">Feedbacków kalibracji: %d</string>
+    <string name="diagnostics_db_error">Błąd odczytu bazy: %s</string>
+    <string name="diagnostics_retry_count">Ponowienia: %d</string>
+    <string name="diagnostics_critical_errors">Błędy krytyczne: %d</string>
+    <string name="diagnostics_success_rate">Skuteczność: %d%%</string>
+    <string name="diagnostics_no_run_data">brak danych</string>
 
     <!-- Debug Screen -->
     <string name="debug_lab_title">Laboratorium Dewelopera</string>

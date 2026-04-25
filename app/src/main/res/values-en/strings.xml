@@ -550,4 +550,27 @@
 
     <!-- Calibration ViewModel -->
     <string name="calibration_no_analysis_data">No data to analyze.</string>
+
+    <!-- Additional Diagnostics -->
+    <string name="diagnostics_precip_threshold">Precipitation threshold: %s mm</string>
+    <string name="diagnostics_alert_time">Alerts: %1$d:00–%2$d:00</string>
+    <string name="diagnostics_auto_mode">Auto mode: %s</string>
+    <string name="diagnostics_pro_forced">PRO mode (forced): %s</string>
+    <string name="diagnostics_geofencing">Geofencing: %s</string>
+    <string name="diagnostics_trend_notif">Trend notifications: %s</string>
+    <string name="diagnostics_manual_location">Manual location: %s</string>
+    <string name="diagnostics_manual_location_name"> (%s)</string>
+    <string name="diagnostics_temp_unit">Temp unit: %s</string>
+    <string name="diagnostics_theme">Theme: %s</string>
+    <string name="diagnostics_theme_light">Light</string>
+    <string name="diagnostics_theme_dark">Dark</string>
+    <string name="diagnostics_theme_system">System</string>
+    <string name="diagnostics_read_error">Settings read error: %s</string>
+    <string name="diagnostics_risk_count">Frost risks: %d</string>
+    <string name="diagnostics_calibration_count">Calibration feedbacks: %d</string>
+    <string name="diagnostics_db_error">Database read error: %s</string>
+    <string name="diagnostics_retry_count">Retries: %d</string>
+    <string name="diagnostics_critical_errors">Critical errors: %d</string>
+    <string name="diagnostics_success_rate">Success rate: %d%%</string>
+    <string name="diagnostics_no_run_data">no data</string>
 </resources>

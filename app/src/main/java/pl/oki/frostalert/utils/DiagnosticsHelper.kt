@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import kotlinx.coroutines.flow.first
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.SettingsDataStore
 import java.text.SimpleDateFormat
@@ -22,101 +23,113 @@ object DiagnosticsHelper {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         val now = dateFormat.format(Date())
 
-        sb.appendLine("=== FrostAlert Raport Diagnostyczny ===")
-        sb.appendLine("Wygenerowano: $now")
+        sb.appendLine(context.getString(R.string.diagnostics_title))
+        sb.appendLine(context.getString(R.string.diagnostics_generated, now))
         sb.appendLine()
 
         if (userDescription.isNotBlank()) {
-            sb.appendLine("--- Opis problemu ---")
+            sb.appendLine(context.getString(R.string.diagnostics_user_description_label))
             sb.appendLine(userDescription.trim())
             sb.appendLine()
         }
 
         // App info
-        sb.appendLine("--- Aplikacja ---")
+        sb.appendLine(context.getString(R.string.diagnostics_app_section))
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            sb.appendLine("Wersja: ${pInfo.versionName} (build ${pInfo.longVersionCode})")
+            sb.appendLine(context.getString(R.string.diagnostics_version, pInfo.versionName, pInfo.longVersionCode))
         } catch (_: PackageManager.NameNotFoundException) {
-            sb.appendLine("Wersja: nieznana")
+            sb.appendLine(context.getString(R.string.diagnostics_version_unknown))
         }
         sb.appendLine()
 
         // Device info
-        sb.appendLine("--- Urządzenie ---")
-        sb.appendLine("Model: ${Build.MANUFACTURER} ${Build.MODEL}")
-        sb.appendLine("Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+        sb.appendLine(context.getString(R.string.diagnostics_device_section))
+        sb.appendLine(context.getString(R.string.diagnostics_device_model, "${Build.MANUFACTURER} ${Build.MODEL}"))
+        sb.appendLine(context.getString(R.string.diagnostics_android_version, Build.VERSION.RELEASE, Build.VERSION.SDK_INT))
         sb.appendLine()
 
         // Settings
-        sb.appendLine("--- Ustawienia ---")
+        sb.appendLine(context.getString(R.string.diagnostics_settings_section))
         try {
             val prefs = settingsDataStore.userPreferencesFlow.first()
-            sb.appendLine("Tryb: ${if (prefs.appMode == 0) "Samochód" else "Ogród"}")
-            sb.appendLine("Próg temp: ${prefs.tempThreshold}°C")
-            sb.appendLine("Próg wilgotności: ${prefs.humidityThreshold}%")
-            sb.appendLine("Próg opadów: ${prefs.precipitationThreshold} mm")
-            sb.appendLine("Czułość: ${prefs.sensitivity}")
-            sb.appendLine("Alert od-do: ${prefs.alertStartHour}:00–${prefs.alertEndHour}:00")
-            sb.appendLine("Tryb auto: ${prefs.isAutoModeEnabled}")
-            sb.appendLine("Tryb PRO (wymuszony): ${prefs.isProForced}")
-            sb.appendLine("Geofencing: ${prefs.isGeofencingEnabled}")
-            sb.appendLine("Trend powiadomienia: ${prefs.isTrendChangeNotificationsEnabled}")
-            sb.appendLine("Lokalizacja ręczna: ${prefs.isManualLocationEnabled}" +
-                    if (prefs.isManualLocationEnabled) " (${prefs.manualLocationName})" else "")
-            sb.appendLine("Jednostka temp: ${if (prefs.useFahrenheit) "°F" else "°C"}")
-            sb.appendLine("Motyw: ${when (prefs.theme) { 0 -> "Jasny"; 1 -> "Ciemny"; else -> "Systemowy" }}")
+            val modeStr = if (prefs.appMode == 0)
+                context.getString(R.string.diagnostics_mode_car)
+            else
+                context.getString(R.string.diagnostics_mode_garden)
+            sb.appendLine(context.getString(R.string.diagnostics_mode, modeStr))
+            sb.appendLine(context.getString(R.string.diagnostics_temp_threshold, "${prefs.tempThreshold}°C"))
+            sb.appendLine(context.getString(R.string.diagnostics_humidity_threshold, prefs.humidityThreshold))
+            sb.appendLine(context.getString(R.string.diagnostics_precip_threshold, "${prefs.precipitationThreshold}"))
+            sb.appendLine(context.getString(R.string.diagnostics_sensitivity, prefs.sensitivity))
+            sb.appendLine(context.getString(R.string.diagnostics_alert_time, prefs.alertStartHour, prefs.alertEndHour))
+            sb.appendLine(context.getString(R.string.diagnostics_auto_mode, prefs.isAutoModeEnabled))
+            sb.appendLine(context.getString(R.string.diagnostics_pro_forced, prefs.isProForced))
+            sb.appendLine(context.getString(R.string.diagnostics_geofencing, prefs.isGeofencingEnabled))
+            sb.appendLine(context.getString(R.string.diagnostics_trend_notif, prefs.isTrendChangeNotificationsEnabled))
+            val locationStr = context.getString(R.string.diagnostics_manual_location, prefs.isManualLocationEnabled) +
+                if (prefs.isManualLocationEnabled) context.getString(R.string.diagnostics_manual_location_name, prefs.manualLocationName) else ""
+            sb.appendLine(locationStr)
+            val unitStr = if (prefs.useFahrenheit) "°F" else "°C"
+            sb.appendLine(context.getString(R.string.diagnostics_temp_unit, unitStr))
+            val themeStr = when (prefs.theme) {
+                0 -> context.getString(R.string.diagnostics_theme_light)
+                1 -> context.getString(R.string.diagnostics_theme_dark)
+                else -> context.getString(R.string.diagnostics_theme_system)
+            }
+            sb.appendLine(context.getString(R.string.diagnostics_theme, themeStr))
         } catch (e: Exception) {
-            sb.appendLine("Błąd odczytu ustawień: ${e.message}")
+            sb.appendLine(context.getString(R.string.diagnostics_read_error, e.message))
         }
         sb.appendLine()
 
         // DB stats + recent records
-        sb.appendLine("--- Baza Danych ---")
+        sb.appendLine(context.getString(R.string.diagnostics_db_section))
         try {
             val allRecords = db.temperatureDao().getAllRecords()
             val riskCount = db.temperatureDao().getRiskCount()
             val feedbackCount = db.calibrationDao().getTotalFeedbackCount()
-            sb.appendLine("Rekordów temp: ${allRecords.size}")
-            sb.appendLine("Ryzyk szronu: $riskCount")
-            sb.appendLine("Feedbacków kalibracji: $feedbackCount")
+            sb.appendLine(context.getString(R.string.diagnostics_records_count, allRecords.size))
+            sb.appendLine(context.getString(R.string.diagnostics_risk_count, riskCount))
+            sb.appendLine(context.getString(R.string.diagnostics_calibration_count, feedbackCount))
             sb.appendLine()
-            sb.appendLine("Ostatnie 5 rekordów:")
+            sb.appendLine(context.getString(R.string.diagnostics_last_5_records))
             val recent = allRecords.sortedByDescending { it.timestamp }.take(5)
             if (recent.isEmpty()) {
-                sb.appendLine("  (brak danych)")
+                sb.appendLine("  ${context.getString(R.string.diagnostics_no_data)}")
             } else {
                 recent.forEach { record ->
                     val ts = dateFormat.format(Date(record.timestamp))
-                    val risk = if (record.hasRisk) "RYZYKO" else "OK"
+                    val risk = if (record.hasRisk) context.getString(R.string.diagnostics_risk) else context.getString(R.string.diagnostics_ok)
                     sb.appendLine("  $ts | ${record.minTemp}°C | $risk")
                 }
             }
         } catch (e: Exception) {
-            sb.appendLine("Błąd odczytu bazy: ${e.message}")
+            sb.appendLine(context.getString(R.string.diagnostics_db_error, e.message))
         }
         sb.appendLine()
 
         // Telemetry section
-        sb.appendLine("--- Telemetria Worker ---")
+        sb.appendLine(context.getString(R.string.diagnostics_worker_section))
         val successCount = AppTelemetry.getWorkerSuccessCount(context)
         val retryCount = AppTelemetry.getWorkerRetryCount(context)
         val failureCount = AppTelemetry.getWorkerFailureCount(context)
         val lastRunMs = AppTelemetry.getLastWorkerRunMs(context)
         val lastError = AppTelemetry.getLastErrorMessage(context)
-        sb.appendLine("Sukcesy: $successCount")
-        sb.appendLine("Ponowienia: $retryCount")
-        sb.appendLine("Błędy krytyczne: $failureCount")
+        sb.appendLine(context.getString(R.string.diagnostics_success_count, successCount))
+        sb.appendLine(context.getString(R.string.diagnostics_retry_count, retryCount))
+        sb.appendLine(context.getString(R.string.diagnostics_critical_errors, failureCount))
         val totalRuns = successCount + failureCount
         if (totalRuns > 0) {
             val successRate = (successCount.toDouble() / totalRuns * 100).toInt()
-            sb.appendLine("Skuteczność: $successRate%")
+            sb.appendLine(context.getString(R.string.diagnostics_success_rate, successRate))
         }
-        sb.appendLine("Ostatnie uruchomienie: ${if (lastRunMs > 0L) dateFormat.format(Date(lastRunMs)) else "brak danych"}")
-        if (lastError != null) sb.appendLine("Ostatni błąd: $lastError")
+        val lastRunStr = if (lastRunMs > 0L) dateFormat.format(Date(lastRunMs)) else context.getString(R.string.diagnostics_no_run_data)
+        sb.appendLine(context.getString(R.string.diagnostics_last_run, lastRunStr))
+        if (lastError != null) sb.appendLine(context.getString(R.string.diagnostics_last_error, lastError))
         sb.appendLine()
 
-        sb.appendLine("=== Koniec raportu ===")
+        sb.appendLine(context.getString(R.string.diagnostics_footer))
         return sb.toString()
     }
 }
