@@ -92,5 +92,472 @@
 
     <!-- Actions -->
     <string name="action_ignore">Heute ignorieren</string>
+    <string name="action_mata">Abdeckung angelegt</string>
+    <string name="action_snooze">In 2h erinnern</string>
     <string name="retry_button">Erneut versuchen</string>
+
+    <!-- Additional Home Screen -->
+    <string name="offline_settings_unavailable">Einstellungen nicht verfügbar</string>
+    <string name="night_min_garden">Vorh. min. im Garten</string>
+    <string name="battery_warning_title">Zuverlässige Benachrichtigungen</string>
+    <string name="battery_warning_desc">Batterieoptimierung deaktivieren, um Benachrichtigungen nachts zu erhalten.</string>
+    <string name="battery_fix_btn">EINSTELLEN</string>
+    <string name="home_garden_title">Mein Garten</string>
+    <string name="home_car_title">Ihr Auto</string>
+    <string name="garden_status_label">Pflanzenstatus</string>
+    <string name="feedback_thanks">Danke für Ihr Feedback!</string>
+    <string name="summer_optimal">Optimale Bedingungen</string>
+    <string name="watering_needed">💧 Pflanzen benötigen Bewässerung!</string>
+    <string name="uv_label">UV-Index: %1$s (%2$s)</string>
+    <string name="muted_banner_title">Benachrichtigungen stumm</string>
+    <string name="muted_banner_desc">Abdeckung angelegt oder Benachrichtigungen ignoriert.</string>
+    <string name="restore_btn">WIEDERHERSTELLEN</string>
+
+    <!-- Extended Settings -->
+    <string name="save_location">Standort speichern</string>
+    <string name="location_name_label">Standortname</string>
+    <string name="location_lat_label">Breitengrad</string>
+    <string name="location_lon_label">Längengrad</string>
+    <string name="location_input_error">Ungültig</string>
+    <string name="location_lat_range_error">Breitengrad: -90 bis 90</string>
+    <string name="location_lon_range_error">Längengrad: -180 bis 180</string>
+    <string name="section_algorithm">Frost-Algorithmus</string>
+    <string name="auto_mode">Automatischer Modus</string>
+    <string name="sensitivity_label">Algorithmus-Empfindlichkeit</string>
+    <string name="sensitivity_desc">Erhöhen Sie, wenn Ihr Auto schneller als andere gefriert (z.B. windiger Standort).</string>
+    <string name="temp_threshold">Temperatur-Schwellenwert</string>
+    <string name="humidity_threshold">Luftfeuchtigkeits-Schwellenwert</string>
+    <string name="precipitation_threshold">Niederschlags-Schwellenwert</string>
+    <string name="section_frost_options">Frost-Optionen</string>
+    <string name="mata_option_label">Option \'Abdeckung angelegt\'</string>
+    <string name="mata_option_desc">Aktiviert Schaltfläche in Benachrichtigung zum Stummschalten nach Abdeckung des Autos.</string>
+    <string name="section_summer_settings">Sommer-Einstellungen (NEU)</string>
+    <string name="storm_alert_label">Warnung vor Stürmen und Hagel</string>
+    <string name="watering_reminder_label">Bewässerungserinnerung</string>
+    <string name="heat_threshold_label">Hitzewarnschwelle</string>
+    <string name="section_app_profile">App-Profil</string>
+    <string name="profile_car">Auto</string>
+    <string name="profile_garden">Garten</string>
+    <string name="profile_car_desc">Frostanalyse für Autoscheiben.</string>
+    <string name="profile_garden_desc">Bodenfrostanalyse für Pflanzen.</string>
+    <string name="section_notifications">Benachrichtigungen</string>
+    <string name="section_geofencing">Geofencing (NEU)</string>
+    <string name="geofencing_label">Geofencing-Benachrichtigungen</string>
+    <string name="geofencing_desc">Warnung beim Betreten von Gebieten mit höherem Frostrisiko</string>
+    <string name="geofence_history_title">Geofence-Verlauf</string>
+    <string name="geofence_history_empty">Keine Geofence-Einträge</string>
+    <string name="geofence_radius_title">Geofence-Radius</string>
+    <string name="geofence_radius_save">Radius speichern</string>
+    <string name="trend_change_notifications_label">Trendänderungs-Benachrichtigungen</string>
+    <string name="section_calibration">Algorithmus-Kalibrierung</string>
+    <string name="calibration_accuracy">Vorhersagegenauigkeit</string>
+    <string name="calibration_feedback_count">Feedback-Anzahl</string>
+    <string name="calibration_apply_recommendations">Empfehlungen anwenden</string>
+    <string name="calibration_explanation">Der Algorithmus lernt aus Ihren Antworten, um die Vorhersagegenauigkeit zu verbessern.</string>
+    <string name="calibration_no_data">Keine Daten – beantworten Sie Wetterfragen zur Kalibrierung des Algorithmus.</string>
+    <string name="calibration_dialog_title">Algorithmus-Kalibrierung</string>
+    <string name="calibration_dialog_question">Gab es in der Nacht Frost oder Eis?</string>
+    <string name="calibration_dialog_help">Ihre Antwort hilft, die Vorhersagegenauigkeit zu verbessern.</string>
+    <string name="calibration_dialog_yes">JA - Frost trat auf</string>
+    <string name="calibration_dialog_no">NEIN - Kein Frost</string>
+    <string name="car_mode_title">Automodus (Eis auf Scheiben)</string>
+    <string name="car_mode_desc">Morgenerinnerungen aktivieren</string>
+    <string name="car_mode_check_hour">Morgenprüfungszeit</string>
+
+    <!-- Extended History -->
+    <string name="stat_risk_days">Risikotage</string>
+    <string name="stat_avg_temp">Durchschn. Min-Temp</string>
+    <string name="history_empty">Keine Daten im Verlauf</string>
+    <string name="history_hint">Sammeln Sie Daten von 2 Nächten, um das Diagramm zu sehen</string>
+    <string name="trend_title">Temperaturtrend (neueste links)</string>
+    <string name="monthly_report_title">Monatsbericht</string>
+    <string name="avg_min_label">Durchschn. Min: %s</string>
+    <string name="days_count_label">%d Tage</string>
+    <string name="export_error">Exportfehler</string>
+    <string name="buy_pro">PRO freischalten und Werbung entfernen</string>
+
+    <!-- Billing & Subscriptions -->
+    <string name="product_lifetime_title">PRO Lebenslang</string>
+    <string name="product_lifetime_desc">Einmalkauf • Werbefrei • Alle PRO-Funktionen für immer</string>
+    <string name="product_monthly_title">PRO Monatlich</string>
+    <string name="product_monthly_desc">Monatsabonnement • Jederzeit kündbar • Alle PRO-Funktionen</string>
+    <string name="product_yearly_title">PRO Jährlich</string>
+    <string name="product_yearly_desc">Jahresabonnement • Bester Preis • Sparen Sie bis zu 33%</string>
+    <string name="purchase_dialog_title">PRO-Plan wählen</string>
+    <string name="purchase_best_value">BESTER WERT</string>
+    <string name="purchase_most_popular">BELIEBTESTE</string>
+    <string name="purchase_button">Jetzt kaufen</string>
+    <string name="purchase_restore">Käufe wiederherstellen</string>
+    <string name="purchase_loading_price">Preis wird geladen…</string>
+    <string name="purchase_debug_no_products">🛠 DEBUG: Produkte nicht aus Play Store geladen. Konfigurieren Sie Produkte in Play Console oder verwenden Sie isProForced in Debug-Einstellungen.</string>
+    <string name="purchase_success">Danke für den PRO-Kauf!</string>
+    <string name="purchase_success_desc">PRO-Funktionen wurden freigeschaltet</string>
+    <string name="purchase_pending">Zahlung wird verarbeitet…</string>
+    <string name="purchase_cancelled">Kauf abgebrochen</string>
+    <string name="subscription_active">Aktives PRO-Abonnement</string>
+    <string name="subscription_expires">Läuft ab: %1$s</string>
+    <string name="subscription_auto_renew_on">Verlängert sich automatisch</string>
+    <string name="subscription_auto_renew_off">Verlängert sich nicht automatisch</string>
+    <string name="subscription_manage">Abonnement verwalten</string>
+    <string name="subscription_grace_period">In Kulanzfrist</string>
+    <string name="pro_features_title">PRO-Funktionen</string>
+    <string name="pro_feature_no_ads">🚫 Werbefrei</string>
+    <string name="pro_feature_frost_map">🗺️ Frostkarte in Ihrer Region</string>
+    <string name="pro_feature_extended_forecast">📅 14-Tage-Vorhersage</string>
+    <string name="pro_feature_multi_location">📍 Mehrere gespeicherte Standorte</string>
+    <string name="pro_feature_pdf_reports">📄 PDF-Berichte</string>
+    <string name="pro_feature_priority_support">⚡ Vorrangiger Support</string>
+    <string name="price_per_month">%1$s/Monat</string>
+    <string name="price_per_year">%1$s/Jahr</string>
+    <string name="price_one_time">%1$s einmalig</string>
+    <string name="billing_error_generic">Zahlungsfehler. Bitte erneut versuchen.</string>
+    <string name="billing_error_network">Keine Verbindung. Internet prüfen.</string>
+    <string name="billing_unavailable">Zahlungen nicht verfügbar</string>
+
+    <!-- Trend Screen -->
+    <string name="trend_screen_title">7-Tage-Trend</string>
+    <string name="trend_high_risk">⚠️ Sehr hohes Frostrisiko diese Woche</string>
+    <string name="trend_moderate_risk">⚡ Moderates Frostrisiko</string>
+    <string name="trend_low_risk">🧊 Vereinzelte Fröste</string>
+    <string name="trend_no_risk">✅ Kein Frostrisiko</string>
+    <string name="trend_stat_nights_with_risk">Risikonächte</string>
+    <string name="trend_stat_avg_min">Durchschn. Min</string>
+    <string name="trend_stat_lowest">Niedrigste</string>
+    <string name="trend_chart_no_data">Keine anzuzeigenden Daten</string>
+    <string name="trend_chart_temperature_title">Nachttemperatur (7 Tage)</string>
+    <string name="trend_chart_range">Bereich: %1$s°C - %2$s°C</string>
+    <string name="trend_night_details_title">Nachtdetails</string>
+    <string name="trend_future_title">Zukünftige Trendvorhersage</string>
+    <string name="trend_future_load_button">Trendvorhersage laden</string>
+    <string name="trend_future_loaded">Zukünftiger Trend geladen: %1$s</string>
+    <string name="trend_future_prompt">Tippen Sie auf die Schaltfläche, um die zukünftige Trendvorhersage zu laden</string>
+    <string name="trend_unknown_error">Unbekannter Fehler</string>
+    <string name="trend_export_title">Trenddatenexport</string>
+    <string name="trend_export_button">CSV exportieren</string>
+    <string name="trend_export_future_button">Zukünftigen Trend CSV exportieren</string>
+    <string name="trend_export_subject">FrostAlert-Trend</string>
+    <string name="trend_export_future_subject">FrostAlert-Zukunftstrend</string>
+    <string name="trend_export_chooser">Trend teilen</string>
+    <string name="trend_export_future_chooser">Zukunftstrend teilen</string>
+    <string name="trend_export_csv_header">Tag,Datum,MinTempC,Frostrisiko</string>
+    <string name="trend_export_risk_yes">JA</string>
+    <string name="trend_export_risk_no">NEIN</string>
+    <string name="trend_export_error_with_reason">Exportfehler: %1$s</string>
+
+    <!-- Feedback -->
+    <string name="feedback_question">War die Vorhersage heute Morgen genau?</string>
+    <string name="feedback_yes">JA</string>
+    <string name="feedback_no">NEIN</string>
+    <string name="feedback_calibration">Ihre Antworten kalibrieren den Algorithmus für Ihr Auto.</string>
+
+    <!-- Accessibility -->
+    <string name="frost_risk_icon">Warnung - Frostrisiko</string>
+    <string name="no_frost_risk_icon">Kein Frostrisiko</string>
+    <string name="wind_icon_description">Wind-Symbol</string>
+    <string name="wind_speed_format">Wind: %s km/h (reduziert Risiko)</string>
+    <string name="weather_icon_description">Wetter-Symbol</string>
+    <string name="night_icon_description">Nacht-Symbol</string>
+    <string name="error_icon_description">Fehler-Symbol</string>
+    <string name="no_forecast_data">Keine Vorhersagedaten</string>
+
+    <!-- Home ViewModel -->
+    <string name="home_pull_to_refresh">Zum Aktualisieren ziehen.</string>
+
+    <!-- Widget -->
+    <string name="widget_risk_high_short">Hoch</string>
+    <string name="widget_risk_low_short">Niedrig</string>
+    <string name="widget_no_data">Keine Daten</string>
+    <string name="widget_tap_to_refresh">Zum Aktualisieren tippen</string>
+    <string name="widget_refresh_button">Aktualisieren</string>
+    <string name="widget_temp_label">Min: %s</string>
+    <string name="widget_risk_label">Risiko: %s</string>
+    <string name="widget_title_with_date">FrostAlert • %s</string>
+
+    <!-- Notifications -->
+    <string name="notification_test_title">Testbenachrichtigung</string>
+    <string name="notification_test_message">Dies ist eine Test-Frostrisiko-Benachrichtigung.</string>
+    <string name="notification_trend_title">Temperaturtrend-Änderung</string>
+    <string name="notification_trend_warming">Wird wärmer! 📈</string>
+    <string name="notification_trend_cooling">Wird kälter! 📉</string>
+    <string name="notification_trend_stable">Trend stabilisiert ➡️</string>
+    <string name="notification_geofence_title">⚠️ Höheres Frostrisiko in der Nähe!</string>
+    <string name="notification_geofence_message">In Richtung %1$s ist das Risiko um %2$d%% höher. Vorhersage: %3$.1f°C.</string>
+    <string name="notification_frost_car_alert_title">Warnung, Frost!</string>
+    <string name="notification_frost_garden_alert_title">Achten Sie auf Ihre Pflanzen!</string>
+    <string name="notification_frost_night_message">Möglicher Frost heute Nacht.</string>
+    <string name="notification_morning_brief_title">☀️ Guten Morgen! Frostvorhersage</string>
+    <string name="notification_morning_brief_risk_message">⚠️ Frostrisiko heute Nacht! Min: %1$.1f°C, Wahrscheinlichkeit: %2$d%%</string>
+    <string name="notification_morning_brief_no_risk_message">✅ Kein Frostrisiko. Vorhersage Min: %.1f°C</string>
+
+    <!-- Morning Brief -->
+    <string name="section_morning_brief">Morgenzusammenfassung</string>
+    <string name="morning_brief_label">Morgenbenachrichtigung</string>
+    <string name="morning_brief_desc">Wetterübersicht kurz nach dem ersten Entsperren des Telefons senden</string>
+    <string name="morning_brief_delay_label">Verzögerung nach Entsperren (Min)</string>
+    <string name="morning_brief_learning_days_label">Lernhistorie (Tage)</string>
+    <string name="security_warning_title">⚠️ Sicherheitswarnung</string>
+    <string name="security_warning_message">Probleme erkannt: %1$s. PRO-Funktionen wurden deaktiviert.</string>
+    <string name="security_warning_root_message">Ein gerootetes Gerät wurde erkannt. Seien Sie beim Verwenden der App vorsichtig.</string>
+    <string name="security_issue_app_modified">App modifiziert</string>
+    <string name="security_issue_non_genuine">Nicht-originales Gerät</string>
+    <string name="security_issue_root_detected">Root erkannt</string>
+    <string name="security_issue_invalid_signature">Ungültige App-Signatur</string>
+    <string name="security_issue_non_play_installer">Außerhalb Play Store installiert</string>
+
+    <!-- Offline Cache -->
+    <string name="offline_cache_banner_title">Offline-Daten</string>
+    <string name="offline_cache_banner_desc">Letzte bekannte Daten: %s</string>
+
+    <!-- Daily Forecast -->
+    <string name="daily_forecast_title">Wochenvorhersage</string>
+
+    <!-- UV Descriptions -->
+    <string name="uv_description_low">Niedrig</string>
+    <string name="uv_description_moderate">Mäßig</string>
+    <string name="uv_description_high">Hoch</string>
+    <string name="uv_description_very_high">Sehr hoch</string>
+    <string name="uv_description_extreme">Extrem</string>
+
+    <!-- UV Advice -->
+    <string name="uv_advice_low">Sicher. Keine besonderen Vorsichtsmaßnahmen erforderlich.</string>
+    <string name="uv_advice_moderate">Sonnencreme verwenden und Sonnenbrille tragen.</string>
+    <string name="uv_advice_high">Sonnenexposition zwischen 11 und 16 Uhr einschränken. Schatten suchen.</string>
+    <string name="uv_advice_extreme">Sonne vermeiden! Risiko schneller Hautverbrennungen und Hitzschlag.</string>
+
+    <!-- Summer Warnings -->
+    <string name="summer_warning_hail">⚠️ WARNUNG: HAGELRISIKO!\n</string>
+    <string name="summer_warning_storm">⛈️ STURMRISIKO!\n</string>
+    <string name="summer_warning_heat_car">🔥 HITZE: Autoinnenraum erhitzt sich schnell. Keine Kinder oder Haustiere zurücklassen!\n</string>
+    <string name="summer_warning_uv_high">☀️ Hoher UV-Index: %1$s (%2$s)\n</string>
+
+    <!-- Garden Tips -->
+    <string name="garden_tip_safe">Sicher. Pflanzen benötigen keinen Schutz.</string>
+    <string name="garden_tip_light_frost">Leichter Frost. Empfindliche Pflanzen mit Vlies abdecken.</string>
+    <string name="garden_tip_moderate_frost">Mäßiger Frost. Feste Abdeckung oder Töpfe in Garage erforderlich.</string>
+    <string name="garden_tip_severe_frost">Schwerer Frost! Exotische Pflanzen und junge Setzlinge sind selbst unter Abdeckung gefährdet.</string>
+
+    <!-- Warning Messages -->
+    <string name="warning_strong_wind">Sicher – starker Wind verhindert Frostbildung.</string>
+    <string name="warning_frost_risk_garden">Gartenfrostrisiko!</string>
+    <string name="warning_frost_risk_high">Hohes Frostrisiko!</string>
+    <string name="warning_no_frost_risk">Sicher – kein Frostrisiko\nTemperatur: %s</string>
+    <string name="warning_frost_air_surface">%1$s\nLuft: %2$s | Oberfläche: %3$s\nTaupunkt: %4$s</string>
+
+    <!-- Trend Descriptions -->
+    <string name="trend_description_very_high">⚠️ Sehr hohes Frostrisiko diese Woche</string>
+    <string name="trend_description_moderate">⚡ Moderates Frostrisiko</string>
+    <string name="trend_description_low">🧊 Vereinzelte Fröste</string>
+    <string name="trend_description_none">✅ Kein Frostrisiko</string>
+
+    <!-- Trend Direction -->
+    <string name="trend_direction_up">📈 Wird wärmer</string>
+    <string name="trend_direction_down">📉 Wird kälter</string>
+    <string name="trend_direction_stable">➡️ Keine Änderung</string>
+
+    <!-- Day Labels -->
+    <string name="day_label_today">Heute</string>
+    <string name="day_label_yesterday">Gestern</string>
+    <string name="day_label_days_ago">Vor %d Tagen</string>
+    <string name="day_label_tomorrow">Morgen</string>
+    <string name="day_label_day_after_tomorrow">Übermorgen</string>
+    <string name="day_label_in_3_days">In 3 Tagen</string>
+    <string name="day_label_in_4_days">In 4 Tagen</string>
+    <string name="day_label_in_5_days">In 5 Tagen</string>
+    <string name="day_label_in_6_days">In 6 Tagen</string>
+    <string name="day_label_in_7_days">In 7 Tagen</string>
+    <string name="day_label_later">Später</string>
+
+    <!-- Notification Channels -->
+    <string name="notification_channel_frost_name">Frostwarnungen</string>
+    <string name="notification_channel_frost_description">Warnungen vor Frost und Eis auf Autoscheiben</string>
+    <string name="notification_channel_morning_name">Morgenliche Wetterübersicht</string>
+    <string name="notification_channel_morning_description">Morgenwetterübersicht nach erstem Telefonentsperren</string>
+
+    <!-- Report Generator -->
+    <string name="report_title">FrostAlert – Saisonbericht</string>
+    <string name="report_summary">Zusammenfassung</string>
+    <string name="report_total_nights">Nächte gesamt: %d</string>
+    <string name="report_frost_nights">Nächte mit Frostrisiko: %d</string>
+    <string name="report_avg_min">Durchschnittliches Minimum: %s</string>
+    <string name="report_abs_min">Absolutes Minimum: %s</string>
+    <string name="report_details">Aufzeichnungsdetails</string>
+    <string name="report_table_date">Datum</string>
+    <string name="report_table_min">Min °C</string>
+    <string name="report_table_risk">Risiko</string>
+    <string name="report_table_probability">Wahrsch.</string>
+    <string name="report_yes">JA</string>
+    <string name="report_no">NEIN</string>
+    <string name="report_footer">Generiert von FrostAlert • %s</string>
+    <string name="report_share_chooser">Bericht teilen</string>
+
+    <!-- Garden Seasonal Tips -->
+    <string name="garden_seasonal_tip_format">%1$s %2$s</string>
+    <string name="tip_january_1">Winterpflanzenabdeckungen nach jedem Tauwetter prüfen.</string>
+    <string name="tip_january_2">Garten für kommende Saison planen, Samen aus Katalogen bestellen.</string>
+    <string name="tip_january_3">Obstbäume bei Frost schneiden, wenn Saft nicht fließt.</string>
+    <string name="tip_february_1">Gemüsesetzlinge zu Hause beginnen (Tomaten, Paprika).</string>
+    <string name="tip_february_2">Ziersträucher vor dem Aufwachen schneiden.</string>
+    <string name="tip_february_3">Pflanzen auf überwinternde Schädlinge unter Rinde prüfen.</string>
+    <string name="tip_march_1">Winterabdeckungen entfernen, wenn Temperaturen nicht unter -5°C fallen.</string>
+    <string name="tip_march_2">Frühes Gemüse säen: Salat, Spinat, Radieschen.</string>
+    <string name="tip_march_3">Bewässerung wieder aufnehmen, wenn Boden in Schichten auftaut.</string>
+    <string name="tip_april_1">Auf Fröste achten! Mai ist der Monat der \'Eisheiligen\'.</string>
+    <string name="tip_april_2">Setzlinge in Töpfe umpflanzen, nicht vor 15. Mai nach draußen.</string>
+    <string name="tip_april_3">Kräuter im Boden säen: Petersilie, Dill, Koriander.</string>
+    <string name="tip_may_1">Nach dem 15. Mai wärmeliebende Gemüsesetzlinge nach draußen pflanzen.</string>
+    <string name="tip_may_2">Regelmäßiges Gießen beginnen – Frühlingsregen oft unzureichend.</string>
+    <string name="tip_may_3">Rosen- und Staudenabdeckungen lösen und aufrollen.</string>
+    <string name="tip_june_1">Boden mulchen, um Feuchtigkeit zu halten und Unkraut zu hemmen.</string>
+    <string name="tip_june_2">Morgens oder abends gießen, Mittag vermeiden.</string>
+    <string name="tip_june_3">Erdbeerernte – Früchte nicht zu lange auf Sträuchern lassen.</string>
+    <string name="tip_july_1">UV-Index prüfen – Gartenarbeit zwischen 11 und 15 Uhr einschränken.</string>
+    <string name="tip_july_2">Gemüse bei Hitze benötigt tägliches Gießen, besonders Tomaten.</string>
+    <string name="tip_july_3">Kräuter morgens ernten, wenn ätherische Öle am intensivsten sind.</string>
+    <string name="tip_august_1">Herbstgemüse säen: Brokkoli, Kohlrabi, Salat.</string>
+    <string name="tip_august_2">Frühe Sorten von Äpfeln und Pflaumen ernten.</string>
+    <string name="tip_august_3">Gießen zum Monatsende reduzieren, um Pflanzen abzuhärten.</string>
+    <string name="tip_september_1">Kürbisse und Zucchini vor den ersten Frösten ernten.</string>
+    <string name="tip_september_2">Tulpen-, Narzissen- und Hyazinthenzwiebeln pflanzen.</string>
+    <string name="tip_september_3">Vlies vorbereiten – Fröste können diesen Monat auftreten.</string>
+    <string name="tip_october_1">Rosen und frostempfindliche Stauden abdecken.</string>
+    <string name="tip_october_2">Wurzelgemüse ernten: Karotten, Petersilie, Pastinaken – Frost süßt sie.</string>
+    <string name="tip_october_3">Blätter kompostieren – ausgezeichneter Dünger für nächstes Jahr.</string>
+    <string name="tip_november_1">Pflanzen vor Frost schützen: Vlies, Stroh, Kiefernnadeln.</string>
+    <string name="tip_november_2">Empfindliche Topfpflanzen in kühlen Raum bringen.</string>
+    <string name="tip_november_3">Beobachtungen der endenden Saison notieren für bessere Planung.</string>
+    <string name="tip_december_1">Abdeckungen nach starkem Schneefall prüfen.</string>
+    <string name="tip_december_2">Zeit für Gartenlektüre und Planung für neues Jahr.</string>
+    <string name="tip_december_3">An Vögel im Garten denken – Futterstelle aufhängen.</string>
+
+    <!-- Diagnostics -->
+    <string name="diagnostics_title">=== FrostAlert Diagnosebericht ===</string>
+    <string name="diagnostics_generated">Generiert: %s</string>
+    <string name="diagnostics_user_description_label">--- Problembeschreibung ---</string>
+    <string name="diagnostics_app_section">--- Anwendung ---</string>
+    <string name="diagnostics_version">Version: %1$s (Build %2$d)</string>
+    <string name="diagnostics_version_unknown">Version: unbekannt</string>
+    <string name="diagnostics_device_section">--- Gerät ---</string>
+    <string name="diagnostics_device_model">Modell: %s</string>
+    <string name="diagnostics_android_version">Android: %s (API %d)</string>
+    <string name="diagnostics_settings_section">--- Einstellungen ---</string>
+    <string name="diagnostics_location">Standort: %1$s, %2$s</string>
+    <string name="diagnostics_mode">Modus: %s</string>
+    <string name="diagnostics_mode_car">Auto</string>
+    <string name="diagnostics_mode_garden">Garten</string>
+    <string name="diagnostics_temp_threshold">Temp-Schwellenwert: %s</string>
+    <string name="diagnostics_humidity_threshold">Luftfeuchtigkeits-Schwellenwert: %.0f%%</string>
+    <string name="diagnostics_sensitivity">Empfindlichkeit: %.1f</string>
+    <string name="diagnostics_fahrenheit">Fahrenheit: %s</string>
+    <string name="diagnostics_enabled">Aktiviert</string>
+    <string name="diagnostics_disabled">Deaktiviert</string>
+    <string name="diagnostics_alerts_time">Benachrichtigungen: %1$d:00 - %2$d:00</string>
+    <string name="diagnostics_car_mode">Automodus: %s um %d:00</string>
+    <string name="diagnostics_db_section">--- Datenbank ---</string>
+    <string name="diagnostics_records_count">Temp-Aufzeichnungen: %d</string>
+    <string name="diagnostics_feedback_count">Feedbacks: %d</string>
+    <string name="diagnostics_geofence_count">Geofence-Aufzeichnungen: %d</string>
+    <string name="diagnostics_last_5_records">Letzte 5 Aufzeichnungen:</string>
+    <string name="diagnostics_no_data">(keine Daten)</string>
+    <string name="diagnostics_record_entry">%1$s | %2$s | Feuchte: %.0f%% | %3$s</string>
+    <string name="diagnostics_risk">RISIKO</string>
+    <string name="diagnostics_ok">OK</string>
+    <string name="diagnostics_worker_section">--- Worker-Telemetrie ---</string>
+    <string name="diagnostics_last_run">Letzter Lauf: %s</string>
+    <string name="diagnostics_last_success">Letzter Erfolg: %s</string>
+    <string name="diagnostics_last_failure">Letzter Fehler: %s</string>
+    <string name="diagnostics_never">nie</string>
+    <string name="diagnostics_total_runs">Läufe gesamt: %d</string>
+    <string name="diagnostics_success_count">Erfolge: %d</string>
+    <string name="diagnostics_failure_count">Fehler: %d</string>
+    <string name="diagnostics_last_error">Letzter Fehler: %s</string>
+    <string name="diagnostics_footer">=== Berichtsende ===</string>
+    <string name="diagnostics_precip_threshold">Niederschlags-Schwellenwert: %s mm</string>
+    <string name="diagnostics_alert_time">Benachrichtigungen: %1$d:00–%2$d:00</string>
+    <string name="diagnostics_auto_mode">Automodus: %s</string>
+    <string name="diagnostics_pro_forced">PRO-Modus (erzwungen): %s</string>
+    <string name="diagnostics_geofencing">Geofencing: %s</string>
+    <string name="diagnostics_trend_notif">Trend-Benachrichtigungen: %s</string>
+    <string name="diagnostics_manual_location">Manueller Standort: %s</string>
+    <string name="diagnostics_manual_location_name"> (%s)</string>
+    <string name="diagnostics_temp_unit">Temp-Einheit: %s</string>
+    <string name="diagnostics_theme">Design: %s</string>
+    <string name="diagnostics_theme_light">Hell</string>
+    <string name="diagnostics_theme_dark">Dunkel</string>
+    <string name="diagnostics_theme_system">System</string>
+    <string name="diagnostics_read_error">Einstellungslesefehler: %s</string>
+    <string name="diagnostics_risk_count">Frostrisiken: %d</string>
+    <string name="diagnostics_calibration_count">Kalibrierungs-Feedbacks: %d</string>
+    <string name="diagnostics_db_error">Datenbanklesefehler: %s</string>
+    <string name="diagnostics_retry_count">Wiederholungen: %d</string>
+    <string name="diagnostics_critical_errors">Kritische Fehler: %d</string>
+    <string name="diagnostics_success_rate">Erfolgsrate: %d%%</string>
+    <string name="diagnostics_no_run_data">keine Daten</string>
+
+    <!-- Debug Screen -->
+    <string name="debug_lab_title">Entwicklerlabor</string>
+    <string name="debug_temp_slider">Temp: %s°C</string>
+    <string name="debug_humidity_slider">Feuchtigkeit: %d%%</string>
+    <string name="debug_wind_slider">Wind: %d km/h</string>
+    <string name="debug_uv_slider">UV-Index: %s</string>
+    <string name="debug_force_pro">PRO-Status erzwingen (Debug)</string>
+    <string name="debug_frost_risk_percent">Frostrisiko: %d%%</string>
+    <string name="debug_nights_with_risk">Nächte mit Risiko: %1$d/7</string>
+    <string name="debug_lowest_temp">Niedrigste: %s°C</string>
+    <string name="debug_trend">Trend: %s</string>
+    <string name="debug_open_trend_screen">Trend-Bildschirm öffnen (4. Tab)</string>
+    <string name="debug_test_notification">Testbenachrichtigung</string>
+    <string name="debug_generate_history">Verlauf generieren</string>
+    <string name="debug_history_added">%d Tage Verlauf hinzugefügt</string>
+    <string name="debug_clear_all">Alles löschen</string>
+    <string name="debug_db_cleared">Datenbank gelöscht</string>
+    <string name="debug_long_history">Langen Verlauf generieren (90 Tage)</string>
+    <string name="debug_force_widget_refresh">Widget-Aktualisierung erzwingen</string>
+    <string name="debug_widget_refreshed">Widget aktualisiert</string>
+    <string name="debug_log_widget_data">Widget-Daten protokollieren</string>
+    <string name="debug_widget_logged">Widget-Daten protokolliert (siehe logcat)</string>
+    <string name="debug_force_classic_widget">Klassisches Widget-Update erzwingen</string>
+    <string name="debug_classic_widget_updated">Klassisches Widget-Update erzwungen</string>
+    <string name="debug_start_geofence_registrar">GeofenceRegistrar starten</string>
+    <string name="debug_stop_geofence_registrar">GeofenceRegistrar stoppen</string>
+    <string name="debug_geofence_started">Geofence-Registrar gestartet</string>
+    <string name="debug_geofence_stopped">Geofence-Registrar gestoppt</string>
+    <string name="debug_register_now">Jetzt registrieren</string>
+    <string name="debug_geofence_registered">Einmalige Geofence-Registrierung aufgerufen</string>
+    <string name="debug_feedbacks_count">Feedbacks: %d</string>
+    <string name="debug_accuracy">Genauigkeit: %d%%</string>
+    <string name="debug_confidence_level">Konfidenzniveau: %s</string>
+    <string name="debug_no_calibration_data">Keine Kalibrierungsdaten</string>
+    <string name="debug_clear_feedback">Feedback löschen</string>
+    <string name="debug_calibration_cleared">Kalibrierung gelöscht</string>
+    <string name="debug_temp_records">Temp-Aufzeichnungen</string>
+    <string name="debug_feedbacks">Feedbacks</string>
+    <string name="debug_frost_risks">Frostrisiken</string>
+    <string name="debug_add_simulator_record">Aufzeichnung vom Simulator hinzufügen</string>
+    <string name="debug_record_added">Test-Aufzeichnung hinzugefügt</string>
+    <string name="debug_send_test_notification">Testbenachrichtigung senden</string>
+    <string name="debug_test_ignore_today">Test: Heute ignorieren</string>
+    <string name="debug_ignore_set">\'Heute ignorieren\' gesetzt</string>
+    <string name="debug_test_snooze">Test: In 2h erinnern</string>
+    <string name="debug_snooze_scheduled">Erinnerung in 2h geplant</string>
+    <string name="debug_result_winter_risk">ERGEBNIS WINTER: FROSTRISIKO</string>
+    <string name="debug_result_winter_safe">ERGEBNIS WINTER: SICHER</string>
+    <string name="debug_result_summer_optimal">ERGEBNIS SOMMER: OPTIMAL</string>
+    <string name="debug_diagnostics_clipboard">FrostAlert-Diagnose</string>
+    <string name="debug_diagnostics_email_subject">FrostAlert – Diagnosebericht</string>
+    <string name="debug_share_report">Bericht teilen</string>
+    <string name="debug_loading_trend">Trend wird geladen...</string>
+    <string name="debug_loading_stats">Statistiken werden geladen...</string>
+    <string name="debug_current_mode">Aktueller Modus: %s</string>
+    <string name="debug_mode_car">Auto</string>
+    <string name="debug_mode_garden">Garten</string>
+    <string name="debug_no_higher_risk">Kein höheres Risiko in der Nähe</string>
+    <string name="debug_problem_description">Problembeschreibung</string>
+    <string name="debug_generate_diagnostic">Diagnosebericht generieren</string>
+
+    <!-- History Screen -->
+    <string name="history_csv_subject">FrostAlert-Verlauf</string>
+    <string name="history_csv_chooser">Verlauf teilen</string>
+
+    <!-- Calibration ViewModel -->
+    <string name="calibration_no_analysis_data">Keine Daten zur Analyse.</string>
 </resources>
