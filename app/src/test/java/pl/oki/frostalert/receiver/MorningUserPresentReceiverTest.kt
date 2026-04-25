@@ -31,8 +31,9 @@ class MorningUserPresentReceiverTest {
         context = ApplicationProvider.getApplicationContext()
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         dataStore = SettingsDataStore(context)
-        // Reset unlock epoch so each test starts fresh
+        // Reset all relevant DataStore state so tests don't bleed into each other
         runBlocking {
+            dataStore.updateMorningBriefEnabled(false)
             dataStore.updateMorningLastUnlockEpochDay(-1L)
             dataStore.updateMorningLastNotificationEpochDay(-1L)
         }

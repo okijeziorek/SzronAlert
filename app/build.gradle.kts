@@ -69,6 +69,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests {
+            // Provide AndroidManifest + resources to Robolectric unit tests.
+            // Without this flag Robolectric falls back to "legacy resources mode"
+            // which is NOT supported for API > P (28), causing all tests to be skipped.
+            isIncludeAndroidResources = true
+        }
+    }
+
 }
 
 kotlin {

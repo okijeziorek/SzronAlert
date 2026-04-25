@@ -101,7 +101,9 @@ class MorningUserPresentReceiver : BroadcastReceiver() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error in MorningUserPresentReceiver: ${e.message}", e)
             } finally {
-                pendingResult.finish()
+                // pendingResult is null when onReceive() is called directly (e.g. in Robolectric
+                // unit tests) rather than dispatched via the Android broadcast framework.
+                pendingResult?.finish()
             }
         }
     }

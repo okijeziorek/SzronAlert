@@ -1,20 +1,15 @@
 package pl.oki.frostalert.utils
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.res.Configuration
 import android.content.res.Resources
-import android.os.Build
 import java.util.Locale
 
 object LocaleHelper {
 
     private fun getSystemLocale(): Locale {
-        val systemConfig = Resources.getSystem().configuration
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            systemConfig.locales[0]
-        } else {
-            @Suppress("DEPRECATION")
-            systemConfig.locale
-        }
+        return Resources.getSystem().configuration.locales[0]
     }
 
     /**
@@ -25,28 +20,29 @@ object LocaleHelper {
     fun setLocale(context: Context, languageCode: String): Context {
         val locale = when (languageCode) {
             "system" -> getSystemLocale()
-            "pl" -> Locale("pl")
-            "en" -> Locale("en")
-            "de" -> Locale("de")
-            "fr" -> Locale("fr")
-            "es" -> Locale("es")
-            "it" -> Locale("it")
-            "uk" -> Locale("uk")
-            "cs" -> Locale("cs")
+            "pl" -> Locale.forLanguageTag("pl")
+            "en" -> Locale.forLanguageTag("en")
+            "de" -> Locale.forLanguageTag("de")
+            "fr" -> Locale.forLanguageTag("fr")
+            "es" -> Locale.forLanguageTag("es")
+            "it" -> Locale.forLanguageTag("it")
+            "uk" -> Locale.forLanguageTag("uk")
+            "cs" -> Locale.forLanguageTag("cs")
             else -> getSystemLocale()
         }
 
         Locale.setDefault(locale)
 
-        val config = context.resources.configuration
+        val config = Configuration(context.resources.configuration)
         config.setLocale(locale)
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            context.createConfigurationContext(config)
-        } else {
-            @Suppress("DEPRECATION")
-            context.resources.updateConfiguration(config, context.resources.displayMetrics)
-            context
+        // Use ContextWrapper(context) so that the Activity remains reachable via the
+        // baseContext chain. A bare createConfigurationContext() returns a ContextImpl
+        // which breaks Hilt's findActivity() traversal and causes an
+        // IllegalStateException when hiltViewModel() is called inside Compose.
+        val localizedResources = context.createConfigurationContext(config).resources
+        return object : ContextWrapper(context) {
+            override fun getResources(): Resources = localizedResources
         }
     }
 
