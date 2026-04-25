@@ -55,6 +55,13 @@ android {
         debug {
             buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
         }
+        // Closed testing variant with test ads to comply with AdMob policies
+        create("closedTest") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".closedtest"
+            versionNameSuffix = "-closedtest"
+            buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
+        }
     }
 
     compileOptions {
