@@ -451,4 +451,249 @@
     <string name="onboarding_grant_exact_alarm">Zezwól na dokładne alarmy</string>
     <string name="onboarding_grant_exact_alarm_granted">✓ Alarmy przyznane</string>
     <string name="onboarding_permissions_note">Możesz zmienić te ustawienia później w Ustawieniach systemu.</string>
+
+    <!-- UV Descriptions -->
+    <string name="uv_description_low">Niskie</string>
+    <string name="uv_description_moderate">Umiarkowane</string>
+    <string name="uv_description_high">Wysokie</string>
+    <string name="uv_description_very_high">Bardzo wysokie</string>
+    <string name="uv_description_extreme">Ekstremalne</string>
+
+    <!-- UV Advice -->
+    <string name="uv_advice_low">Bezpiecznie. Nie są wymagane specjalne środki ostrożności.</string>
+    <string name="uv_advice_moderate">Użyj kremu z filtrem i załóż okulary przeciwsłoneczne.</string>
+    <string name="uv_advice_high">Ogranicz przebywanie na słońcu w godzinach 11-16. Szukaj cienia.</string>
+    <string name="uv_advice_extreme">Unikaj słońca! Ryzyko szybkiego oparzenia skóry i udaru.</string>
+
+    <!-- Summer Warning Messages -->
+    <string name="summer_warning_hail">⚠️ UWAGA: Ryzyko BURZY Z GRADEM!\n</string>
+    <string name="summer_warning_storm">⛈️ Ryzyko BURZY!\n</string>
+    <string name="summer_warning_heat_car">🔥 UPAŁ: Wnętrze auta szybko się nagrzewa. Nie zostawiaj dzieci ani zwierząt!\n</string>
+    <string name="summer_warning_uv_high">☀️ Wysoki indeks UV: %1$s (%2$s)\n</string>
+
+    <!-- Garden Tips -->
+    <string name="garden_tip_safe">Bezpiecznie. Rośliny nie wymagają ochrony.</string>
+    <string name="garden_tip_light_frost">Lekki przymrozek. Wrażliwe rośliny okryj agrowłókniną.</string>
+    <string name="garden_tip_moderate_frost">Umiarkowany mróz. Konieczne solidne okrycie lub przeniesienie donic do garażu.</string>
+    <string name="garden_tip_severe_frost">Silny mróz! Rośliny egzotyczne i młode sadzonki są zagrożone nawet pod przykryciem.</string>
+
+    <!-- Warning Messages -->
+    <string name="warning_strong_wind">Bezpiecznie – silny wiatr zapobiega osadzaniu szronu.</string>
+    <string name="warning_frost_risk_garden">Ryzyko przymrozku w ogrodzie!</string>
+    <string name="warning_frost_risk_high">Wysokie ryzyko szronu!</string>
+    <string name="warning_no_frost_risk">Bezpiecznie – brak ryzyka szronu\nTemperatura: %s</string>
+    <string name="warning_frost_air_surface">%1$s\nPowietrze: %2$s | Powierzchnia: %3$s\nPunkt rosy: %4$s</string>
+
+    <!-- Trend Descriptions -->
+    <string name="trend_description_very_high">⚠️ Bardzo wysokie ryzyko szronu w tym tygodniu</string>
+    <string name="trend_description_moderate">⚡ Umiarkowane ryzyko szronu</string>
+    <string name="trend_description_low">🧊 Sporadyczne przymrozki</string>
+    <string name="trend_description_none">✅ Brak ryzyka szronu</string>
+
+    <!-- Trend Direction Emoji -->
+    <string name="trend_direction_up">📈 Robi się cieplej</string>
+    <string name="trend_direction_down">📉 Robi się chłodniej</string>
+    <string name="trend_direction_stable">➡️ Brak zmian</string>
+
+    <!-- Day Labels -->
+    <string name="day_label_today">Dziś</string>
+    <string name="day_label_yesterday">Wczoraj</string>
+    <string name="day_label_days_ago">%d dni temu</string>
+    <string name="day_label_tomorrow">Jutro</string>
+    <string name="day_label_day_after_tomorrow">Pojutrze</string>
+    <string name="day_label_in_3_days">Za 3 dni</string>
+    <string name="day_label_in_4_days">Za 4 dni</string>
+    <string name="day_label_in_5_days">Za 5 dni</string>
+    <string name="day_label_in_6_days">Za 6 dni</string>
+    <string name="day_label_in_7_days">Za 7 dni</string>
+    <string name="day_label_later">Później</string>
+
+    <!-- Notification Channel Names -->
+    <string name="notification_channel_frost_name">Frost Alerts</string>
+    <string name="notification_channel_frost_description">Alerts about frost and ice on windshields</string>
+    <string name="notification_channel_morning_name">Morning Weather Brief</string>
+    <string name="notification_channel_morning_description">Morning weather summary after first phone unlock</string>
+
+    <!-- Report Generator -->
+    <string name="report_title">FrostAlert — Raport Sezonowy</string>
+    <string name="report_summary">Podsumowanie</string>
+    <string name="report_total_nights">Łączna liczba nocy: %d</string>
+    <string name="report_frost_nights">Noce z ryzykiem szronu: %d</string>
+    <string name="report_avg_min">Średnie minimum: %s</string>
+    <string name="report_abs_min">Absolutne minimum: %s</string>
+    <string name="report_details">Szczegóły rekordów</string>
+    <string name="report_table_date">Data</string>
+    <string name="report_table_min">Min °C</string>
+    <string name="report_table_risk">Ryzyko</string>
+    <string name="report_table_probability">Prawdop.</string>
+    <string name="report_yes">TAK</string>
+    <string name="report_no">NIE</string>
+    <string name="report_footer">Wygenerowano przez FrostAlert • %s</string>
+    <string name="report_share_chooser">Udostępnij raport</string>
+
+    <!-- Garden Seasonal Tips -->
+    <string name="garden_seasonal_tip_format">%1$s %2$s</string>
+
+    <!-- January Tips -->
+    <string name="tip_january_1">❄️ Sprawdź okrycia zimowe roślin po każdej odwilży.</string>
+    <string name="tip_january_2">📋 Planuj ogród na nadchodzący sezon, zamów nasiona z katalogów.</string>
+    <string name="tip_january_3">✂️ Przycinaj drzewa owocowe w czasie mrozów, gdy soki nie płyną.</string>
+
+    <!-- February Tips -->
+    <string name="tip_february_1">🌱 Zacznij wysiew warzyw na rozsady w domu (pomidory, papryki).</string>
+    <string name="tip_february_2">✂️ Przycinaj krzewy ozdobne przed przebudzeniem.</string>
+    <string name="tip_february_3">🐛 Sprawdź rośliny pod kątem szkodników zimujących pod korą.</string>
+
+    <!-- March Tips -->
+    <string name="tip_march_1">🌷 Zdejmuj okrycia zimowe gdy temperatury nie spadają poniżej -5°C.</string>
+    <string name="tip_march_2">🌱 Wysiej warzywa wczesne: sałatę, szpinak, rzodkiewkę.</string>
+    <string name="tip_march_3">💧 Wznów podlewanie, gdy ziemia odmrozi się w warstwach.</string>
+
+    <!-- April Tips -->
+    <string name="tip_april_1">⚠️ Uwaga na przymrozki! Maj to miesiąc \'zimnych ogrodników\'.</string>
+    <string name="tip_april_2">🍅 Przesadzaj rozsady do doniczek, nie wstawiaj na zewnątrz przed 15 maja.</string>
+    <string name="tip_april_3">🌿 Siej zioła w gruncie: pietruszka, koper, kolendra.</string>
+
+    <!-- May Tips -->
+    <string name="tip_may_1">🌡️ Po 15 maja sadzaj rozsady ciepłolubnych warzyw na zewnątrz.</string>
+    <string name="tip_may_2">💧 Zacznij regularnie podlewać – deszcze wiosenne często są niewystarczające.</string>
+    <string name="tip_may_3">🌹 Odwiązuj i rozwijaj okrycia róż i bylin.</string>
+
+    <!-- June Tips -->
+    <string name="tip_june_1">☀️ Mulchuj glebę, by zatrzymać wilgoć i hamować chwasty.</string>
+    <string name="tip_june_2">💧 Podlewaj rano lub wieczorem, unikaj południa.</string>
+    <string name="tip_june_3">🍓 Zbiory truskawek – nie zostawiaj owoców na krzakach za długo.</string>
+
+    <!-- July Tips -->
+    <string name="tip_july_1">🌡️ Sprawdź indeks UV – ogranicz pracę w ogrodzie między 11 a 15.</string>
+    <string name="tip_july_2">💧 Warzywa w skwarze wymagają codziennego podlewania, szczególnie pomidory.</string>
+    <string name="tip_july_3">🌿 Zbieraj zioła rano, gdy olejki eteryczne są najbardziej intensywne.</string>
+
+    <!-- August Tips -->
+    <string name="tip_august_1">🥦 Siej warzywa jesienne: brokuły, kalarepę, sałatę.</string>
+    <string name="tip_august_2">🍎 Zbiory wcześniejszych odmian jabłek i śliwek.</string>
+    <string name="tip_august_3">💧 Ogranicz podlewanie pod koniec miesiąca, by zahartować rośliny.</string>
+
+    <!-- September Tips -->
+    <string name="tip_september_1">🌾 Zbiory dyni i cukinii przed pierwszymi przymrozkami.</string>
+    <string name="tip_september_2">🧅 Sadzaj cebule tulipanów, narcyzów i hiacyntów.</string>
+    <string name="tip_september_3">❄️ Przygotuj agrowłókninę – przymrozki mogą pojawić się już w tym miesiącu.</string>
+
+    <!-- October Tips -->
+    <string name="tip_october_1">🌹 Okrywaj róże i byliny wrażliwe na mróz.</string>
+    <string name="tip_october_2">🥕 Zbieraj korzeniowe: marchew, pietruszkę, pasternak – mróz je dosładza.</string>
+    <string name="tip_october_3">🍂 Kompostuj liście – doskonały nawóz na przyszły rok.</string>
+
+    <!-- November Tips -->
+    <string name="tip_november_1">❄️ Zabezpieczaj rośliny przed mrozem: agrowłóknina, słoma, igliwie.</string>
+    <string name="tip_november_2">🪴 Przenieś doniczkowe rośliny wrażliwe do chłodnego pomieszczenia.</string>
+    <string name="tip_november_3">📋 Notuj obserwacje z kończącego się sezonu, by planować lepiej.</string>
+
+    <!-- December Tips -->
+    <string name="tip_december_1">🌟 Sprawdzaj okrycia po intensywnych opadach śniegu.</string>
+    <string name="tip_december_2">📚 Czas na lektury ogrodnicze i planowanie ogrodu na nowy rok.</string>
+    <string name="tip_december_3">🐦 Pamiętaj o ptakach w ogrodzie – zawieś karmnik.</string>
+
+    <!-- Diagnostics -->
+    <string name="diagnostics_title">=== FrostAlert Raport Diagnostyczny ===</string>
+    <string name="diagnostics_generated">Wygenerowano: %s</string>
+    <string name="diagnostics_user_description_label">--- Opis problemu ---</string>
+    <string name="diagnostics_app_section">--- Aplikacja ---</string>
+    <string name="diagnostics_version">Wersja: %1$s (build %2$d)</string>
+    <string name="diagnostics_version_unknown">Wersja: nieznana</string>
+    <string name="diagnostics_device_section">--- Urządzenie ---</string>
+    <string name="diagnostics_device_model">Model: %s</string>
+    <string name="diagnostics_android_version">Android: %s (API %d)</string>
+    <string name="diagnostics_settings_section">--- Ustawienia ---</string>
+    <string name="diagnostics_location">Lokalizacja: %1$s, %2$s</string>
+    <string name="diagnostics_mode">Tryb: %s</string>
+    <string name="diagnostics_mode_car">Samochód</string>
+    <string name="diagnostics_mode_garden">Ogród</string>
+    <string name="diagnostics_temp_threshold">Próg temp: %s</string>
+    <string name="diagnostics_humidity_threshold">Próg wilgotności: %.0f%%</string>
+    <string name="diagnostics_sensitivity">Czułość: %.1f</string>
+    <string name="diagnostics_fahrenheit">Fahrenheit: %s</string>
+    <string name="diagnostics_enabled">Włączony</string>
+    <string name="diagnostics_disabled">Wyłączony</string>
+    <string name="diagnostics_alerts_time">Alerty: %1$d:00 - %2$d:00</string>
+    <string name="diagnostics_car_mode">Tryb samochód: %s o %d:00</string>
+    <string name="diagnostics_db_section">--- Baza Danych ---</string>
+    <string name="diagnostics_records_count">Rekordów temp: %d</string>
+    <string name="diagnostics_feedback_count">Feedbacków: %d</string>
+    <string name="diagnostics_geofence_count">Rekordów geofence: %d</string>
+    <string name="diagnostics_last_5_records">Ostatnie 5 rekordów:</string>
+    <string name="diagnostics_no_data">(brak danych)</string>
+    <string name="diagnostics_record_entry">%1$s | %2$s | Wilg: %.0f%% | %3$s</string>
+    <string name="diagnostics_risk">RYZYKO</string>
+    <string name="diagnostics_ok">OK</string>
+    <string name="diagnostics_worker_section">--- Telemetria Worker ---</string>
+    <string name="diagnostics_last_run">Ostatnie uruchomienie: %s</string>
+    <string name="diagnostics_last_success">Ostatni sukces: %s</string>
+    <string name="diagnostics_last_failure">Ostatnia porażka: %s</string>
+    <string name="diagnostics_never">nigdy</string>
+    <string name="diagnostics_total_runs">Łącznie uruchomień: %d</string>
+    <string name="diagnostics_success_count">Sukcesów: %d</string>
+    <string name="diagnostics_failure_count">Porażek: %d</string>
+    <string name="diagnostics_last_error">Ostatni błąd: %s</string>
+    <string name="diagnostics_footer">=== Koniec raportu ===</string>
+
+    <!-- Debug Screen -->
+    <string name="debug_lab_title">Laboratorium Dewelopera</string>
+    <string name="debug_temp_slider">Temp: %s°C</string>
+    <string name="debug_humidity_slider">Wilgotność: %d%%</string>
+    <string name="debug_wind_slider">Wiatr: %d km/h</string>
+    <string name="debug_uv_slider">Indeks UV: %s</string>
+    <string name="debug_force_pro">Wymuś status PRO (Debug)</string>
+    <string name="debug_frost_risk_percent">Ryzyko szronu: %d%%</string>
+    <string name="debug_nights_with_risk">Noce z ryzykiem: %1$d/7</string>
+    <string name="debug_lowest_temp">Najniższa: %s°C</string>
+    <string name="debug_trend">Trend: %s</string>
+    <string name="debug_open_trend_screen">Otwórz ekran Trendu (4. tab)</string>
+    <string name="debug_test_notification">Testowe powiadomienie</string>
+    <string name="debug_generate_history">Generuj historię</string>
+    <string name="debug_history_added">Dodano %d dni historii</string>
+    <string name="debug_clear_all">Wyczyść wszystko</string>
+    <string name="debug_db_cleared">Baza wyczyszczona</string>
+    <string name="debug_long_history">Generuj długą historię (90 dni)</string>
+    <string name="debug_force_widget_refresh">Wymuś odświeżenie widgetu</string>
+    <string name="debug_widget_refreshed">Widget odświeżony</string>
+    <string name="debug_log_widget_data">Log widget data</string>
+    <string name="debug_widget_logged">Zalogowano dane widgetu (sprawdź logcat)</string>
+    <string name="debug_force_classic_widget">Force classic widget update</string>
+    <string name="debug_classic_widget_updated">Wymuszono update klasycznych widgetów</string>
+    <string name="debug_start_geofence_registrar">Start GeofenceRegistrar</string>
+    <string name="debug_stop_geofence_registrar">Stop GeofenceRegistrar</string>
+    <string name="debug_geofence_started">Geofence registrar uruchomiony</string>
+    <string name="debug_geofence_stopped">Geofence registrar zatrzymany</string>
+    <string name="debug_register_now">Register Now</string>
+    <string name="debug_geofence_registered">Wywołano jednorazową rejestrację geofence</string>
+    <string name="debug_feedbacks_count">Feedbacków: %d</string>
+    <string name="debug_accuracy">Dokładność: %d%%</string>
+    <string name="debug_confidence_level">Poziom ufności: %s</string>
+    <string name="debug_no_calibration_data">Brak danych kalibracji</string>
+    <string name="debug_clear_feedback">Wyczyść feedback</string>
+    <string name="debug_calibration_cleared">Kalibracja wyczyszczona</string>
+    <string name="debug_temp_records">Rekordów temp</string>
+    <string name="debug_feedbacks">Feedbacków</string>
+    <string name="debug_frost_risks">Ryzyk szronu</string>
+    <string name="debug_add_simulator_record">Dodaj rekord z symulatora</string>
+    <string name="debug_record_added">Dodano rekord testowy</string>
+    <string name="debug_send_test_notification">Wyślij testowe powiadomienie</string>
+    <string name="debug_test_ignore_today">Test: Ignoruj dziś</string>
+    <string name="debug_ignore_set">Ustawiono \'Ignoruj dziś\'</string>
+    <string name="debug_test_snooze">Test: Przypomnij za 2h</string>
+    <string name="debug_snooze_scheduled">Zaplanowano przypomnienie za 2h</string>
+    <string name="debug_result_winter_risk">WYNIK ZIMA: RYZYKO SZRONU</string>
+    <string name="debug_result_winter_safe">WYNIK ZIMA: BEZPIECZNIE</string>
+    <string name="debug_result_summer_optimal">WYNIK LATO: OPTYMALNIE</string>
+    <string name="debug_diagnostics_clipboard">FrostAlert Diagnostics</string>
+    <string name="debug_diagnostics_email_subject">FrostAlert – Raport Diagnostyczny</string>
+    <string name="debug_share_report">Udostępnij raport</string>
+
+    <!-- History Screen -->
+    <string name="history_csv_subject">Historia FrostAlert</string>
+    <string name="history_csv_chooser">Udostępnij historię</string>
+
+    <!-- Calibration ViewModel -->
+    <string name="calibration_no_analysis_data">Brak danych do analizy.</string>
 </resources>
