@@ -33,6 +33,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrendSummaryCard(stats: TrendCalculations.WeeklyTrendStats) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -54,7 +55,7 @@ fun TrendSummaryCard(stats: TrendCalculations.WeeklyTrendStats) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = TrendCalculations.getTrendDescription(stats),
+                        text = TrendCalculations.getTrendDescription(context, stats),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 2,
@@ -62,7 +63,7 @@ fun TrendSummaryCard(stats: TrendCalculations.WeeklyTrendStats) {
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = TrendCalculations.getTrendEmoji(stats.trend),
+                        text = TrendCalculations.getTrendEmoji(context, stats.trend),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -420,7 +421,7 @@ fun FutureTrendSection(
                 futureTrendState.futureWeeklyStats != null -> {
                     val stats = futureTrendState.futureWeeklyStats
                     Text(
-                        text = stringResource(R.string.trend_future_loaded, TrendCalculations.getTrendEmoji(stats.trend)),
+                        text = stringResource(R.string.trend_future_loaded, TrendCalculations.getTrendEmoji(context, stats.trend)),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

@@ -18,25 +18,27 @@ import pl.oki.frostalert.ui.MainActivity
 
 object NotificationHelper {
     private const val CHANNEL_ID = "frost_alert_channel"
-    private const val CHANNEL_NAME = "Frost Alerts"
     private const val NOTIFICATION_ID = 1001
 
     private const val MORNING_BRIEF_CHANNEL_ID = "morning_brief_channel"
-    private const val MORNING_BRIEF_CHANNEL_NAME = "Morning Weather Brief"
     private const val MORNING_BRIEF_NOTIFICATION_ID = 1002
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
-                description = "Alerts about frost and ice on windshields"
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                context.getString(R.string.notification_channel_frost_name),
+                importance
+            ).apply {
+                description = context.getString(R.string.notification_channel_frost_description)
             }
             val morningChannel = NotificationChannel(
                 MORNING_BRIEF_CHANNEL_ID,
-                MORNING_BRIEF_CHANNEL_NAME,
+                context.getString(R.string.notification_channel_morning_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Morning weather summary after first phone unlock"
+                description = context.getString(R.string.notification_channel_morning_description)
             }
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
                 ?: return

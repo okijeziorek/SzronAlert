@@ -1,8 +1,10 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.data.local.*
@@ -34,6 +36,7 @@ private data class PlantFilterState(
 
 @HiltViewModel
 class GardenViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val plantDao: PlantDao,
     private val userPlantDao: UserPlantDao,
     private val temperatureDao: TemperatureDao,
@@ -79,7 +82,7 @@ class GardenViewModel @Inject constructor(
             emptyList()
         }
 
-        val monthData = GardenSeasonalTips.getCurrentMonthData()
+        val monthData = GardenSeasonalTips.getCurrentMonthData(context)
 
         GardenUiState(
             allPlants = filtered,

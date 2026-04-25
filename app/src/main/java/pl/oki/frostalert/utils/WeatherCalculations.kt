@@ -1,6 +1,8 @@
 package pl.oki.frostalert.utils
 
+import android.content.Context
 import android.util.Log
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.remote.HourlyForecast
 import java.text.SimpleDateFormat
@@ -167,12 +169,12 @@ object WeatherCalculations {
     /**
      * Zwraca konkretną poradę dla ogrodnika na podstawie intensywności mrozu
      */
-    fun getGardenTip(minTemp: Double): String {
+    fun getGardenTip(context: Context, minTemp: Double): String {
         return when {
-            minTemp > 0 -> "Bezpiecznie. Rośliny nie wymagają ochrony."
-            minTemp > -2 -> "Lekki przymrozek. Wrażliwe rośliny okryj agrowłókniną."
-            minTemp > -5 -> "Umiarkowany mróz. Konieczne solidne okrycie lub przeniesienie donic do garażu."
-            else -> "Silny mróz! Rośliny egzotyczne i młode sadzonki są zagrożone nawet pod przykryciem."
+            minTemp > 0 -> context.getString(R.string.garden_tip_safe)
+            minTemp > -2 -> context.getString(R.string.garden_tip_light_frost)
+            minTemp > -5 -> context.getString(R.string.garden_tip_moderate_frost)
+            else -> context.getString(R.string.garden_tip_severe_frost)
         }
     }
 
@@ -187,32 +189,36 @@ object WeatherCalculations {
     }
 
     fun getWarningMessage(
-        temp: Double, 
-        humidity: Double, 
-        precip: Double, 
-        weatherCode: Int, 
-        tempThreshold: Double, 
-        humidityThreshold: Double, 
+        context: Context,
+        temp: Double,
+        humidity: Double,
+        precip: Double,
+        weatherCode: Int,
+        tempThreshold: Double,
+        humidityThreshold: Double,
         precipitationThreshold: Double,
         sensitivity: Double = 1.0,
         windSpeed: Double = 0.0,
         appMode: Int = 0,
         useFahrenheit: Boolean = false
     ): String {
-        if (windSpeed > 15.0) return "Bezpiecznie – silny wiatr zapobiega osadzaniu szronu."
-        
+        if (windSpeed > 15.0) return context.getString(R.string.warning_strong_wind)
+
         val dewPoint = calculateDewPoint(temp, humidity)
         val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity, appMode)
-        
+
         val formattedTemp = formatTemperature(temp, useFahrenheit)
         val formattedDewPoint = formatTemperature(dewPoint, useFahrenheit)
         val formattedSurface = formatTemperature(surfaceTemp, useFahrenheit)
 
         return if (hasFrostRisk(temp, humidity, precip, weatherCode, tempThreshold, humidityThreshold, precipitationThreshold, sensitivity, windSpeed, appMode)) {
-            val prefix = if (appMode == 1) "Ryzyko przymrozku w ogrodzie!" else "Wysokie ryzyko szronu!"
-            "$prefix\nPowietrze: $formattedTemp | Powierzchnia: $formattedSurface\nPunkt rosy: $formattedDewPoint"
+            val prefix = if (appMode == 1)
+                context.getString(R.string.warning_frost_risk_garden)
+            else
+                context.getString(R.string.warning_frost_risk_high)
+            context.getString(R.string.warning_frost_air_surface, prefix, formattedTemp, formattedSurface, formattedDewPoint)
         } else {
-            "Bezpiecznie – brak ryzyka szronu\nTemperatura: $formattedTemp"
+            context.getString(R.string.warning_no_frost_risk, formattedTemp)
         }
     }
 

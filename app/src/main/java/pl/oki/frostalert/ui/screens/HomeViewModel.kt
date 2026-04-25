@@ -123,8 +123,9 @@ class HomeViewModel @Inject constructor(
             )
 
             val warningMessage = WeatherCalculations.getWarningMessage(
-                minTemp, weather.current.humidity, weather.current.precipitation, 
-                weather.current.weatherCode, 
+                context,
+                minTemp, weather.current.humidity, weather.current.precipitation,
+                weather.current.weatherCode,
                 if (prefs.isAutoModeEnabled) 1.0 else prefs.tempThreshold,
                 if (prefs.isAutoModeEnabled) 75.0 else prefs.humidityThreshold.toDouble(),
                 if (prefs.isAutoModeEnabled) 0.2 else prefs.precipitationThreshold,

@@ -12,6 +12,7 @@
     <string name="offline_banner_title">Bez připojení</string>
     <string name="offline_banner_description">Zkontrolujte připojení k internetu pro aktualizaci údajů o počasí.</string>
     <string name="offline_banner_action">NASTAVENÍ</string>
+    <string name="offline_settings_unavailable">Nelze otevřít nastavení</string>
 
     <!-- Home Screen -->
     <string name="loading_weather">Načítání údajů o počasí…</string>
@@ -19,14 +20,35 @@
     <string name="risk_garden">Riziko mrazu!</string>
     <string name="risk_none">Bezpečné – žádné riziko mrazu</string>
     <string name="night_min_temp">Noční předpověď (min)</string>
+    <string name="night_min_garden">Min. předpověď na zahradě</string>
     <string name="hourly_forecast">Příštích 24 hodin</string>
     <string name="refresh_success">Data aktualizována</string>
+    <string name="battery_warning_title">Spolehlivá upozornění</string>
+    <string name="battery_warning_desc">Vypněte optimalizaci baterie pro příjem upozornění v noci.</string>
+    <string name="battery_fix_btn">NASTAVIT</string>
+    <string name="home_garden_title">Moje zahrada</string>
+    <string name="home_car_title">Vaše auto</string>
+    <string name="garden_status_label">Stav rostlin</string>
+    <string name="feedback_thanks">Děkujeme za zpětnou vazbu!</string>
+    <string name="summer_optimal">Optimální podmínky</string>
+    <string name="watering_needed">💧 Rostliny potřebují vodu!</string>
+    <string name="uv_label">Index UV: %1$s (%2$s)</string>
+    <string name="muted_banner_title">Upozornění ztlumena</string>
+    <string name="muted_banner_desc">Ochrana použita nebo upozornění ignorována.</string>
+    <string name="restore_btn">OBNOVIT</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Nastavení</string>
     <string name="section_location">Poloha</string>
     <string name="manual_location_toggle">Nastavit polohu ručně</string>
     <string name="location_gps_auto">Použít GPS (automaticky)</string>
+    <string name="save_location">Uložit polohu</string>
+    <string name="location_name_label">Název polohy</string>
+    <string name="location_lat_label">Šíř</string>
+    <string name="location_lon_label">Dél</string>
+    <string name="location_input_error">Neplatné</string>
+    <string name="location_lat_range_error">Šíř: -90 až 90</string>
+    <string name="location_lon_range_error">Dél: -180 až 180</string>
     <string name="section_appearance">Vzhled</string>
     <string name="section_language">Jazyk</string>
     <string name="settings_language_current">Aktuální jazyk</string>
@@ -34,8 +56,145 @@
     <string name="theme_light">Světlý</string>
     <string name="theme_dark">Tmavý</string>
     <string name="theme_auto">Systém</string>
+    <string name="section_algorithm">Algoritmus mrazu</string>
+    <string name="auto_mode">Automatický režim</string>
+    <string name="sensitivity_label">Citlivost algoritmu</string>
+    <string name="sensitivity_desc">Zvyšte, pokud vaše auto mrzne rychleji než ostatní (např. parkování na větrném místě).</string>
+    <string name="temp_threshold">Práh teploty</string>
+    <string name="humidity_threshold">Práh vlhkosti</string>
+    <string name="precipitation_threshold">Práh srážek</string>
+
+    <string name="section_frost_options">Možnosti mrazu</string>
+    <string name="mata_option_label">Možnost \'Ochrana použita\'</string>
+    <string name="mata_option_desc">Aktivuje tlačítko v upozornění pro ztlumení upozornění po zakrytí auta.</string>
+
+    <string name="section_summer_settings">Letní nastavení (NOVÉ)</string>
+    <string name="storm_alert_label">Upozornit na bouře a krupobití</string>
+    <string name="watering_reminder_label">Připomenout zalévání</string>
+    <string name="heat_threshold_label">Práh upozornění na horko</string>
+
+    <string name="section_app_profile">Profil aplikace</string>
+    <string name="profile_car">Auto</string>
+    <string name="profile_garden">Zahrada</string>
+    <string name="profile_car_desc">Analýza mrazu na oknech auta.</string>
+    <string name="profile_garden_desc">Analýza mrazu na zemi pro rostliny.</string>
+
     <string name="section_units">Jednotky</string>
     <string name="use_fahrenheit_label">Použít Fahrenheity (°F)</string>
+
+    <string name="section_notifications">Upozornění</string>
+    <string name="section_geofencing">Geofencing (NOVÉ)</string>
+    <string name="geofencing_label">Upozornění geofencing</string>
+    <string name="geofencing_desc">Upozornit při vstupu do oblastí s vyšším rizikem mrazu</string>
+    <string name="geofence_history_title">Historie geofence</string>
+    <string name="geofence_history_empty">Žádné záznamy geofence</string>
+    <string name="geofence_radius_title">Poloměr geofence</string>
+    <string name="geofence_radius_save">Uložit poloměr</string>
+    <string name="trend_change_notifications_label">Upozornění na změnu trendu</string>
+
+    <string name="section_calibration">Kalibrace algoritmu</string>
+    <string name="calibration_accuracy">Přesnost předpovědi</string>
+    <string name="calibration_feedback_count">Počet zpětných vazeb</string>
+    <string name="calibration_apply_recommendations">Použít doporučení</string>
+    <string name="calibration_explanation">Algoritmus se učí z vašich odpovědí, aby zlepšil přesnost předpovědí.</string>
+    <string name="calibration_no_data">Žádná data - odpovězte na otázky o počasí pro kalibraci algoritmu.</string>
+    <string name="calibration_dialog_title">Kalibrace algoritmu</string>
+    <string name="calibration_dialog_question">Byl v noci mráz nebo led?</string>
+    <string name="calibration_dialog_help">Vaše odpověď pomáhá zlepšit přesnost předpovědí.</string>
+    <string name="calibration_dialog_yes">ANO - Byl mráz</string>
+    <string name="calibration_dialog_no">NE - Nebyl mráz</string>
+
+    <string name="car_mode_title">Režim auto (led na oknech)</string>
+    <string name="car_mode_desc">Aktivovat ranní připomenutí</string>
+    <string name="car_mode_check_hour">Čas ranní kontroly</string>
+
+    <!-- Notifications Buttons -->
+    <string name="action_ignore">Ignorovat dnes</string>
+    <string name="action_mata">Ochrana použita</string>
+    <string name="action_snooze">Připomenout za 2h</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Historie mrazu</string>
+    <string name="stats_season">Statistiky sezóny</string>
+    <string name="stat_risk_days">Dny rizika</string>
+    <string name="stat_avg_temp">Průměr min. teplot</string>
+    <string name="history_empty">Žádná data v historii</string>
+    <string name="history_hint">Shromážděte data ze 2 nocí pro zobrazení grafu</string>
+    <string name="trend_title">Trend teploty (nejnovější vlevo)</string>
+    <string name="monthly_report_title">Měsíční zpráva</string>
+    <string name="avg_min_label">Průměr min.: %s</string>
+    <string name="days_count_label">%d dní</string>
+    <string name="export_csv">Exportovat do CSV</string>
+    <string name="export_error">Chyba exportu</string>
+    <string name="buy_pro">Odemknout PRO a odstranit reklamy</string>
+
+    <!-- Billing & Subscriptions -->
+    <string name="product_lifetime_title">PRO na celý život</string>
+    <string name="product_lifetime_desc">Jednorázový nákup • Bez reklam • Všechny funkce PRO navždy</string>
+    <string name="product_monthly_title">PRO měsíční</string>
+    <string name="product_monthly_desc">Měsíční předplatné • Zrušte kdykoli • Všechny funkce PRO</string>
+    <string name="product_yearly_title">PRO roční</string>
+    <string name="product_yearly_desc">Roční předplatné • Nejlepší cena • Ušetřete až 33%</string>
+    <string name="purchase_dialog_title">Vyberte plán PRO</string>
+    <string name="purchase_best_value">NEJLEPŠÍ HODNOTA</string>
+    <string name="purchase_most_popular">NEJOBLÍBENĚJŠÍ</string>
+    <string name="purchase_button">Koupit nyní</string>
+    <string name="purchase_restore">Obnovit nákupy</string>
+    <string name="purchase_loading_price">Načítání ceny…</string>
+    <string name="purchase_debug_no_products">🛠 DEBUG: Produkty nenačteny z Play Store. Nakonfigurujte produkty v Play Console nebo použijte isProForced v nastavení ladění.</string>
+    <string name="purchase_success">Děkujeme za nákup PRO!</string>
+    <string name="purchase_success_desc">Funkce PRO byly odemčeny</string>
+    <string name="purchase_pending">Zpracování platby…</string>
+    <string name="purchase_cancelled">Nákup zrušen</string>
+    <string name="subscription_active">Předplatné PRO aktivní</string>
+    <string name="subscription_expires">Platnost vyprší: %1$s</string>
+    <string name="subscription_auto_renew_on">Obnovuje se automaticky</string>
+    <string name="subscription_auto_renew_off">Neobnovuje se automaticky</string>
+    <string name="subscription_manage">Spravovat předplatné</string>
+    <string name="subscription_grace_period">V období odkladu</string>
+    <string name="pro_features_title">Funkce PRO</string>
+    <string name="pro_feature_no_ads">🚫 Bez reklam</string>
+    <string name="pro_feature_frost_map">🗺️ Mapa mrazu ve vaší oblasti</string>
+    <string name="pro_feature_extended_forecast">📅 14denní předpověď</string>
+    <string name="pro_feature_multi_location">📍 Více uložených poloh</string>
+    <string name="pro_feature_pdf_reports">📄 PDF zprávy</string>
+    <string name="pro_feature_priority_support">⚡ Prioritní podpora</string>
+    <string name="price_per_month">%1$s/měsíc</string>
+    <string name="price_per_year">%1$s/rok</string>
+    <string name="price_one_time">%1$s jednorázově</string>
+    <string name="billing_error_generic">Chyba platby. Zkuste to prosím znovu.</string>
+    <string name="billing_error_network">Bez připojení. Zkontrolujte internet.</string>
+    <string name="billing_unavailable">Platby nedostupné</string>
+
+    <!-- Trend Screen (NEW) -->
+    <string name="trend_screen_title">7denní trend</string>
+    <string name="trend_high_risk">⚠️ Velmi vysoké riziko mrazu tento týden</string>
+    <string name="trend_moderate_risk">⚡ Mírné riziko mrazu</string>
+    <string name="trend_low_risk">🧊 Sporadický mráz</string>
+    <string name="trend_no_risk">✅ Žádné riziko mrazu</string>
+    <string name="trend_stat_nights_with_risk">Noci s rizikem</string>
+    <string name="trend_stat_avg_min">Průměr min.</string>
+    <string name="trend_stat_lowest">Nejnižší</string>
+    <string name="trend_chart_no_data">Žádná data k zobrazení</string>
+    <string name="trend_chart_temperature_title">Noční teplota (7 dní)</string>
+    <string name="trend_chart_range">Rozsah: %1$s°C - %2$s°C</string>
+    <string name="trend_night_details_title">Detaily noci</string>
+    <string name="trend_future_title">Předpověď budoucího trendu</string>
+    <string name="trend_future_load_button">Načíst předpověď trendu</string>
+    <string name="trend_future_loaded">Budoucí trend načten: %1$s</string>
+    <string name="trend_future_prompt">Klepnutím na tlačítko načtete předpověď budoucího trendu</string>
+    <string name="trend_unknown_error">Neznámá chyba</string>
+    <string name="trend_export_title">Export dat trendu</string>
+    <string name="trend_export_button">Exportovat CSV</string>
+    <string name="trend_export_future_button">Exportovat CSV budoucího trendu</string>
+    <string name="trend_export_subject">Trend FrostAlert</string>
+    <string name="trend_export_future_subject">Budoucí trend FrostAlert</string>
+    <string name="trend_export_chooser">Sdílet trend</string>
+    <string name="trend_export_future_chooser">Sdílet budoucí trend</string>
+    <string name="trend_export_csv_header">Den,Datum,TempMinC,RizikoMrazu</string>
+    <string name="trend_export_risk_yes">ANO</string>
+    <string name="trend_export_risk_no">NE</string>
+    <string name="trend_export_error_with_reason">Chyba exportu: %1$s</string>
 
     <!-- Onboarding -->
     <string name="welcome_title">Vítejte ve FrostAlert</string>
@@ -48,7 +207,78 @@
     <string name="onboarding_skip">Přeskočit</string>
     <string name="onboarding_finish">ZAČÍT</string>
 
-    <!-- Language Selection -->
+    <!-- Feedback Section -->
+    <string name="feedback_question">Byla dnes ráno předpověď přesná?</string>
+    <string name="feedback_yes">ANO</string>
+    <string name="feedback_no">NE</string>
+    <string name="feedback_calibration">Vaše odpovědi kalibrují algoritmus pro vaše auto.</string>
+
+    <!-- Accessibility & Icons -->
+    <string name="frost_risk_icon">Varování - riziko mrazu</string>
+    <string name="no_frost_risk_icon">Žádné riziko mrazu</string>
+    <string name="wind_icon_description">Ikona větru</string>
+    <string name="wind_speed_format">Vítr: %s km/h (snižuje riziko)</string>
+    <string name="weather_icon_description">Ikona počasí</string>
+    <string name="night_icon_description">Ikona noci</string>
+    <string name="error_icon_description">Ikona chyby</string>
+    <string name="retry_button">Zkusit znovu</string>
+    <string name="no_forecast_data">Žádná data předpovědi</string>
+
+    <!-- Home ViewModel -->
+    <string name="home_pull_to_refresh">Potáhněte pro obnovení dat.</string>
+
+    <!-- Widget labels -->
+    <string name="widget_risk_high_short">Vysoké</string>
+    <string name="widget_risk_low_short">Nízké</string>
+    <string name="widget_no_data">Žádná data</string>
+    <string name="widget_tap_to_refresh">Klepněte pro obnovení</string>
+    <string name="widget_refresh_button">Obnovit</string>
+    <string name="widget_temp_label">Min: %s</string>
+    <string name="widget_risk_label">Riziko: %s</string>
+    <string name="widget_title_with_date">FrostAlert • %s</string>
+
+    <!-- Notification titles and messages -->
+    <string name="notification_test_title">Testovací upozornění</string>
+    <string name="notification_test_message">Toto je testovací upozornění rizika mrazu.</string>
+    <string name="notification_trend_title">Změna trendu teploty</string>
+    <string name="notification_trend_warming">Oteplování! 📈</string>
+    <string name="notification_trend_cooling">Ochlazování! 📉</string>
+    <string name="notification_trend_stable">Trend stabilizován ➡️</string>
+    <string name="notification_geofence_title">⚠️ Vyšší riziko mrazu poblíž!</string>
+    <string name="notification_geofence_message">Směrem k %1$s je riziko o %2$d%% vyšší. Předpověď: %3$.1f°C.</string>
+    <string name="notification_frost_car_title">Riziko ledu na oknech!</string>
+    <string name="notification_frost_garden_title">Riziko mrazu v zahradě!</string>
+    <string name="notification_frost_car_alert_title">Pozor, mráz!</string>
+    <string name="notification_frost_garden_alert_title">Pečujte o své rostliny!</string>
+    <string name="notification_frost_forecast_message">Předpověď minima: %.1f°C.</string>
+    <string name="notification_frost_night_message">Možný mráz dnes v noci.</string>
+    <string name="notification_morning_brief_title">☀️ Dobré ráno! Předpověď mrazu</string>
+    <string name="notification_morning_brief_risk_message">⚠️ Riziko mrazu dnes v noci! Min: %1$.1f°C, pravděpodobnost: %2$d%%</string>
+    <string name="notification_morning_brief_no_risk_message">✅ Žádné riziko mrazu. Předpověď minima: %.1f°C</string>
+
+    <!-- Morning Brief settings -->
+    <string name="section_morning_brief">Ranní přehled</string>
+    <string name="morning_brief_label">Ranní upozornění</string>
+    <string name="morning_brief_desc">Poslat přehled počasí krátce po prvním odemčení telefonu</string>
+    <string name="morning_brief_delay_label">Zpoždění po odemčení (min)</string>
+    <string name="morning_brief_learning_days_label">Historie učení (dny)</string>
+    <string name="security_warning_title">⚠️ Varování zabezpečení</string>
+    <string name="security_warning_message">Zjištěny problémy: %1$s. Funkce PRO byly deaktivovány.</string>
+    <string name="security_warning_root_message">Bylo zjištěno rootované zařízení. Buďte opatrní při používání aplikace.</string>
+    <string name="security_issue_app_modified">Aplikace upravena</string>
+    <string name="security_issue_non_genuine">Nepůvodní zařízení</string>
+    <string name="security_issue_root_detected">Zjištěn root</string>
+    <string name="security_issue_invalid_signature">Neplatný podpis aplikace</string>
+    <string name="security_issue_non_play_installer">Nainstalováno mimo Play Store</string>
+
+    <!-- B3: Offline cache banner -->
+    <string name="offline_cache_banner_title">Offline data</string>
+    <string name="offline_cache_banner_desc">Poslední známá data: %s</string>
+
+    <!-- C1: Daily forecast section -->
+    <string name="daily_forecast_title">Týdenní předpověď</string>
+
+    <!-- A3: Onboarding enhancements -->
     <string name="onboarding_language_title">Vyberte jazyk</string>
     <string name="onboarding_language_desc">Přizpůsobte aplikaci svým jazykovým preferencím.</string>
     <string name="language_system">Výchozí systémový</string>
@@ -60,16 +290,12 @@
     <string name="language_italian">Italiano</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_czech">Čeština</string>
-
-    <!-- Mode Selection -->
     <string name="onboarding_mode_title">Vyberte profil</string>
     <string name="onboarding_mode_desc">Nakonfigurujte aplikaci pro své potřeby.</string>
     <string name="onboarding_mode_car_label">Auto</string>
     <string name="onboarding_mode_car_desc">Mráz na oknech auta ráno.</string>
     <string name="onboarding_mode_garden_label">Zahrada</string>
     <string name="onboarding_mode_garden_desc">Mráz ohrožující zahradní rostliny.</string>
-
-    <!-- Permissions -->
     <string name="onboarding_permissions_title">Oprávnění</string>
     <string name="onboarding_permissions_desc">FrostAlert potřebuje přístup k vaší poloze a možnost odesílat oznámení, aby vás varoval před rizikem mrazu.</string>
     <string name="onboarding_grant_location">Povolit polohu</string>
@@ -78,19 +304,281 @@
     <string name="onboarding_grant_notifications_granted">✓ Oznámení udělena</string>
     <string name="onboarding_grant_exact_alarm">Povolit přesné alarmy</string>
     <string name="onboarding_grant_exact_alarm_granted">✓ Alarmy uděleny</string>
-    <string name="onboarding_permissions_note">Tato nastavení můžete později změnit v Nastavení.</string>
+    <string name="onboarding_permissions_note">Tato nastavení můžete později změnit v systémovém Nastavení.</string>
 
-    <!-- Notifications -->
-    <string name="notification_frost_car_title">Riziko ledu na oknech!</string>
-    <string name="notification_frost_garden_title">Riziko mrazu v zahradě!</string>
-    <string name="notification_frost_forecast_message">Předpověď min: %.1f°C.</string>
+    <!-- UV Descriptions -->
+    <string name="uv_description_low">Nízký</string>
+    <string name="uv_description_moderate">Střední</string>
+    <string name="uv_description_high">Vysoký</string>
+    <string name="uv_description_very_high">Velmi vysoký</string>
+    <string name="uv_description_extreme">Extrémní</string>
+
+    <!-- UV Advice -->
+    <string name="uv_advice_low">Bezpečné. Nejsou nutná žádná zvláštní opatření.</string>
+    <string name="uv_advice_moderate">Použijte opalovací krém a noste sluneční brýle.</string>
+    <string name="uv_advice_high">Omezte pobyt na slunci mezi 11. a 16. hodinou. Vyhledejte stín.</string>
+    <string name="uv_advice_extreme">Vyhýbejte se slunci! Riziko rychlých popálenin a úpalu.</string>
+
+    <!-- Summer Warning Messages -->
+    <string name="summer_warning_hail">⚠️ VAROVÁNÍ: RIZIKO KRUPOBITÍ!\n</string>
+    <string name="summer_warning_storm">⛈️ RIZIKO BOUŘE!\n</string>
+    <string name="summer_warning_heat_car">🔥 HORKO: Interiér auta se rychle zahřívá. Nenechávejte děti ani zvířata!\n</string>
+    <string name="summer_warning_uv_high">☀️ Vysoký index UV: %1$s (%2$s)\n</string>
+
+    <!-- Garden Tips -->
+    <string name="garden_tip_safe">Bezpečné. Rostliny nevyžadují ochranu.</string>
+    <string name="garden_tip_light_frost">Lehký mráz. Zakryjte citlivé rostliny netkanou textilií.</string>
+    <string name="garden_tip_moderate_frost">Mírný mráz. Nutné pevné zakrytí nebo přesun květináčů do garáže.</string>
+    <string name="garden_tip_severe_frost">Silný mráz! Exotické rostliny a mladé sazenice jsou ohroženy i pod přikryvkou.</string>
+
+    <!-- Warning Messages -->
+    <string name="warning_strong_wind">Bezpečné – silný vítr brání tvorbě mrazu.</string>
+    <string name="warning_frost_risk_garden">Riziko mrazu v zahradě!</string>
+    <string name="warning_frost_risk_high">Vysoké riziko mrazu!</string>
+    <string name="warning_no_frost_risk">Bezpečné – žádné riziko mrazu\nTeplota: %s</string>
+    <string name="warning_frost_air_surface">%1$s\nVzduch: %2$s | Povrch: %3$s\nRosný bod: %4$s</string>
+
+    <!-- Trend Descriptions -->
+    <string name="trend_description_very_high">⚠️ Velmi vysoké riziko mrazu tento týden</string>
+    <string name="trend_description_moderate">⚡ Mírné riziko mrazu</string>
+    <string name="trend_description_low">🧊 Sporadický mráz</string>
+    <string name="trend_description_none">✅ Žádné riziko mrazu</string>
+
+    <!-- Trend Direction Emoji -->
+    <string name="trend_direction_up">📈 Oteplování</string>
+    <string name="trend_direction_down">📉 Ochlazování</string>
+    <string name="trend_direction_stable">➡️ Beze změny</string>
+
+    <!-- Day Labels -->
+    <string name="day_label_today">Dnes</string>
+    <string name="day_label_yesterday">Včera</string>
+    <string name="day_label_days_ago">Před %d dny</string>
+    <string name="day_label_tomorrow">Zítra</string>
+    <string name="day_label_day_after_tomorrow">Pozítří</string>
+    <string name="day_label_in_3_days">Za 3 dny</string>
+    <string name="day_label_in_4_days">Za 4 dny</string>
+    <string name="day_label_in_5_days">Za 5 dní</string>
+    <string name="day_label_in_6_days">Za 6 dní</string>
+    <string name="day_label_in_7_days">Za 7 dní</string>
+    <string name="day_label_later">Později</string>
+
+    <!-- Notification Channel Names -->
+    <string name="notification_channel_frost_name">Upozornění na mráz</string>
+    <string name="notification_channel_frost_description">Upozornění na mráz a led na čelním skle</string>
+    <string name="notification_channel_morning_name">Ranní přehled počasí</string>
+    <string name="notification_channel_morning_description">Ranní přehled počasí po prvním odemčení telefonu</string>
+
+    <!-- Report Generator -->
+    <string name="report_title">FrostAlert — Zpráva o sezóně</string>
+    <string name="report_summary">Souhrn</string>
+    <string name="report_total_nights">Celkem nocí: %d</string>
+    <string name="report_frost_nights">Noci s rizikem mrazu: %d</string>
+    <string name="report_avg_min">Průměrné minimum: %s</string>
+    <string name="report_abs_min">Absolutní minimum: %s</string>
+    <string name="report_details">Detaily záznamů</string>
+    <string name="report_table_date">Datum</string>
+    <string name="report_table_min">Min °C</string>
+    <string name="report_table_risk">Riziko</string>
+    <string name="report_table_probability">Pravd.</string>
+    <string name="report_yes">ANO</string>
+    <string name="report_no">NE</string>
+    <string name="report_footer">Vygenerováno FrostAlert • %s</string>
+    <string name="report_share_chooser">Sdílet zprávu</string>
+
+    <!-- Garden Seasonal Tips -->
+    <string name="garden_seasonal_tip_format">%1$s %2$s</string>
+
+    <!-- January Tips -->
+    <string name="tip_january_1">❄️ Zkontrolujte zimní přikrývky rostlin po každém tání.</string>
+    <string name="tip_january_2">📋 Naplánujte zahradu na příští sezónu, objednejte semena z katalogů.</string>
+    <string name="tip_january_3">✂️ Prořezávejte ovocné stromy během mrazu, kdy míza neteče.</string>
+
+    <!-- February Tips -->
+    <string name="tip_february_1">🌱 Začněte se setbou zeleniny na sazenice doma (rajčata, papriky).</string>
+    <string name="tip_february_2">✂️ Prořezejte okrasné keře před jejich probuzením.</string>
+    <string name="tip_february_3">🐛 Zkontrolujte rostliny na škůdce přezimující pod kůrou.</string>
+
+    <!-- March Tips -->
+    <string name="tip_march_1">🌷 Odstraňte zimní přikrývky, když teploty neklesají pod -5°C.</string>
+    <string name="tip_march_2">🌱 Zasejte ranou zeleninu: salát, špenát, ředkvičky.</string>
+    <string name="tip_march_3">💧 Obnovte zalévání, když půda rozmrzne po vrstvách.</string>
+
+    <!-- April Tips -->
+    <string name="tip_april_1">⚠️ Pozor na mrazíky! Květen je měsíc \'Zmrzlých svatých\'.</string>
+    <string name="tip_april_2">🍅 Přesaďte sazenice do květináčů, nevynášejte je před 15. květnem.</string>
+    <string name="tip_april_3">🌿 Zasejte byliny přímo do půdy: petržel, kopr, koriandr.</string>
+
+    <!-- May Tips -->
+    <string name="tip_may_1">🌡️ Po 15. květnu vysaďte sazenice teplomilné zeleniny venku.</string>
+    <string name="tip_may_2">💧 Začněte s pravidelným zálivkou – jarní deště často nestačí.</string>
+    <string name="tip_may_3">🌹 Odvažte a rozmotejte přikrývky růží a trvalek.</string>
+
+    <!-- June Tips -->
+    <string name="tip_june_1">☀️ Mulčujte půdu pro zadržení vlhkosti a potlačení plevele.</string>
+    <string name="tip_june_2">💧 Zaléve jte ráno nebo večer, vyhněte se poledni.</string>
+    <string name="tip_june_3">🍓 Sběr jahod – nenechávejte ovoce na keřích příliš dlouho.</string>
+
+    <!-- July Tips -->
+    <string name="tip_july_1">🌡️ Zkontrolujte index UV – omezte práci na zahradě mezi 11. a 15. hodinou.</string>
+    <string name="tip_july_2">💧 Zelenina v horku vyžaduje denní zalévání, zejména rajčata.</string>
+    <string name="tip_july_3">🌿 Sklízejte byliny ráno, kdy jsou silice nejintenzivnější.</string>
+
+    <!-- August Tips -->
+    <string name="tip_august_1">🥦 Zasejte podzimní zeleninu: brokolice, kedlubny, salát.</string>
+    <string name="tip_august_2">🍎 Sklízejte rané odrůdy jablek a švestek.</string>
+    <string name="tip_august_3">💧 Snižte zalévání na konci měsíce pro otužení rostlin.</string>
+
+    <!-- September Tips -->
+    <string name="tip_september_1">🌾 Sklízejte dýně a cukety před prvními mrazíky.</string>
+    <string name="tip_september_2">🧅 Vysazujte cibule tulipánů, narcisů a hyacintů.</string>
+    <string name="tip_september_3">❄️ Připravte netkanou textilii – mrazíky se mohou objevit tento měsíc.</string>
+
+    <!-- October Tips -->
+    <string name="tip_october_1">🌹 Přikryjte růže a trvalky citlivé na mráz.</string>
+    <string name="tip_october_2">🥕 Sklízejte kořenovou zeleninu: mrkev, petržel, pastinák – mráz je osladí.</string>
+    <string name="tip_october_3">🍂 Kompostujte listí – vynikající hnojivo na příští rok.</string>
+
+    <!-- November Tips -->
+    <string name="tip_november_1">❄️ Chraňte rostliny před mrazem: netkaná textilie, sláma, jehličí.</string>
+    <string name="tip_november_2">🪴 Přemístěte citlivé květináče do chladné místnosti.</string>
+    <string name="tip_november_3">📋 Poznamenejte si pozorování z končící sezóny pro lepší plánování.</string>
+
+    <!-- December Tips -->
+    <string name="tip_december_1">🌟 Zkontrolujte přikrývky po silných sněžení.</string>
+    <string name="tip_december_2">📚 Čas na čtení o zahradničení a plánování zahrady na nový rok.</string>
+    <string name="tip_december_3">🐦 Pamatujte na ptáky v zahradě – pověste krmítko.</string>
+
+    <!-- Diagnostics -->
+    <string name="diagnostics_title">=== Diagnostická zpráva FrostAlert ===</string>
+    <string name="diagnostics_generated">Vygenerováno: %s</string>
+    <string name="diagnostics_user_description_label">--- Popis problému ---</string>
+    <string name="diagnostics_app_section">--- Aplikace ---</string>
+    <string name="diagnostics_version">Verze: %1$s (build %2$d)</string>
+    <string name="diagnostics_version_unknown">Verze: neznámá</string>
+    <string name="diagnostics_device_section">--- Zařízení ---</string>
+    <string name="diagnostics_device_model">Model: %s</string>
+    <string name="diagnostics_android_version">Android: %s (API %d)</string>
+    <string name="diagnostics_settings_section">--- Nastavení ---</string>
+    <string name="diagnostics_location">Poloha: %1$s, %2$s</string>
+    <string name="diagnostics_mode">Režim: %s</string>
+    <string name="diagnostics_mode_car">Auto</string>
+    <string name="diagnostics_mode_garden">Zahrada</string>
+    <string name="diagnostics_temp_threshold">Práh tepl.: %s</string>
+    <string name="diagnostics_humidity_threshold">Práh vlhk.: %.0f%%</string>
+    <string name="diagnostics_sensitivity">Citlivost: %.1f</string>
+    <string name="diagnostics_fahrenheit">Fahrenheit: %s</string>
+    <string name="diagnostics_enabled">Zapnuto</string>
+    <string name="diagnostics_disabled">Vypnuto</string>
+    <string name="diagnostics_alerts_time">Upozornění: %1$d:00 - %2$d:00</string>
+    <string name="diagnostics_car_mode">Režim auto: %s v %d:00</string>
+    <string name="diagnostics_db_section">--- Databáze ---</string>
+    <string name="diagnostics_records_count">Záznamy tepl.: %d</string>
+    <string name="diagnostics_feedback_count">Zpětné vazby: %d</string>
+    <string name="diagnostics_geofence_count">Záznamy geofence: %d</string>
+    <string name="diagnostics_last_5_records">Posledních 5 záznamů:</string>
+    <string name="diagnostics_no_data">(žádná data)</string>
+    <string name="diagnostics_record_entry">%1$s | %2$s | Vlhk: %.0f%% | %3$s</string>
+    <string name="diagnostics_risk">RIZIKO</string>
+    <string name="diagnostics_ok">OK</string>
+    <string name="diagnostics_worker_section">--- Telemetrie workeru ---</string>
+    <string name="diagnostics_last_run">Poslední spuštění: %s</string>
+    <string name="diagnostics_last_success">Poslední úspěch: %s</string>
+    <string name="diagnostics_last_failure">Poslední selhání: %s</string>
+    <string name="diagnostics_never">nikdy</string>
+    <string name="diagnostics_total_runs">Celkem spuštění: %d</string>
+    <string name="diagnostics_success_count">Úspěchy: %d</string>
+    <string name="diagnostics_failure_count">Selhání: %d</string>
+    <string name="diagnostics_last_error">Poslední chyba: %s</string>
+    <string name="diagnostics_footer">=== Konec zprávy ===</string>
+
+    <!-- Debug Screen -->
+    <string name="debug_lab_title">Vývojářská laboratoř</string>
+    <string name="debug_temp_slider">Tepl.: %s°C</string>
+    <string name="debug_humidity_slider">Vlhkost: %d%%</string>
+    <string name="debug_wind_slider">Vítr: %d km/h</string>
+    <string name="debug_uv_slider">Index UV: %s</string>
+    <string name="debug_force_pro">Vynutit stav PRO (Debug)</string>
+    <string name="debug_frost_risk_percent">Riziko mrazu: %d%%</string>
+    <string name="debug_nights_with_risk">Noci s rizikem: %1$d/7</string>
+    <string name="debug_lowest_temp">Nejnižší: %s°C</string>
+    <string name="debug_trend">Trend: %s</string>
+    <string name="debug_open_trend_screen">Otevřít obrazovku Trendu (4. karta)</string>
+    <string name="debug_test_notification">Testovací upozornění</string>
+    <string name="debug_generate_history">Generovat historii</string>
+    <string name="debug_history_added">Přidáno %d dní historie</string>
+    <string name="debug_clear_all">Vymazat vše</string>
+    <string name="debug_db_cleared">Databáze vymazána</string>
+    <string name="debug_long_history">Generovat dlouhou historii (90 dní)</string>
+    <string name="debug_force_widget_refresh">Vynutit obnovení widgetu</string>
+    <string name="debug_widget_refreshed">Widget obnoven</string>
+    <string name="debug_log_widget_data">Zaznamenat data widgetu</string>
+    <string name="debug_widget_logged">Data widgetu zaznamenána (viz logcat)</string>
+    <string name="debug_force_classic_widget">Vynutit aktualizaci klasického widgetu</string>
+    <string name="debug_classic_widget_updated">Vynucená aktualizace klasického widgetu</string>
+    <string name="debug_start_geofence_registrar">Spustit GeofenceRegistrar</string>
+    <string name="debug_stop_geofence_registrar">Zastavit GeofenceRegistrar</string>
+    <string name="debug_geofence_started">Registrátor geofence spuštěn</string>
+    <string name="debug_geofence_stopped">Registrátor geofence zastaven</string>
+    <string name="debug_register_now">Registrovat nyní</string>
+    <string name="debug_geofence_registered">Jednorázová registrace geofence vyvolána</string>
+    <string name="debug_feedbacks_count">Zpětné vazby: %d</string>
+    <string name="debug_accuracy">Přesnost: %d%%</string>
+    <string name="debug_confidence_level">Úroveň jistoty: %s</string>
+    <string name="debug_no_calibration_data">Žádná data kalibrace</string>
+    <string name="debug_clear_feedback">Vymazat zpětnou vazbu</string>
+    <string name="debug_calibration_cleared">Kalibrace vymazána</string>
+    <string name="debug_temp_records">Záznamy tepl.</string>
+    <string name="debug_feedbacks">Zpětné vazby</string>
+    <string name="debug_frost_risks">Rizika mrazu</string>
+    <string name="debug_add_simulator_record">Přidat záznam ze simulátoru</string>
+    <string name="debug_record_added">Testovací záznam přidán</string>
+    <string name="debug_send_test_notification">Odeslat testovací upozornění</string>
+    <string name="debug_test_ignore_today">Test: Ignorovat dnes</string>
+    <string name="debug_ignore_set">\'Ignorovat dnes\' nastaveno</string>
+    <string name="debug_test_snooze">Test: Připomenout za 2h</string>
+    <string name="debug_snooze_scheduled">Připomenutí naplánováno za 2h</string>
+    <string name="debug_result_winter_risk">VÝSLEDEK ZIMA: RIZIKO MRAZU</string>
+    <string name="debug_result_winter_safe">VÝSLEDEK ZIMA: BEZPEČNÉ</string>
+    <string name="debug_result_summer_optimal">VÝSLEDEK LÉTO: OPTIMÁLNÍ</string>
+    <string name="debug_diagnostics_clipboard">Diagnostika FrostAlert</string>
+    <string name="debug_diagnostics_email_subject">FrostAlert – Diagnostická zpráva</string>
+    <string name="debug_share_report">Sdílet zprávu</string>
+    <string name="debug_loading_trend">Načítání trendu...</string>
+    <string name="debug_loading_stats">Načítání statistik...</string>
+    <string name="debug_current_mode">Aktuální režim: %s</string>
+    <string name="debug_mode_car">Auto</string>
+    <string name="debug_mode_garden">Zahrada</string>
+    <string name="debug_no_higher_risk">Žádné vyšší riziko poblíž</string>
+    <string name="debug_problem_description">Popis problému</string>
+    <string name="debug_generate_diagnostic">Generovat diagnostickou zprávu</string>
 
     <!-- History Screen -->
-    <string name="history_title">Historie mrazu</string>
-    <string name="stats_season">Statistiky sezóny</string>
-    <string name="export_csv">Exportovat do CSV</string>
+    <string name="history_csv_subject">Historie FrostAlert</string>
+    <string name="history_csv_chooser">Sdílet historii</string>
 
-    <!-- Actions -->
-    <string name="action_ignore">Ignorovat dnes</string>
-    <string name="retry_button">Zkusit znovu</string>
+    <!-- Calibration ViewModel -->
+    <string name="calibration_no_analysis_data">Žádná data k analýze.</string>
+
+    <!-- Additional Diagnostics -->
+    <string name="diagnostics_precip_threshold">Práh srážek: %s mm</string>
+    <string name="diagnostics_alert_time">Upozornění: %1$d:00–%2$d:00</string>
+    <string name="diagnostics_auto_mode">Automatický režim: %s</string>
+    <string name="diagnostics_pro_forced">Režim PRO (vynucený): %s</string>
+    <string name="diagnostics_geofencing">Geofencing: %s</string>
+    <string name="diagnostics_trend_notif">Upozornění na trend: %s</string>
+    <string name="diagnostics_manual_location">Ruční poloha: %s</string>
+    <string name="diagnostics_manual_location_name"> (%s)</string>
+    <string name="diagnostics_temp_unit">Jednotka tepl.: %s</string>
+    <string name="diagnostics_theme">Téma: %s</string>
+    <string name="diagnostics_theme_light">Světlý</string>
+    <string name="diagnostics_theme_dark">Tmavý</string>
+    <string name="diagnostics_theme_system">Systém</string>
+    <string name="diagnostics_read_error">Chyba čtení nastavení: %s</string>
+    <string name="diagnostics_risk_count">Rizika mrazu: %d</string>
+    <string name="diagnostics_calibration_count">Zpětné vazby kalibrace: %d</string>
+    <string name="diagnostics_db_error">Chyba čtení databáze: %s</string>
+    <string name="diagnostics_retry_count">Opakování: %d</string>
+    <string name="diagnostics_critical_errors">Kritické chyby: %d</string>
+    <string name="diagnostics_success_rate">Míra úspěšnosti: %d%%</string>
+    <string name="diagnostics_no_run_data">žádná data</string>
 </resources>
