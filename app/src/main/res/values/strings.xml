@@ -710,6 +710,14 @@
     <string name="debug_diagnostics_clipboard">FrostAlert Diagnostics</string>
     <string name="debug_diagnostics_email_subject">FrostAlert – Raport Diagnostyczny</string>
     <string name="debug_share_report">Udostępnij raport</string>
+    <string name="debug_loading_trend">Ładowanie trendu...</string>
+    <string name="debug_loading_stats">Ładowanie statystyk...</string>
+    <string name="debug_current_mode">Aktualny tryb: %s</string>
+    <string name="debug_mode_car">Samochód</string>
+    <string name="debug_mode_garden">Ogród</string>
+    <string name="debug_no_higher_risk">Brak wyższego ryzyka w okolicy</string>
+    <string name="debug_problem_description">Opis problemu</string>
+    <string name="debug_generate_diagnostic">Generuj raport diagnostyczny</string>
 
     <!-- History Screen -->
     <string name="history_csv_subject">Historia FrostAlert</string>

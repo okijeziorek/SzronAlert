@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.FrostDatabase
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.local.SettingsDataStore
@@ -96,7 +98,7 @@ fun DebugScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Laboratorium Dewelopera",
+                        text = stringResource(R.string.debug_lab_title),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

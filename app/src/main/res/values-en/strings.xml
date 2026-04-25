@@ -543,6 +543,14 @@
     <string name="debug_diagnostics_clipboard">FrostAlert Diagnostics</string>
     <string name="debug_diagnostics_email_subject">FrostAlert – Diagnostic Report</string>
     <string name="debug_share_report">Share report</string>
+    <string name="debug_loading_trend">Loading trend...</string>
+    <string name="debug_loading_stats">Loading stats...</string>
+    <string name="debug_current_mode">Current mode: %s</string>
+    <string name="debug_mode_car">Car</string>
+    <string name="debug_mode_garden">Garden</string>
+    <string name="debug_no_higher_risk">No higher risk nearby</string>
+    <string name="debug_problem_description">Problem description</string>
+    <string name="debug_generate_diagnostic">Generate diagnostic report</string>
 
     <!-- History Screen -->
     <string name="history_csv_subject">FrostAlert History</string>
