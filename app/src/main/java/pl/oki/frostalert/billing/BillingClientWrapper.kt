@@ -146,15 +146,24 @@ class BillingClientWrapper @Inject constructor(
 
                 // Proceed with purchase flow
                 // Find offer with a free trial phase; fall back to the first available offer
-                val offerToken = productDetails.subscriptionOfferDetails
+                val subscriptionOfferDetails = productDetails.subscriptionOfferDetails
+                val offerToken = subscriptionOfferDetails
                     ?.firstOrNull { offer ->
                         offer.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L }
                     }?.offerToken
-                    ?: productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken
+                    ?.takeIf { it.isNotBlank() }
+                    ?: subscriptionOfferDetails?.firstOrNull()?.offerToken?.takeIf { it.isNotBlank() }
+
+                if (subscriptionOfferDetails != null && offerToken == null) {
+                    _purchaseError.value = "Nie udało się pobrać oferty subskrypcji. Spróbuj ponownie później."
+                    return@launch
+                }
 
                 val productDetailsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
                     .setProductDetails(productDetails)
-                if (offerToken != null) productDetailsBuilder.setOfferToken(offerToken)
+                if (subscriptionOfferDetails != null) {
+                    productDetailsBuilder.setOfferToken(offerToken)
+                }
                 val productDetailsParamsList = listOf(productDetailsBuilder.build())
                 val billingFlowParams = BillingFlowParams.newBuilder()
                     .setProductDetailsParamsList(productDetailsParamsList)
@@ -258,7 +267,7 @@ class BillingClientWrapper @Inject constructor(
                         detailsList.forEach { details ->
                             val offering = ProductOffering.fromProductId(details.productId)
                             if (offering != null) {
-                                // Get the base plan offer (first subscription offer)
+                                // Use the first available subscription offer returned by BillingClient.
                                 val subscriptionOffer = details.subscriptionOfferDetails?.firstOrNull()
                                 val pricingPhase = subscriptionOffer?.pricingPhases?.pricingPhaseList?.lastOrNull()
                                 if (pricingPhase != null) {
