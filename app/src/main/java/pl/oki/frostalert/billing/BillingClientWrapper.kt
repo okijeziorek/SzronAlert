@@ -152,20 +152,10 @@ class BillingClientWrapper @Inject constructor(
                     }?.offerToken
                     ?: productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken
 
-                val productDetailsParamsList = if (offerToken != null) {
-                    listOf(
-                        BillingFlowParams.ProductDetailsParams.newBuilder()
-                            .setProductDetails(productDetails)
-                            .setOfferToken(offerToken)
-                            .build()
-                    )
-                } else {
-                    listOf(
-                        BillingFlowParams.ProductDetailsParams.newBuilder()
-                            .setProductDetails(productDetails)
-                            .build()
-                    )
-                }
+                val productDetailsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(productDetails)
+                if (offerToken != null) productDetailsBuilder.setOfferToken(offerToken)
+                val productDetailsParamsList = listOf(productDetailsBuilder.build())
                 val billingFlowParams = BillingFlowParams.newBuilder()
                     .setProductDetailsParamsList(productDetailsParamsList)
                     .build()
