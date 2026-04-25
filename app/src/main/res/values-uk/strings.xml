@@ -12,6 +12,7 @@
     <string name="offline_banner_title">Немає з\'єднання</string>
     <string name="offline_banner_description">Перевірте інтернет-з\'єднання для оновлення метеоданих.</string>
     <string name="offline_banner_action">НАЛАШТУВАННЯ</string>
+    <string name="offline_settings_unavailable">Неможливо відкрити налаштування</string>
 
     <!-- Home Screen -->
     <string name="loading_weather">Завантаження метеоданих…</string>
@@ -19,38 +20,267 @@
     <string name="risk_garden">Ризик морозу!</string>
     <string name="risk_none">Безпечно – немає ризику морозу</string>
     <string name="night_min_temp">Нічний прогноз (мін)</string>
+    <string name="night_min_garden">Мін. прогноз у саду</string>
     <string name="hourly_forecast">Наступні 24 години</string>
     <string name="refresh_success">Дані оновлено</string>
+    <string name="battery_warning_title">Надійні сповіщення</string>
+    <string name="battery_warning_desc">Вимкніть оптимізацію батареї для отримання сповіщень вночі.</string>
+    <string name="battery_fix_btn">НАЛАШТУВАТИ</string>
+    <string name="home_garden_title">Мій сад</string>
+    <string name="home_car_title">Ваш автомобіль</string>
+    <string name="garden_status_label">Стан рослин</string>
+    <string name="feedback_thanks">Дякуємо за відгук!</string>
+    <string name="summer_optimal">Оптимальні умови</string>
+    <string name="watering_needed">💧 Рослини потребують поливу!</string>
+    <string name="uv_label">Індекс УФ: %1$s (%2$s)</string>
+    <string name="muted_banner_title">Сповіщення приглушено</string>
+    <string name="muted_banner_desc">Захист застосовано або сповіщення проігноровано.</string>
+    <string name="restore_btn">ВІДНОВИТИ</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Налаштування</string>
     <string name="section_location">Місцезнаходження</string>
     <string name="manual_location_toggle">Встановити місцезнаходження вручну</string>
     <string name="location_gps_auto">Використовувати GPS (автоматично)</string>
+    <string name="save_location">Зберегти місцезнаходження</string>
+    <string name="location_name_label">Назва місця</string>
+    <string name="location_lat_label">Шир</string>
+    <string name="location_lon_label">Дов</string>
+    <string name="location_input_error">Недійсне</string>
+    <string name="location_lat_range_error">Шир: -90 до 90</string>
+    <string name="location_lon_range_error">Дов: -180 до 180</string>
     <string name="section_appearance">Вигляд</string>
     <string name="section_language">Мова</string>
     <string name="settings_language_current">Поточна мова</string>
     <string name="settings_language_dialog_title">Вибрати мову</string>
     <string name="theme_light">Світла</string>
     <string name="theme_dark">Темна</string>
-    <string name="theme_auto">Системна</string>
+    <string name="theme_auto">Система</string>
+    <string name="section_algorithm">Алгоритм морозу</string>
+    <string name="auto_mode">Автоматичний режим</string>
+    <string name="sensitivity_label">Чутливість алгоритму</string>
+    <string name="sensitivity_desc">Збільште, якщо ваш автомобіль замерзає швидше за інші (наприклад, паркування у вітряному місці).</string>
+    <string name="temp_threshold">Поріг температури</string>
+    <string name="humidity_threshold">Поріг вологості</string>
+    <string name="precipitation_threshold">Поріг опадів</string>
+
+    <string name="section_frost_options">Параметри морозу</string>
+    <string name="mata_option_label">Опція \'Захист застосовано\'</string>
+    <string name="mata_option_desc">Активує кнопку у сповіщенні для приглушення попереджень після накривання автомобіля.</string>
+
+    <string name="section_summer_settings">Літні налаштування (НОВЕ)</string>
+    <string name="storm_alert_label">Попереджати про грози та град</string>
+    <string name="watering_reminder_label">Нагадувати про полив</string>
+    <string name="heat_threshold_label">Поріг попередження про спеку</string>
+
+    <string name="section_app_profile">Профіль додатка</string>
+    <string name="profile_car">Автомобіль</string>
+    <string name="profile_garden">Сад</string>
+    <string name="profile_car_desc">Аналіз морозу на вікнах автомобіля.</string>
+    <string name="profile_garden_desc">Аналіз морозу на землі для рослин.</string>
+
     <string name="section_units">Одиниці</string>
-    <string name="use_fahrenheit_label">Використовувати Фаренгейт (°F)</string>
+    <string name="use_fahrenheit_label">Використовувати Фаренгейти (°F)</string>
+
+    <string name="section_notifications">Сповіщення</string>
+    <string name="section_geofencing">Геозони (НОВЕ)</string>
+    <string name="geofencing_label">Сповіщення геозон</string>
+    <string name="geofencing_desc">Попереджати при вході в області з вищим ризиком морозу</string>
+    <string name="geofence_history_title">Історія геозон</string>
+    <string name="geofence_history_empty">Немає записів геозон</string>
+    <string name="geofence_radius_title">Радіус геозони</string>
+    <string name="geofence_radius_save">Зберегти радіус</string>
+    <string name="trend_change_notifications_label">Сповіщення про зміну тренду</string>
+
+    <string name="section_calibration">Калібрування алгоритму</string>
+    <string name="calibration_accuracy">Точність прогнозу</string>
+    <string name="calibration_feedback_count">Кількість відгуків</string>
+    <string name="calibration_apply_recommendations">Застосувати рекомендації</string>
+    <string name="calibration_explanation">Алгоритм вчиться з ваших відповідей для покращення точності прогнозів.</string>
+    <string name="calibration_no_data">Немає даних - відповідайте на питання про погоду для калібрування алгоритму.</string>
+    <string name="calibration_dialog_title">Калібрування алгоритму</string>
+    <string name="calibration_dialog_question">Чи був мороз або лід вночі?</string>
+    <string name="calibration_dialog_help">Ваша відповідь допомагає покращити точність прогнозів.</string>
+    <string name="calibration_dialog_yes">ТАК - Був мороз</string>
+    <string name="calibration_dialog_no">НІ - Не було морозу</string>
+
+    <string name="car_mode_title">Режим авто (лід на вікнах)</string>
+    <string name="car_mode_desc">Увімкнути ранкові нагадування</string>
+    <string name="car_mode_check_hour">Час ранкової перевірки</string>
+
+    <!-- Notifications Buttons -->
+    <string name="action_ignore">Ігнорувати сьогодні</string>
+    <string name="action_mata">Захист застосовано</string>
+    <string name="action_snooze">Нагадати через 2год</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Історія морозів</string>
+    <string name="stats_season">Статистика сезону</string>
+    <string name="stat_risk_days">Днів ризику</string>
+    <string name="stat_avg_temp">Середня мін. темп.</string>
+    <string name="history_empty">Немає даних в історії</string>
+    <string name="history_hint">Зберіть дані з 2 ночей для відображення графіка</string>
+    <string name="trend_title">Тренд температури (найновіше зліва)</string>
+    <string name="monthly_report_title">Місячний звіт</string>
+    <string name="avg_min_label">Середня мін.: %s</string>
+    <string name="days_count_label">%d днів</string>
+    <string name="export_csv">Експортувати в CSV</string>
+    <string name="export_error">Помилка експорту</string>
+    <string name="buy_pro">Розблокувати PRO і прибрати рекламу</string>
+
+    <!-- Billing & Subscriptions -->
+    <string name="product_lifetime_title">PRO назавжди</string>
+    <string name="product_lifetime_desc">Одноразова покупка • Без реклами • Всі функції PRO назавжди</string>
+    <string name="product_monthly_title">PRO щомісячно</string>
+    <string name="product_monthly_desc">Щомісячна підписка • Скасуйте будь-коли • Всі функції PRO</string>
+    <string name="product_yearly_title">PRO щорічно</string>
+    <string name="product_yearly_desc">Річна підписка • Найкраща ціна • Заощадьте до 33%</string>
+    <string name="purchase_dialog_title">Виберіть план PRO</string>
+    <string name="purchase_best_value">НАЙКРАЩА ВАРТІСТЬ</string>
+    <string name="purchase_most_popular">НАЙПОПУЛЯРНІШЕ</string>
+    <string name="purchase_button">Купити зараз</string>
+    <string name="purchase_restore">Відновити покупки</string>
+    <string name="purchase_loading_price">Завантаження ціни…</string>
+    <string name="purchase_debug_no_products">🛠 DEBUG: Продукти не завантажені з Play Store. Налаштуйте продукти в Play Console або використайте isProForced у налаштуваннях налагодження.</string>
+    <string name="purchase_success">Дякуємо за покупку PRO!</string>
+    <string name="purchase_success_desc">Функції PRO розблоковано</string>
+    <string name="purchase_pending">Обробка платежу…</string>
+    <string name="purchase_cancelled">Покупка скасована</string>
+    <string name="subscription_active">Підписка PRO активна</string>
+    <string name="subscription_expires">Закінчується: %1$s</string>
+    <string name="subscription_auto_renew_on">Автоматично поновлюється</string>
+    <string name="subscription_auto_renew_off">Не поновлюється автоматично</string>
+    <string name="subscription_manage">Керувати підпискою</string>
+    <string name="subscription_grace_period">У періоді відстрочки</string>
+    <string name="pro_features_title">Функції PRO</string>
+    <string name="pro_feature_no_ads">🚫 Без реклами</string>
+    <string name="pro_feature_frost_map">🗺️ Карта морозів у вашій області</string>
+    <string name="pro_feature_extended_forecast">📅 14-денний прогноз</string>
+    <string name="pro_feature_multi_location">📍 Кілька збережених місць</string>
+    <string name="pro_feature_pdf_reports">📄 PDF звіти</string>
+    <string name="pro_feature_priority_support">⚡ Пріоритетна підтримка</string>
+    <string name="price_per_month">%1$s/місяць</string>
+    <string name="price_per_year">%1$s/рік</string>
+    <string name="price_one_time">%1$s одноразово</string>
+    <string name="billing_error_generic">Помилка платежу. Спробуйте ще раз.</string>
+    <string name="billing_error_network">Немає з\'єднання. Перевірте інтернет.</string>
+    <string name="billing_unavailable">Платежі недоступні</string>
+
+    <!-- Trend Screen (NEW) -->
+    <string name="trend_screen_title">7-денний тренд</string>
+    <string name="trend_high_risk">⚠️ Дуже високий ризик морозу цього тижня</string>
+    <string name="trend_moderate_risk">⚡ Помірний ризик морозу</string>
+    <string name="trend_low_risk">🧊 Спорадичний мороз</string>
+    <string name="trend_no_risk">✅ Немає ризику морозу</string>
+    <string name="trend_stat_nights_with_risk">Ночей з ризиком</string>
+    <string name="trend_stat_avg_min">Середня мін.</string>
+    <string name="trend_stat_lowest">Найнижча</string>
+    <string name="trend_chart_no_data">Немає даних для відображення</string>
+    <string name="trend_chart_temperature_title">Нічна температура (7 днів)</string>
+    <string name="trend_chart_range">Діапазон: %1$s°C - %2$s°C</string>
+    <string name="trend_night_details_title">Деталі ночі</string>
+    <string name="trend_future_title">Прогноз майбутнього тренду</string>
+    <string name="trend_future_load_button">Завантажити прогноз тренду</string>
+    <string name="trend_future_loaded">Майбутній тренд завантажено: %1$s</string>
+    <string name="trend_future_prompt">Натисніть кнопку для завантаження прогнозу майбутнього тренду</string>
+    <string name="trend_unknown_error">Невідома помилка</string>
+    <string name="trend_export_title">Експорт даних тренду</string>
+    <string name="trend_export_button">Експортувати CSV</string>
+    <string name="trend_export_future_button">Експортувати CSV майбутнього тренду</string>
+    <string name="trend_export_subject">Тренд FrostAlert</string>
+    <string name="trend_export_future_subject">Майбутній тренд FrostAlert</string>
+    <string name="trend_export_chooser">Поділитися трендом</string>
+    <string name="trend_export_future_chooser">Поділитися майбутнім трендом</string>
+    <string name="trend_export_csv_header">День,Дата,ТемпМінC,РизикМорозу</string>
+    <string name="trend_export_risk_yes">ТАК</string>
+    <string name="trend_export_risk_no">НІ</string>
+    <string name="trend_export_error_with_reason">Помилка експорту: %1$s</string>
 
     <!-- Onboarding -->
     <string name="welcome_title">Ласкаво просимо до FrostAlert</string>
-    <string name="welcome_desc">Ваш розумний помічник, який передбачає мороз на вікнах вашого автомобіля.</string>
+    <string name="welcome_desc">Ваш інтелектуальний помічник, який передбачає мороз на вікнах вашого автомобіля.</string>
     <string name="feature_1_title">Точний алгоритм</string>
     <string name="feature_1_desc">Ми аналізуємо точку роси та радіаційне охолодження вікон.</string>
-    <string name="feature_2_title">Фонові сповіщення</string>
-    <string name="feature_2_desc">Ми повідомимо вас ввечері, якщо вранці доведеться чистити лід.</string>
+    <string name="feature_2_title">Сповіщення у фоні</string>
+    <string name="feature_2_desc">Ми попередимо вас увечері, якщо вранці доведеться зіскрібати лід.</string>
     <string name="onboarding_next">ДАЛІ</string>
     <string name="onboarding_skip">Пропустити</string>
     <string name="onboarding_finish">ПОЧАТИ</string>
 
-    <!-- Language Selection -->
+    <!-- Feedback Section -->
+    <string name="feedback_question">Чи був прогноз точним сьогодні вранці?</string>
+    <string name="feedback_yes">ТАК</string>
+    <string name="feedback_no">НІ</string>
+    <string name="feedback_calibration">Ваші відповіді калібрують алгоритм для вашого автомобіля.</string>
+
+    <!-- Accessibility & Icons -->
+    <string name="frost_risk_icon">Попередження - ризик морозу</string>
+    <string name="no_frost_risk_icon">Немає ризику морозу</string>
+    <string name="wind_icon_description">Іконка вітру</string>
+    <string name="wind_speed_format">Вітер: %s км/год (знижує ризик)</string>
+    <string name="weather_icon_description">Іконка погоди</string>
+    <string name="night_icon_description">Іконка ночі</string>
+    <string name="error_icon_description">Іконка помилки</string>
+    <string name="retry_button">Спробувати знову</string>
+    <string name="no_forecast_data">Немає даних прогнозу</string>
+
+    <!-- Home ViewModel -->
+    <string name="home_pull_to_refresh">Потягніть для оновлення даних.</string>
+
+    <!-- Widget labels -->
+    <string name="widget_risk_high_short">Високий</string>
+    <string name="widget_risk_low_short">Низький</string>
+    <string name="widget_no_data">Немає даних</string>
+    <string name="widget_tap_to_refresh">Натисніть для оновлення</string>
+    <string name="widget_refresh_button">Оновити</string>
+    <string name="widget_temp_label">Мін: %s</string>
+    <string name="widget_risk_label">Ризик: %s</string>
+    <string name="widget_title_with_date">FrostAlert • %s</string>
+
+    <!-- Notification titles and messages -->
+    <string name="notification_test_title">Тестове сповіщення</string>
+    <string name="notification_test_message">Це тестове сповіщення про ризик морозу.</string>
+    <string name="notification_trend_title">Зміна тренду температури</string>
+    <string name="notification_trend_warming">Потепління! 📈</string>
+    <string name="notification_trend_cooling">Похолодання! 📉</string>
+    <string name="notification_trend_stable">Тренд стабілізовано ➡️</string>
+    <string name="notification_geofence_title">⚠️ Вищий ризик морозу поблизу!</string>
+    <string name="notification_geofence_message">У напрямку %1$s ризик на %2$d%% вищий. Прогноз: %3$.1f°C.</string>
+    <string name="notification_frost_car_title">Ризик льоду на вікнах!</string>
+    <string name="notification_frost_garden_title">Ризик морозу в саду!</string>
+    <string name="notification_frost_car_alert_title">Увага, мороз!</string>
+    <string name="notification_frost_garden_alert_title">Подбайте про свої рослини!</string>
+    <string name="notification_frost_forecast_message">Прогноз мінімуму: %.1f°C.</string>
+    <string name="notification_frost_night_message">Можливий мороз сьогодні вночі.</string>
+    <string name="notification_morning_brief_title">☀️ Доброго ранку! Прогноз морозу</string>
+    <string name="notification_morning_brief_risk_message">⚠️ Ризик морозу сьогодні вночі! Мін: %1$.1f°C, ймовірність: %2$d%%</string>
+    <string name="notification_morning_brief_no_risk_message">✅ Немає ризику морозу. Прогноз мінімуму: %.1f°C</string>
+
+    <!-- Morning Brief settings -->
+    <string name="section_morning_brief">Ранковий огляд</string>
+    <string name="morning_brief_label">Ранкове сповіщення</string>
+    <string name="morning_brief_desc">Надіслати огляд погоди невдовзі після першого розблокування телефону</string>
+    <string name="morning_brief_delay_label">Затримка після розблокування (хв)</string>
+    <string name="morning_brief_learning_days_label">Історія навчання (днів)</string>
+    <string name="security_warning_title">⚠️ Попередження безпеки</string>
+    <string name="security_warning_message">Виявлено проблеми: %1$s. Функції PRO деактивовано.</string>
+    <string name="security_warning_root_message">Виявлено рутований пристрій. Будьте обережні при використанні додатка.</string>
+    <string name="security_issue_app_modified">Додаток змінено</string>
+    <string name="security_issue_non_genuine">Неоригінальний пристрій</string>
+    <string name="security_issue_root_detected">Виявлено root</string>
+    <string name="security_issue_invalid_signature">Недійсний підпис додатка</string>
+    <string name="security_issue_non_play_installer">Встановлено поза Play Store</string>
+
+    <!-- B3: Offline cache banner -->
+    <string name="offline_cache_banner_title">Офлайн дані</string>
+    <string name="offline_cache_banner_desc">Останні відомі дані: %s</string>
+
+    <!-- C1: Daily forecast section -->
+    <string name="daily_forecast_title">Тижневий прогноз</string>
+
+    <!-- A3: Onboarding enhancements -->
     <string name="onboarding_language_title">Виберіть мову</string>
-    <string name="onboarding_language_desc">Налаштуйте додаток відповідно до ваших мовних уподобань.</string>
+    <string name="onboarding_language_desc">Налаштуйте додаток відповідно до своїх мовних переваг.</string>
     <string name="language_system">Системна за замовчуванням</string>
     <string name="language_polish">Polski</string>
     <string name="language_english">English</string>
@@ -60,37 +290,295 @@
     <string name="language_italian">Italiano</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_czech">Čeština</string>
-
-    <!-- Mode Selection -->
     <string name="onboarding_mode_title">Виберіть профіль</string>
-    <string name="onboarding_mode_desc">Налаштуйте додаток відповідно до ваших потреб.</string>
+    <string name="onboarding_mode_desc">Налаштуйте додаток для своїх потреб.</string>
     <string name="onboarding_mode_car_label">Автомобіль</string>
     <string name="onboarding_mode_car_desc">Мороз на вікнах автомобіля вранці.</string>
     <string name="onboarding_mode_garden_label">Сад</string>
     <string name="onboarding_mode_garden_desc">Мороз, що загрожує садовим рослинам.</string>
-
-    <!-- Permissions -->
     <string name="onboarding_permissions_title">Дозволи</string>
     <string name="onboarding_permissions_desc">FrostAlert потребує доступу до вашого місцезнаходження та можливості надсилати сповіщення, щоб попереджати вас про ризик морозу.</string>
     <string name="onboarding_grant_location">Дозволити місцезнаходження</string>
     <string name="onboarding_grant_location_granted">✓ Місцезнаходження надано</string>
     <string name="onboarding_grant_notifications">Дозволити сповіщення</string>
     <string name="onboarding_grant_notifications_granted">✓ Сповіщення надано</string>
-    <string name="onboarding_grant_exact_alarm">Дозволити точні сигнали</string>
-    <string name="onboarding_grant_exact_alarm_granted">✓ Сигнали надано</string>
-    <string name="onboarding_permissions_note">Ви можете змінити ці налаштування пізніше в Налаштуваннях.</string>
+    <string name="onboarding_grant_exact_alarm">Дозволити точні будильники</string>
+    <string name="onboarding_grant_exact_alarm_granted">✓ Будильники надано</string>
+    <string name="onboarding_permissions_note">Ви можете змінити ці налаштування пізніше в системних Налаштуваннях.</string>
 
-    <!-- Notifications -->
-    <string name="notification_frost_car_title">Ризик льоду на вікнах!</string>
-    <string name="notification_frost_garden_title">Ризик морозу в саду!</string>
-    <string name="notification_frost_forecast_message">Прогнозований мінімум: %.1f°C.</string>
+    <!-- UV Descriptions -->
+    <string name="uv_description_low">Низький</string>
+    <string name="uv_description_moderate">Помірний</string>
+    <string name="uv_description_high">Високий</string>
+    <string name="uv_description_very_high">Дуже високий</string>
+    <string name="uv_description_extreme">Екстремальний</string>
+
+    <!-- UV Advice -->
+    <string name="uv_advice_low">Безпечно. Не потрібні спеціальні заходи.</string>
+    <string name="uv_advice_moderate">Використовуйте сонцезахисний крем і носіть сонцезахисні окуляри.</string>
+    <string name="uv_advice_high">Обмежте перебування на сонці між 11 і 16 годинами. Шукайте тінь.</string>
+    <string name="uv_advice_extreme">Уникайте сонця! Ризик швидких опіків і теплового удару.</string>
+
+    <!-- Summer Warning Messages -->
+    <string name="summer_warning_hail">⚠️ ПОПЕРЕДЖЕННЯ: РИЗИК ГРАДУ!\n</string>
+    <string name="summer_warning_storm">⛈️ РИЗИК ГРОЗИ!\n</string>
+    <string name="summer_warning_heat_car">🔥 СПЕКА: Салон автомобіля швидко нагрівається. Не залишайте дітей і тварин!\n</string>
+    <string name="summer_warning_uv_high">☀️ Високий індекс УФ: %1$s (%2$s)\n</string>
+
+    <!-- Garden Tips -->
+    <string name="garden_tip_safe">Безпечно. Рослини не потребують захисту.</string>
+    <string name="garden_tip_light_frost">Легкий мороз. Накрийте чутливі рослини нетканим матеріалом.</string>
+    <string name="garden_tip_moderate_frost">Помірний мороз. Потрібне міцне накриття або переміщення горщиків до гаража.</string>
+    <string name="garden_tip_severe_frost">Сильний мороз! Екзотичні рослини та молоді саджанці під загрозою навіть під накриттям.</string>
+
+    <!-- Warning Messages -->
+    <string name="warning_strong_wind">Безпечно – сильний вітер запобігає утворенню морозу.</string>
+    <string name="warning_frost_risk_garden">Ризик морозу в саду!</string>
+    <string name="warning_frost_risk_high">Високий ризик морозу!</string>
+    <string name="warning_no_frost_risk">Безпечно – немає ризику морозу\nТемпература: %s</string>
+    <string name="warning_frost_air_surface">%1$s\nПовітря: %2$s | Поверхня: %3$s\nТочка роси: %4$s</string>
+
+    <!-- Trend Descriptions -->
+    <string name="trend_description_very_high">⚠️ Дуже високий ризик морозу цього тижня</string>
+    <string name="trend_description_moderate">⚡ Помірний ризик морозу</string>
+    <string name="trend_description_low">🧊 Спорадичний мороз</string>
+    <string name="trend_description_none">✅ Немає ризику морозу</string>
+
+    <!-- Trend Direction Emoji -->
+    <string name="trend_direction_up">📈 Потепління</string>
+    <string name="trend_direction_down">📉 Похолодання</string>
+    <string name="trend_direction_stable">➡️ Без змін</string>
+
+    <!-- Day Labels -->
+    <string name="day_label_today">Сьогодні</string>
+    <string name="day_label_yesterday">Вчора</string>
+    <string name="day_label_days_ago">%d днів тому</string>
+    <string name="day_label_tomorrow">Завтра</string>
+    <string name="day_label_day_after_tomorrow">Післязавтра</string>
+    <string name="day_label_in_3_days">За 3 дні</string>
+    <string name="day_label_in_4_days">За 4 дні</string>
+    <string name="day_label_in_5_days">За 5 днів</string>
+    <string name="day_label_in_6_days">За 6 днів</string>
+    <string name="day_label_in_7_days">За 7 днів</string>
+    <string name="day_label_later">Пізніше</string>
+
+    <!-- Notification Channel Names -->
+    <string name="notification_channel_frost_name">Сповіщення про мороз</string>
+    <string name="notification_channel_frost_description">Сповіщення про мороз та лід на лобовому склі</string>
+    <string name="notification_channel_morning_name">Ранковий огляд погоди</string>
+    <string name="notification_channel_morning_description">Ранковий огляд погоди після першого розблокування телефону</string>
+
+    <!-- Report Generator -->
+    <string name="report_title">FrostAlert — Звіт за сезон</string>
+    <string name="report_summary">Підсумок</string>
+    <string name="report_total_nights">Всього ночей: %d</string>
+    <string name="report_frost_nights">Ночей з ризиком морозу: %d</string>
+    <string name="report_avg_min">Середній мінімум: %s</string>
+    <string name="report_abs_min">Абсолютний мінімум: %s</string>
+    <string name="report_details">Деталі записів</string>
+    <string name="report_table_date">Дата</string>
+    <string name="report_table_min">Мін °C</string>
+    <string name="report_table_risk">Ризик</string>
+    <string name="report_table_probability">Ймов.</string>
+    <string name="report_yes">ТАК</string>
+    <string name="report_no">НІ</string>
+    <string name="report_footer">Згенеровано FrostAlert • %s</string>
+    <string name="report_share_chooser">Поділитися звітом</string>
+
+    <!-- Garden Seasonal Tips -->
+    <string name="garden_seasonal_tip_format">%1$s %2$s</string>
+
+    <!-- January Tips -->
+    <string name="tip_january_1">❄️ Перевірте зимові накриття рослин після кожної відлиги.</string>
+    <string name="tip_january_2">📋 Сплануйте сад на наступний сезон, замовте насіння з каталогів.</string>
+    <string name="tip_january_3">✂️ Обрізайте плодові дерева під час морозу, коли сік не тече.</string>
+
+    <!-- February Tips -->
+    <string name="tip_february_1">🌱 Почніть посів овочів на розсаду вдома (помідори, перець).</string>
+    <string name="tip_february_2">✂️ Обріжіть декоративні чагарники до їх пробудження.</string>
+    <string name="tip_february_3">🐛 Перевірте рослини на шкідників, що зимують під корою.</string>
+
+    <!-- March Tips -->
+    <string name="tip_march_1">🌷 Зніміть зимові накриття, коли температура не опускається нижче -5°C.</string>
+    <string name="tip_march_2">🌱 Посійте ранні овочі: салат, шпинат, редиску.</string>
+    <string name="tip_march_3">💧 Відновіть полив, коли ґрунт відтає шарами.</string>
+
+    <!-- April Tips -->
+    <string name="tip_april_1">⚠️ Увага на заморозки! Травень - місяць \'Крижаних святих\'.</string>
+    <string name="tip_april_2">🍅 Пересадіть розсаду в горщики, не виносьте до 15 травня.</string>
+    <string name="tip_april_3">🌿 Посійте трави прямо в ґрунт: петрушка, кріп, коріандр.</string>
+
+    <!-- May Tips -->
+    <string name="tip_may_1">🌡️ Після 15 травня висадіть розсаду теплолюбних овочів назовні.</string>
+    <string name="tip_may_2">💧 Почніть регулярний полив – весняних дощів часто недостатньо.</string>
+    <string name="tip_may_3">🌹 Розв\'яжіть і розмотайте накриття троянд і багаторічників.</string>
+
+    <!-- June Tips -->
+    <string name="tip_june_1">☀️ Мульчуйте ґрунт для утримання вологи та придушення бур\'янів.</string>
+    <string name="tip_june_2">💧 Поливайте вранці або ввечері, уникайте обіду.</string>
+    <string name="tip_june_3">🍓 Збір полуниць – не залишайте плоди на кущах надто довго.</string>
+
+    <!-- July Tips -->
+    <string name="tip_july_1">🌡️ Перевірте індекс УФ – обмежте роботу в саду між 11 і 15 годинами.</string>
+    <string name="tip_july_2">💧 Овочі у спеку потребують щоденного поливу, особливо помідори.</string>
+    <string name="tip_july_3">🌿 Збирайте трави вранці, коли ефірні олії найінтенсивніші.</string>
+
+    <!-- August Tips -->
+    <string name="tip_august_1">🥦 Посійте осінні овочі: броколі, кольрабі, салат.</string>
+    <string name="tip_august_2">🍎 Збирайте ранні сорти яблук і слив.</string>
+    <string name="tip_august_3">💧 Зменште полив наприкінці місяця для загартування рослин.</string>
+
+    <!-- September Tips -->
+    <string name="tip_september_1">🌾 Збирайте гарбузи та кабачки до перших заморозків.</string>
+    <string name="tip_september_2">🧅 Висаджуйте цибулини тюльпанів, нарцисів і гіацинтів.</string>
+    <string name="tip_september_3">❄️ Підготуйте нетканий матеріал – заморозки можуть з\'явитися цього місяця.</string>
+
+    <!-- October Tips -->
+    <string name="tip_october_1">🌹 Накрийте троянди та багаторічники, чутливі до морозу.</string>
+    <string name="tip_october_2">🥕 Збирайте кореневі овочі: морква, петрушка, пастернак – мороз їх підсолодить.</string>
+    <string name="tip_october_3">🍂 Компостуйте листя – чудове добриво на наступний рік.</string>
+
+    <!-- November Tips -->
+    <string name="tip_november_1">❄️ Захистіть рослини від морозу: нетканий матеріал, солома, хвоя.</string>
+    <string name="tip_november_2">🪴 Перемістіть чутливі горщики у прохолодне приміщення.</string>
+    <string name="tip_november_3">📋 Запишіть спостереження із сезону, що закінчується, для кращого планування.</string>
+
+    <!-- December Tips -->
+    <string name="tip_december_1">🌟 Перевірте накриття після сильних снігопадів.</string>
+    <string name="tip_december_2">📚 Час для читання про садівництво та планування саду на новий рік.</string>
+    <string name="tip_december_3">🐦 Пам\'ятайте про птахів у саду – повісьте годівничку.</string>
+
+    <!-- Diagnostics -->
+    <string name="diagnostics_title">=== Діагностичний звіт FrostAlert ===</string>
+    <string name="diagnostics_generated">Згенеровано: %s</string>
+    <string name="diagnostics_user_description_label">--- Опис проблеми ---</string>
+    <string name="diagnostics_app_section">--- Додаток ---</string>
+    <string name="diagnostics_version">Версія: %1$s (build %2$d)</string>
+    <string name="diagnostics_version_unknown">Версія: невідома</string>
+    <string name="diagnostics_device_section">--- Пристрій ---</string>
+    <string name="diagnostics_device_model">Модель: %s</string>
+    <string name="diagnostics_android_version">Android: %s (API %d)</string>
+    <string name="diagnostics_settings_section">--- Налаштування ---</string>
+    <string name="diagnostics_location">Місцезнаходження: %1$s, %2$s</string>
+    <string name="diagnostics_mode">Режим: %s</string>
+    <string name="diagnostics_mode_car">Автомобіль</string>
+    <string name="diagnostics_mode_garden">Сад</string>
+    <string name="diagnostics_temp_threshold">Поріг темп.: %s</string>
+    <string name="diagnostics_humidity_threshold">Поріг вологості: %.0f%%</string>
+    <string name="diagnostics_sensitivity">Чутливість: %.1f</string>
+    <string name="diagnostics_fahrenheit">Фаренгейт: %s</string>
+    <string name="diagnostics_enabled">Увімкнено</string>
+    <string name="diagnostics_disabled">Вимкнено</string>
+    <string name="diagnostics_alerts_time">Сповіщення: %1$d:00 - %2$d:00</string>
+    <string name="diagnostics_car_mode">Режим авто: %s о %d:00</string>
+    <string name="diagnostics_db_section">--- База даних ---</string>
+    <string name="diagnostics_records_count">Записів темп.: %d</string>
+    <string name="diagnostics_feedback_count">Відгуки: %d</string>
+    <string name="diagnostics_geofence_count">Записів геозон: %d</string>
+    <string name="diagnostics_last_5_records">Останні 5 записів:</string>
+    <string name="diagnostics_no_data">(немає даних)</string>
+    <string name="diagnostics_record_entry">%1$s | %2$s | Волог: %.0f%% | %3$s</string>
+    <string name="diagnostics_risk">РИЗИК</string>
+    <string name="diagnostics_ok">OK</string>
+    <string name="diagnostics_worker_section">--- Телеметрія worker ---</string>
+    <string name="diagnostics_last_run">Останній запуск: %s</string>
+    <string name="diagnostics_last_success">Останній успіх: %s</string>
+    <string name="diagnostics_last_failure">Останній збій: %s</string>
+    <string name="diagnostics_never">ніколи</string>
+    <string name="diagnostics_total_runs">Всього запусків: %d</string>
+    <string name="diagnostics_success_count">Успіхи: %d</string>
+    <string name="diagnostics_failure_count">Збої: %d</string>
+    <string name="diagnostics_last_error">Остання помилка: %s</string>
+    <string name="diagnostics_footer">=== Кінець звіту ===</string>
+
+    <!-- Debug Screen -->
+    <string name="debug_lab_title">Лабораторія розробника</string>
+    <string name="debug_temp_slider">Темп.: %s°C</string>
+    <string name="debug_humidity_slider">Вологість: %d%%</string>
+    <string name="debug_wind_slider">Вітер: %d км/год</string>
+    <string name="debug_uv_slider">Індекс УФ: %s</string>
+    <string name="debug_force_pro">Примусовий стан PRO (Debug)</string>
+    <string name="debug_frost_risk_percent">Ризик морозу: %d%%</string>
+    <string name="debug_nights_with_risk">Ночей з ризиком: %1$d/7</string>
+    <string name="debug_lowest_temp">Найнижча: %s°C</string>
+    <string name="debug_trend">Тренд: %s</string>
+    <string name="debug_open_trend_screen">Відкрити екран Тренду (4-та вкладка)</string>
+    <string name="debug_test_notification">Тестове сповіщення</string>
+    <string name="debug_generate_history">Генерувати історію</string>
+    <string name="debug_history_added">Додано %d днів історії</string>
+    <string name="debug_clear_all">Очистити все</string>
+    <string name="debug_db_cleared">Базу даних очищено</string>
+    <string name="debug_long_history">Генерувати довгу історію (90 днів)</string>
+    <string name="debug_force_widget_refresh">Примусово оновити віджет</string>
+    <string name="debug_widget_refreshed">Віджет оновлено</string>
+    <string name="debug_log_widget_data">Зареєструвати дані віджета</string>
+    <string name="debug_widget_logged">Дані віджета зареєстровано (див. logcat)</string>
+    <string name="debug_force_classic_widget">Примусово оновити класичний віджет</string>
+    <string name="debug_classic_widget_updated">Примусове оновлення класичного віджета</string>
+    <string name="debug_start_geofence_registrar">Запустити GeofenceRegistrar</string>
+    <string name="debug_stop_geofence_registrar">Зупинити GeofenceRegistrar</string>
+    <string name="debug_geofence_started">Реєстратор геозон запущено</string>
+    <string name="debug_geofence_stopped">Реєстратор геозон зупинено</string>
+    <string name="debug_register_now">Зареєструвати зараз</string>
+    <string name="debug_geofence_registered">Одноразову реєстрацію геозони викликано</string>
+    <string name="debug_feedbacks_count">Відгуки: %d</string>
+    <string name="debug_accuracy">Точність: %d%%</string>
+    <string name="debug_confidence_level">Рівень впевненості: %s</string>
+    <string name="debug_no_calibration_data">Немає даних калібрування</string>
+    <string name="debug_clear_feedback">Очистити відгуки</string>
+    <string name="debug_calibration_cleared">Калібрування очищено</string>
+    <string name="debug_temp_records">Записи темп.</string>
+    <string name="debug_feedbacks">Відгуки</string>
+    <string name="debug_frost_risks">Ризики морозу</string>
+    <string name="debug_add_simulator_record">Додати запис із симулятора</string>
+    <string name="debug_record_added">Тестовий запис додано</string>
+    <string name="debug_send_test_notification">Надіслати тестове сповіщення</string>
+    <string name="debug_test_ignore_today">Тест: Ігнорувати сьогодні</string>
+    <string name="debug_ignore_set">\'Ігнорувати сьогодні\' встановлено</string>
+    <string name="debug_test_snooze">Тест: Нагадати через 2год</string>
+    <string name="debug_snooze_scheduled">Нагадування заплановано через 2год</string>
+    <string name="debug_result_winter_risk">РЕЗУЛЬТАТ ЗИМА: РИЗИК МОРОЗУ</string>
+    <string name="debug_result_winter_safe">РЕЗУЛЬТАТ ЗИМА: БЕЗПЕЧНО</string>
+    <string name="debug_result_summer_optimal">РЕЗУЛЬТАТ ЛІТО: ОПТИМАЛЬНО</string>
+    <string name="debug_diagnostics_clipboard">Діагностика FrostAlert</string>
+    <string name="debug_diagnostics_email_subject">FrostAlert – Діагностичний звіт</string>
+    <string name="debug_share_report">Поділитися звітом</string>
+    <string name="debug_loading_trend">Завантаження тренду...</string>
+    <string name="debug_loading_stats">Завантаження статистики...</string>
+    <string name="debug_current_mode">Поточний режим: %s</string>
+    <string name="debug_mode_car">Автомобіль</string>
+    <string name="debug_mode_garden">Сад</string>
+    <string name="debug_no_higher_risk">Немає вищого ризику поблизу</string>
+    <string name="debug_problem_description">Опис проблеми</string>
+    <string name="debug_generate_diagnostic">Генерувати діагностичний звіт</string>
 
     <!-- History Screen -->
-    <string name="history_title">Історія морозів</string>
-    <string name="stats_season">Статистика сезону</string>
-    <string name="export_csv">Експортувати в CSV</string>
+    <string name="history_csv_subject">Історія FrostAlert</string>
+    <string name="history_csv_chooser">Поділитися історією</string>
 
-    <!-- Actions -->
-    <string name="action_ignore">Ігнорувати сьогодні</string>
-    <string name="retry_button">Спробувати знову</string>
+    <!-- Calibration ViewModel -->
+    <string name="calibration_no_analysis_data">Немає даних для аналізу.</string>
+
+    <!-- Additional Diagnostics -->
+    <string name="diagnostics_precip_threshold">Поріг опадів: %s мм</string>
+    <string name="diagnostics_alert_time">Сповіщення: %1$d:00–%2$d:00</string>
+    <string name="diagnostics_auto_mode">Автоматичний режим: %s</string>
+    <string name="diagnostics_pro_forced">Режим PRO (примусовий): %s</string>
+    <string name="diagnostics_geofencing">Геозони: %s</string>
+    <string name="diagnostics_trend_notif">Сповіщення про тренд: %s</string>
+    <string name="diagnostics_manual_location">Ручне місцезнаходження: %s</string>
+    <string name="diagnostics_manual_location_name"> (%s)</string>
+    <string name="diagnostics_temp_unit">Одиниця темп.: %s</string>
+    <string name="diagnostics_theme">Тема: %s</string>
+    <string name="diagnostics_theme_light">Світла</string>
+    <string name="diagnostics_theme_dark">Темна</string>
+    <string name="diagnostics_theme_system">Система</string>
+    <string name="diagnostics_read_error">Помилка читання налаштувань: %s</string>
+    <string name="diagnostics_risk_count">Ризики морозу: %d</string>
+    <string name="diagnostics_calibration_count">Відгуки калібрування: %d</string>
+    <string name="diagnostics_db_error">Помилка читання бази даних: %s</string>
+    <string name="diagnostics_retry_count">Повторні спроби: %d</string>
+    <string name="diagnostics_critical_errors">Критичні помилки: %d</string>
+    <string name="diagnostics_success_rate">Показник успішності: %d%%</string>
+    <string name="diagnostics_no_run_data">немає даних</string>
 </resources>
