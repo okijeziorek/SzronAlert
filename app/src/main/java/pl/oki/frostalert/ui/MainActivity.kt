@@ -1,28 +1,23 @@
 package pl.oki.frostalert.ui
 
-import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import pl.oki.frostalert.ui.screens.MainScreen
@@ -38,23 +33,11 @@ class MainActivity : ComponentActivity() {
     private var initialTabState = mutableIntStateOf(0)
     private val settingsViewModel: SettingsViewModel by viewModels()
 
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-        
-        if (!fineGranted && !coarseGranted) {
-            Toast.makeText(this, "Lokalizacja jest niezbędna do prognozy pogody!", Toast.LENGTH_LONG).show()
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        
+
         NotificationHelper.createNotificationChannel(this)
-        checkExactAlarmPermission()
         handleIntent(intent)
 
         setContent {
@@ -67,22 +50,16 @@ class MainActivity : ComponentActivity() {
             } else {
                 val prefs = userPreferences!!
 
-                // Build a locale-wrapped context so that all stringResource() calls
-                // in this subtree use the user-selected language. The returned context
-                // is memoised and only rebuilt when appLanguage changes.
                 val localizedContext = remember(prefs.appLanguage) {
                     LocaleHelper.setLocale(this@MainActivity, prefs.appLanguage)
                 }
 
-                LaunchedEffect(Unit) {
-                    val permissionsToRequest = mutableListOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+                // Poproś o uprawnienie do dokładnych alarmów dopiero gdy onboarding
+                // jest ukończony – nie strasz użytkownika przy pierwszym uruchomieniu.
+                LaunchedEffect(prefs.isOnboardingCompleted) {
+                    if (prefs.isOnboardingCompleted) {
+                        checkExactAlarmPermission()
                     }
-                    permissionLauncher.launch(permissionsToRequest.toTypedArray())
                 }
 
                 CompositionLocalProvider(LocalContext provides localizedContext) {

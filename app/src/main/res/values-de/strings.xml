@@ -28,6 +28,9 @@
     <string name="manual_location_toggle">Standort manuell festlegen</string>
     <string name="location_gps_auto">GPS verwenden (automatisch)</string>
     <string name="section_appearance">Darstellung</string>
+    <string name="section_language">Sprache</string>
+    <string name="settings_language_current">Aktuelle Sprache</string>
+    <string name="settings_language_dialog_title">Sprache auswählen</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
     <string name="theme_auto">System</string>
@@ -70,7 +73,11 @@
     <string name="onboarding_permissions_title">Berechtigungen</string>
     <string name="onboarding_permissions_desc">FrostAlert benötigt Zugriff auf Ihren Standort und die Möglichkeit, Benachrichtigungen zu senden, um Sie vor Frostgefahr zu warnen.</string>
     <string name="onboarding_grant_location">Standort erlauben</string>
+    <string name="onboarding_grant_location_granted">✓ Standort erteilt</string>
     <string name="onboarding_grant_notifications">Benachrichtigungen erlauben</string>
+    <string name="onboarding_grant_notifications_granted">✓ Benachrichtigungen erteilt</string>
+    <string name="onboarding_grant_exact_alarm">Exakte Alarme erlauben</string>
+    <string name="onboarding_grant_exact_alarm_granted">✓ Alarme erteilt</string>
     <string name="onboarding_permissions_note">Sie können diese Einstellungen später in den Einstellungen ändern.</string>
 
     <!-- Notifications -->

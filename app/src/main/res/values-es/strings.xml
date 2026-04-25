@@ -28,6 +28,9 @@
     <string name="manual_location_toggle">Establecer ubicación manualmente</string>
     <string name="location_gps_auto">Usar GPS (automático)</string>
     <string name="section_appearance">Apariencia</string>
+    <string name="section_language">Idioma</string>
+    <string name="settings_language_current">Idioma actual</string>
+    <string name="settings_language_dialog_title">Seleccionar idioma</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
     <string name="theme_auto">Sistema</string>
@@ -70,7 +73,11 @@
     <string name="onboarding_permissions_title">Permisos</string>
     <string name="onboarding_permissions_desc">FrostAlert necesita acceso a tu ubicación y la capacidad de enviar notificaciones para advertirte sobre el riesgo de heladas.</string>
     <string name="onboarding_grant_location">Permitir ubicación</string>
+    <string name="onboarding_grant_location_granted">✓ Ubicación concedida</string>
     <string name="onboarding_grant_notifications">Permitir notificaciones</string>
+    <string name="onboarding_grant_notifications_granted">✓ Notificaciones concedidas</string>
+    <string name="onboarding_grant_exact_alarm">Permitir alarmas exactas</string>
+    <string name="onboarding_grant_exact_alarm_granted">✓ Alarmas concedidas</string>
     <string name="onboarding_permissions_note">Puedes cambiar estos ajustes más tarde en Configuración.</string>
 
     <!-- Notifications -->

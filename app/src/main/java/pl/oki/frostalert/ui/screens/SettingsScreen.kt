@@ -18,10 +18,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import pl.oki.frostalert.utils.LocaleHelper
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -398,6 +403,90 @@ fun SettingsScreen(
                     SegmentedButton(selected = prefs.theme == 0, onClick = { viewModel.updateTheme(0) }, shape = MaterialTheme.shapes.medium) { SingleLineText(text = stringResource(R.string.theme_light), style = MaterialTheme.typography.bodyMedium) }
                     SegmentedButton(selected = prefs.theme == 1, onClick = { viewModel.updateTheme(1) }, shape = MaterialTheme.shapes.medium) { SingleLineText(text = stringResource(R.string.theme_dark), style = MaterialTheme.typography.bodyMedium) }
                     SegmentedButton(selected = prefs.theme == 2, onClick = { viewModel.updateTheme(2) }, shape = MaterialTheme.shapes.medium) { SingleLineText(text = stringResource(R.string.theme_auto), style = MaterialTheme.typography.bodyMedium) }
+                }
+
+                Spacer(Modifier.height(16.dp))
+                SectionTitle(stringResource(R.string.section_language))
+                var showLanguageDialog by remember { mutableStateOf(false) }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showLanguageDialog = true }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SingleLineText(
+                        text = stringResource(R.string.settings_language_current),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = LocaleHelper.getLanguageName(context, prefs.appLanguage),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                if (showLanguageDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showLanguageDialog = false },
+                        title = { Text(stringResource(R.string.settings_language_dialog_title)) },
+                        text = {
+                            Column(
+                                modifier = Modifier.verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                LocaleHelper.supportedLanguages.forEach { langCode ->
+                                    val isSelected = prefs.appLanguage == langCode
+                                    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                    val bgColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh
+                                    Surface(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(2.dp, borderColor, RoundedCornerShape(12.dp))
+                                            .clickable {
+                                                viewModel.updateAppLanguage(langCode)
+                                                showLanguageDialog = false
+                                            },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = bgColor
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = LocaleHelper.getLanguageName(context, langCode),
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            if (isSelected) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CheckCircle,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        confirmButton = {}
+                    )
                 }
 
                 Spacer(Modifier.height(24.dp))

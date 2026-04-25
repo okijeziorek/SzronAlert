@@ -28,6 +28,9 @@
     <string name="manual_location_toggle">Nastavit polohu ručně</string>
     <string name="location_gps_auto">Použít GPS (automaticky)</string>
     <string name="section_appearance">Vzhled</string>
+    <string name="section_language">Jazyk</string>
+    <string name="settings_language_current">Aktuální jazyk</string>
+    <string name="settings_language_dialog_title">Vybrat jazyk</string>
     <string name="theme_light">Světlý</string>
     <string name="theme_dark">Tmavý</string>
     <string name="theme_auto">Systém</string>
@@ -70,7 +73,11 @@
     <string name="onboarding_permissions_title">Oprávnění</string>
     <string name="onboarding_permissions_desc">FrostAlert potřebuje přístup k vaší poloze a možnost odesílat oznámení, aby vás varoval před rizikem mrazu.</string>
     <string name="onboarding_grant_location">Povolit polohu</string>
+    <string name="onboarding_grant_location_granted">✓ Poloha udělena</string>
     <string name="onboarding_grant_notifications">Povolit oznámení</string>
+    <string name="onboarding_grant_notifications_granted">✓ Oznámení udělena</string>
+    <string name="onboarding_grant_exact_alarm">Povolit přesné alarmy</string>
+    <string name="onboarding_grant_exact_alarm_granted">✓ Alarmy uděleny</string>
     <string name="onboarding_permissions_note">Tato nastavení můžete později změnit v Nastavení.</string>
 
     <!-- Notifications -->

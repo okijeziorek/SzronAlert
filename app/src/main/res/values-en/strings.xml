@@ -50,6 +50,9 @@
     <string name="location_lat_range_error">Lat: -90 to 90</string>
     <string name="location_lon_range_error">Lon: -180 to 180</string>
     <string name="section_appearance">Appearance</string>
+    <string name="section_language">Language</string>
+    <string name="settings_language_current">Current language</string>
+    <string name="settings_language_dialog_title">Select language</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_auto">System</string>
@@ -296,6 +299,10 @@
     <string name="onboarding_permissions_title">Permissions</string>
     <string name="onboarding_permissions_desc">FrostAlert needs access to your location and the ability to send notifications to warn you about frost risk.</string>
     <string name="onboarding_grant_location">Allow location</string>
+    <string name="onboarding_grant_location_granted">✓ Location granted</string>
     <string name="onboarding_grant_notifications">Allow notifications</string>
-    <string name="onboarding_permissions_note">You can change these settings later in Settings.</string>
+    <string name="onboarding_grant_notifications_granted">✓ Notifications granted</string>
+    <string name="onboarding_grant_exact_alarm">Allow exact alarms</string>
+    <string name="onboarding_grant_exact_alarm_granted">✓ Alarms granted</string>
+    <string name="onboarding_permissions_note">You can change these settings later in System Settings.</string>
 </resources>

@@ -28,6 +28,9 @@
     <string name="manual_location_toggle">Встановити місцезнаходження вручну</string>
     <string name="location_gps_auto">Використовувати GPS (автоматично)</string>
     <string name="section_appearance">Вигляд</string>
+    <string name="section_language">Мова</string>
+    <string name="settings_language_current">Поточна мова</string>
+    <string name="settings_language_dialog_title">Вибрати мову</string>
     <string name="theme_light">Світла</string>
     <string name="theme_dark">Темна</string>
     <string name="theme_auto">Системна</string>
@@ -70,7 +73,11 @@
     <string name="onboarding_permissions_title">Дозволи</string>
     <string name="onboarding_permissions_desc">FrostAlert потребує доступу до вашого місцезнаходження та можливості надсилати сповіщення, щоб попереджати вас про ризик морозу.</string>
     <string name="onboarding_grant_location">Дозволити місцезнаходження</string>
+    <string name="onboarding_grant_location_granted">✓ Місцезнаходження надано</string>
     <string name="onboarding_grant_notifications">Дозволити сповіщення</string>
+    <string name="onboarding_grant_notifications_granted">✓ Сповіщення надано</string>
+    <string name="onboarding_grant_exact_alarm">Дозволити точні сигнали</string>
+    <string name="onboarding_grant_exact_alarm_granted">✓ Сигнали надано</string>
     <string name="onboarding_permissions_note">Ви можете змінити ці налаштування пізніше в Налаштуваннях.</string>
 
     <!-- Notifications -->

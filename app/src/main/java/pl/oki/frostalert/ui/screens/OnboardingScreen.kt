@@ -1,7 +1,13 @@
 package pl.oki.frostalert.ui.screens
 
 import android.Manifest
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -20,9 +26,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Agriculture
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.WbSunny
@@ -40,6 +48,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import pl.oki.frostalert.R
 import pl.oki.frostalert.utils.LocaleHelper
@@ -254,12 +263,40 @@ private fun OnboardingModeCard(
 /** Page 5: Permissions explanation with request buttons. */
 @Composable
 private fun OnboardingPermissionsPage() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // ── Live permission state ──────────────────────────────────────────────────
+    var locationGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    var notificationsGranted by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            else true
+        )
+    }
+    var exactAlarmGranted by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).canScheduleExactAlarms()
+            else true
+        )
+    }
+
     val locationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { /* result handled by system */ }
+    ) { granted -> locationGranted = granted }
+
     val notificationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { /* result handled by system */ }
+    ) { granted -> notificationsGranted = granted }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -295,35 +332,95 @@ private fun OnboardingPermissionsPage() {
             lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
         )
         Spacer(Modifier.height(28.dp))
-        OutlinedButton(
-            onClick = {
-                locationLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.onboarding_grant_location))
-        }
-        Spacer(Modifier.height(10.dp))
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+        // ── Location ─────────────────────────────────────────────────────────
+        if (locationGranted) {
+            PermissionGrantedRow(label = stringResource(R.string.onboarding_grant_location_granted))
+        } else {
             OutlinedButton(
-                onClick = {
-                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                },
+                onClick = { locationLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.NotificationsActive, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.onboarding_grant_notifications))
+                Text(stringResource(R.string.onboarding_grant_location))
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+
+        // ── Notifications (Android 13+) ───────────────────────────────────────
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (notificationsGranted) {
+                PermissionGrantedRow(label = stringResource(R.string.onboarding_grant_notifications_granted))
+            } else {
+                OutlinedButton(
+                    onClick = { notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.NotificationsActive, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.onboarding_grant_notifications))
+                }
             }
             Spacer(Modifier.height(10.dp))
         }
+
+        // ── Exact alarms (Android 12+) ────────────────────────────────────────
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (exactAlarmGranted) {
+                PermissionGrantedRow(label = stringResource(R.string.onboarding_grant_exact_alarm_granted))
+            } else {
+                OutlinedButton(
+                    onClick = {
+                        try {
+                            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                data = Uri.parse("package:${context.packageName}")
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            android.util.Log.w("OnboardingScreen", "Cannot open exact alarm settings: ${e.message}")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.onboarding_grant_exact_alarm))
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+        }
+
         Text(
             text = stringResource(R.string.onboarding_permissions_note),
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/** Wiersz z ikoną ✓ pokazywany gdy uprawnienie jest już przyznane. */
+@Composable
+private fun PermissionGrantedRow(label: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Medium
         )
     }
 }
