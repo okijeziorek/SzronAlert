@@ -571,6 +571,7 @@ fun SummerRiskCard(
 
 @Composable
 fun UvIndexCard(uvIndex: Double) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
@@ -581,13 +582,13 @@ fun UvIndexCard(uvIndex: Double) {
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
-                    text = stringResource(R.string.uv_label, "%.1f".format(Locale.US, uvIndex), SummerCalculations.getUvDescription(uvIndex)),
+                    text = stringResource(R.string.uv_label, "%.1f".format(Locale.US, uvIndex), SummerCalculations.getUvDescription(context, uvIndex)),
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = SummerCalculations.getUvAdvice(uvIndex),
+                    text = SummerCalculations.getUvAdvice(context, uvIndex),
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
