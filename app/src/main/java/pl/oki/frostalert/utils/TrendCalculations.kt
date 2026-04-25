@@ -1,5 +1,7 @@
 package pl.oki.frostalert.utils
 
+import android.content.Context
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.TemperatureRecord
 import java.util.Calendar
 import java.util.Locale
@@ -179,22 +181,22 @@ object TrendCalculations {
     /**
      * Zwraca opis trendu w naturalnym języku
      */
-    fun getTrendDescription(stats: WeeklyTrendStats): String {
+    fun getTrendDescription(context: Context, stats: WeeklyTrendStats): String {
         return when {
-            stats.frostRiskPercentage > 70 -> "⚠️ Bardzo wysokie ryzyko szronu w tym tygodniu"
-            stats.frostRiskPercentage > 40 -> "⚡ Umiarkowane ryzyko szronu"
-            stats.frostRiskPercentage > 0 -> "🧊 Sporadyczne przymrozki"
-            else -> "✅ Brak ryzyka szronu"
+            stats.frostRiskPercentage > 70 -> context.getString(R.string.trend_description_very_high)
+            stats.frostRiskPercentage > 40 -> context.getString(R.string.trend_description_moderate)
+            stats.frostRiskPercentage > 0 -> context.getString(R.string.trend_description_occasional)
+            else -> context.getString(R.string.trend_description_no_risk)
         }
     }
 
     /**
      * Zwraca emotikonę dla kierunku trendu
      */
-    fun getTrendEmoji(trend: TrendDirection): String = when (trend) {
-        TrendDirection.UP -> "📈 Robi się cieplej"
-        TrendDirection.DOWN -> "📉 Robi się chłodniej"
-        TrendDirection.STABLE -> "➡️ Brak zmian"
+    fun getTrendEmoji(context: Context, trend: TrendDirection): String = when (trend) {
+        TrendDirection.UP -> context.getString(R.string.trend_direction_up)
+        TrendDirection.DOWN -> context.getString(R.string.trend_direction_down)
+        TrendDirection.STABLE -> context.getString(R.string.trend_direction_stable)
     }
 
     /**
@@ -233,6 +235,10 @@ object TrendCalculations {
 
     /**
      * Zwraca etykietę dnia (Dziś, Wczoraj, itd.)
+     *
+     * NOTE: Since this is a private function used in data processing,
+     * we use hardcoded Polish labels. For UI display, callers should use
+     * localized string resources from getRelativeDayLabelLocalized().
      */
     private fun getRelativeDayLabel(timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): String {
         val daysAgo = ((startOfDay(System.currentTimeMillis(), timeZone) - startOfDay(timestamp, timeZone)) / MILLIS_IN_DAY).toInt()
@@ -241,6 +247,20 @@ object TrendCalculations {
             1 -> "Wczoraj"
             in 2..6 -> "$daysAgo dni temu"
             else -> getDayOfWeekShort(timestamp, timeZone)
+        }
+    }
+
+    /**
+     * Zwraca zlokalizowaną etykietę dnia (Today, Yesterday, itd.) dla UI.
+     * Użyj tej funkcji zamiast prywatnej getRelativeDayLabel() w kodzie UI.
+     */
+    fun getRelativeDayLabelLocalized(context: Context, timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): String {
+        val daysAgo = ((startOfDay(System.currentTimeMillis(), timeZone) - startOfDay(timestamp, timeZone)) / MILLIS_IN_DAY).toInt()
+        return when (daysAgo) {
+            0 -> context.getString(R.string.day_label_today)
+            1 -> context.getString(R.string.day_label_yesterday)
+            in 2..6 -> context.getString(R.string.day_label_days_ago, daysAgo)
+            else -> getDayOfWeekShortLocalized(context, timestamp, timeZone)
         }
     }
 
@@ -264,6 +284,10 @@ object TrendCalculations {
 
     /**
      * Zwraca etykietę przyszłego dnia (Jutro, Pojutrze, itd.)
+     *
+     * NOTE: Since this is a private function used in data processing,
+     * we use hardcoded Polish labels. For UI display, callers should use
+     * localized string resources from getFutureDayLabelLocalized().
      */
     private fun getFutureDayLabel(daysAhead: Int): String = when (daysAhead) {
         0 -> "Jutro"
@@ -274,6 +298,20 @@ object TrendCalculations {
         5 -> "Za 6 dni"
         6 -> "Za 7 dni"
         else -> "Później"
+    }
+
+    /**
+     * Zwraca zlokalizowaną etykietę przyszłego dnia dla UI.
+     */
+    fun getFutureDayLabelLocalized(context: Context, daysAhead: Int): String = when (daysAhead) {
+        0 -> context.getString(R.string.day_label_tomorrow)
+        1 -> context.getString(R.string.day_label_day_after_tomorrow)
+        2 -> context.getString(R.string.day_label_in_n_days, 3)
+        3 -> context.getString(R.string.day_label_in_n_days, 4)
+        4 -> context.getString(R.string.day_label_in_n_days, 5)
+        5 -> context.getString(R.string.day_label_in_n_days, 6)
+        6 -> context.getString(R.string.day_label_in_n_days, 7)
+        else -> context.getString(R.string.day_label_later)
     }
 
     /**
@@ -380,6 +418,15 @@ object TrendCalculations {
         else -> "Za $dayIndex dni"
     }
 
+    /**
+     * Zwraca zlokalizowaną etykietę rozszerzonej prognozy dla UI.
+     */
+    fun getExtendedFutureDayLabelLocalized(context: Context, dayIndex: Int): String = when (dayIndex) {
+        1 -> context.getString(R.string.day_label_tomorrow)
+        2 -> context.getString(R.string.day_label_day_after_tomorrow)
+        else -> context.getString(R.string.day_label_in_n_days, dayIndex)
+    }
+
     fun getDayOfWeekShort(timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): String {
         val calendar = Calendar.getInstance(timeZone)
         calendar.timeInMillis = timestamp
@@ -394,5 +441,23 @@ object TrendCalculations {
             else -> "?"
         }
         return dayOfWeek
+    }
+
+    /**
+     * Zwraca zlokalizowany skrót dnia tygodnia dla UI.
+     */
+    fun getDayOfWeekShortLocalized(context: Context, timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): String {
+        val calendar = Calendar.getInstance(timeZone)
+        calendar.timeInMillis = timestamp
+        return when (calendar.get(Calendar.DAY_OF_WEEK)) {
+            Calendar.MONDAY -> context.getString(R.string.day_of_week_mon)
+            Calendar.TUESDAY -> context.getString(R.string.day_of_week_tue)
+            Calendar.WEDNESDAY -> context.getString(R.string.day_of_week_wed)
+            Calendar.THURSDAY -> context.getString(R.string.day_of_week_thu)
+            Calendar.FRIDAY -> context.getString(R.string.day_of_week_fri)
+            Calendar.SATURDAY -> context.getString(R.string.day_of_week_sat)
+            Calendar.SUNDAY -> context.getString(R.string.day_of_week_sun)
+            else -> "?"
+        }
     }
 }
