@@ -145,11 +145,27 @@ class BillingClientWrapper @Inject constructor(
                 }
 
                 // Proceed with purchase flow
-                val productDetailsParamsList = listOf(
-                    BillingFlowParams.ProductDetailsParams.newBuilder()
-                        .setProductDetails(productDetails)
-                        .build()
-                )
+                // Find offer with a free trial phase; fall back to the first available offer
+                val offerToken = productDetails.subscriptionOfferDetails
+                    ?.firstOrNull { offer ->
+                        offer.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L }
+                    }?.offerToken
+                    ?: productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken
+
+                val productDetailsParamsList = if (offerToken != null) {
+                    listOf(
+                        BillingFlowParams.ProductDetailsParams.newBuilder()
+                            .setProductDetails(productDetails)
+                            .setOfferToken(offerToken)
+                            .build()
+                    )
+                } else {
+                    listOf(
+                        BillingFlowParams.ProductDetailsParams.newBuilder()
+                            .setProductDetails(productDetails)
+                            .build()
+                    )
+                }
                 val billingFlowParams = BillingFlowParams.newBuilder()
                     .setProductDetailsParamsList(productDetailsParamsList)
                     .build()
@@ -254,7 +270,7 @@ class BillingClientWrapper @Inject constructor(
                             if (offering != null) {
                                 // Get the base plan offer (first subscription offer)
                                 val subscriptionOffer = details.subscriptionOfferDetails?.firstOrNull()
-                                val pricingPhase = subscriptionOffer?.pricingPhases?.pricingPhaseList?.firstOrNull()
+                                val pricingPhase = subscriptionOffer?.pricingPhases?.pricingPhaseList?.lastOrNull()
                                 if (pricingPhase != null) {
                                     products.add(
                                         ProductInfo(
