@@ -1,10 +1,13 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.CalibrationDao
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.utils.CalibrationEngine
@@ -19,6 +22,7 @@ data class CalibrationUiState(
 
 @HiltViewModel
 class CalibrationViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val calibrationDao: CalibrationDao,
     private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
@@ -106,7 +110,7 @@ class CalibrationViewModel @Inject constructor(
      * Generuje wyjaśnienie dla użytkownika na temat wyników kalibracji
      */
     fun getCalibrationExplanation(): String {
-        val result = _uiState.value.calibrationResult ?: return "Brak danych do analizy."
+        val result = _uiState.value.calibrationResult ?: return context.getString(R.string.calibration_no_analysis_data)
         return CalibrationEngine.generateCalibrationExplanation(result)
     }
 }

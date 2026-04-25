@@ -1,5 +1,7 @@
 package pl.oki.frostalert.utils
 
+import android.content.Context
+import pl.oki.frostalert.R
 import java.util.Locale
 
 object SummerCalculations {
@@ -30,25 +32,25 @@ object SummerCalculations {
     /**
      * Zwraca opis poziomu zagrożenia promieniowaniem UV.
      */
-    fun getUvDescription(uvIndex: Double): String {
+    fun getUvDescription(context: Context, uvIndex: Double): String {
         return when {
-            uvIndex < 3 -> "Niskie"
-            uvIndex < 6 -> "Umiarkowane"
-            uvIndex < 8 -> "Wysokie"
-            uvIndex < 11 -> "Bardzo wysokie"
-            else -> "Ekstremalne"
+            uvIndex < 3 -> context.getString(R.string.uv_description_low)
+            uvIndex < 6 -> context.getString(R.string.uv_description_moderate)
+            uvIndex < 8 -> context.getString(R.string.uv_description_high)
+            uvIndex < 11 -> context.getString(R.string.uv_description_very_high)
+            else -> context.getString(R.string.uv_description_extreme)
         }
     }
 
     /**
      * Zwraca poradę dotyczącą bezpieczeństwa na słońcu.
      */
-    fun getUvAdvice(uvIndex: Double): String {
+    fun getUvAdvice(context: Context, uvIndex: Double): String {
         return when {
-            uvIndex < 3 -> "Bezpiecznie. Nie są wymagane specjalne środki ostrożności."
-            uvIndex < 6 -> "Użyj kremu z filtrem i załóż okulary przeciwsłoneczne."
-            uvIndex < 8 -> "Ogranicz przebywanie na słońcu w godzinach 11-16. Szukaj cienia."
-            else -> "Unikaj słońca! Ryzyko szybkiego oparzenia skóry i udaru."
+            uvIndex < 3 -> context.getString(R.string.uv_advice_low)
+            uvIndex < 6 -> context.getString(R.string.uv_advice_moderate)
+            uvIndex < 8 -> context.getString(R.string.uv_advice_high)
+            else -> context.getString(R.string.uv_advice_extreme)
         }
     }
 
@@ -56,6 +58,7 @@ object SummerCalculations {
      * Generuje komunikat ostrzegawczy dla trybu letniego.
      */
     fun getSummerWarningMessage(
+        context: Context,
         currentTemp: Double,
         weatherCode: Int,
         uvIndex: Double,
@@ -65,17 +68,22 @@ object SummerCalculations {
         val sb = StringBuilder()
 
         if (hasStormOrHailRisk(weatherCode)) {
-            sb.append(if (weatherCode >= 96) "⚠️ UWAGA: Ryzyko BURZY Z GRADEM!\n" else "⛈️ Ryzyko BURZY!\n")
+            sb.append(if (weatherCode >= 96)
+                context.getString(R.string.summer_warning_hail)
+            else
+                context.getString(R.string.summer_warning_storm))
         }
 
         if (appMode == 0) { // Tryb Samochód
             if (hasHeatRisk(currentTemp, heatThreshold)) {
-                sb.append("🔥 UPAŁ: Wnętrze auta szybko się nagrzewa. Nie zostawiaj dzieci ani zwierząt!\n")
+                sb.append(context.getString(R.string.summer_warning_heat_car))
             }
         }
 
         if (uvIndex >= 6) {
-            sb.append("☀️ Wysoki indeks UV: ${String.format(Locale.US, "%.1f", uvIndex)} (${getUvDescription(uvIndex)})\n")
+            val formattedUv = String.format(Locale.US, "%.1f", uvIndex)
+            val uvDesc = getUvDescription(context, uvIndex)
+            sb.append(context.getString(R.string.summer_warning_uv_high, formattedUv, uvDesc))
         }
 
         return sb.toString().trim()
