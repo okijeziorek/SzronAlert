@@ -1,0 +1,89 @@
+<resources>
+    <string name="app_name">FrostAlert</string>
+    <string name="widget_description">Попередження про мороз – Мінімальна нічна температура</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Головна</string>
+    <string name="tab_settings">Налаштування</string>
+    <string name="tab_history">Історія</string>
+    <string name="tab_map">Карта</string>
+    <string name="garden_tab_title">Сад</string>
+    <string name="tab_debug">Налагодження</string>
+    <string name="offline_banner_title">Немає з\'єднання</string>
+    <string name="offline_banner_description">Перевірте інтернет-з\'єднання для оновлення метеоданих.</string>
+    <string name="offline_banner_action">НАЛАШТУВАННЯ</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Завантаження метеоданих…</string>
+    <string name="risk_high">Високий ризик морозу!</string>
+    <string name="risk_garden">Ризик морозу!</string>
+    <string name="risk_none">Безпечно – немає ризику морозу</string>
+    <string name="night_min_temp">Нічний прогноз (мін)</string>
+    <string name="hourly_forecast">Наступні 24 години</string>
+    <string name="refresh_success">Дані оновлено</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Налаштування</string>
+    <string name="section_location">Місцезнаходження</string>
+    <string name="manual_location_toggle">Встановити місцезнаходження вручну</string>
+    <string name="location_gps_auto">Використовувати GPS (автоматично)</string>
+    <string name="section_appearance">Вигляд</string>
+    <string name="theme_light">Світла</string>
+    <string name="theme_dark">Темна</string>
+    <string name="theme_auto">Системна</string>
+    <string name="section_units">Одиниці</string>
+    <string name="use_fahrenheit_label">Використовувати Фаренгейт (°F)</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Ласкаво просимо до FrostAlert</string>
+    <string name="welcome_desc">Ваш розумний помічник, який передбачає мороз на вікнах вашого автомобіля.</string>
+    <string name="feature_1_title">Точний алгоритм</string>
+    <string name="feature_1_desc">Ми аналізуємо точку роси та радіаційне охолодження вікон.</string>
+    <string name="feature_2_title">Фонові сповіщення</string>
+    <string name="feature_2_desc">Ми повідомимо вас ввечері, якщо вранці доведеться чистити лід.</string>
+    <string name="onboarding_next">ДАЛІ</string>
+    <string name="onboarding_skip">Пропустити</string>
+    <string name="onboarding_finish">ПОЧАТИ</string>
+
+    <!-- Language Selection -->
+    <string name="onboarding_language_title">Виберіть мову</string>
+    <string name="onboarding_language_desc">Налаштуйте додаток відповідно до ваших мовних уподобань.</string>
+    <string name="language_system">Системна за замовчуванням</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_czech">Čeština</string>
+
+    <!-- Mode Selection -->
+    <string name="onboarding_mode_title">Виберіть профіль</string>
+    <string name="onboarding_mode_desc">Налаштуйте додаток відповідно до ваших потреб.</string>
+    <string name="onboarding_mode_car_label">Автомобіль</string>
+    <string name="onboarding_mode_car_desc">Мороз на вікнах автомобіля вранці.</string>
+    <string name="onboarding_mode_garden_label">Сад</string>
+    <string name="onboarding_mode_garden_desc">Мороз, що загрожує садовим рослинам.</string>
+
+    <!-- Permissions -->
+    <string name="onboarding_permissions_title">Дозволи</string>
+    <string name="onboarding_permissions_desc">FrostAlert потребує доступу до вашого місцезнаходження та можливості надсилати сповіщення, щоб попереджати вас про ризик морозу.</string>
+    <string name="onboarding_grant_location">Дозволити місцезнаходження</string>
+    <string name="onboarding_grant_notifications">Дозволити сповіщення</string>
+    <string name="onboarding_permissions_note">Ви можете змінити ці налаштування пізніше в Налаштуваннях.</string>
+
+    <!-- Notifications -->
+    <string name="notification_frost_car_title">Ризик льоду на вікнах!</string>
+    <string name="notification_frost_garden_title">Ризик морозу в саду!</string>
+    <string name="notification_frost_forecast_message">Прогнозований мінімум: %.1f°C.</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Історія морозів</string>
+    <string name="stats_season">Статистика сезону</string>
+    <string name="export_csv">Експортувати в CSV</string>
+
+    <!-- Actions -->
+    <string name="action_ignore">Ігнорувати сьогодні</string>
+    <string name="retry_button">Спробувати знову</string>
+</resources>

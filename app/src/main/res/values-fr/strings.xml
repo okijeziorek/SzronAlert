@@ -1,0 +1,89 @@
+<resources>
+    <string name="app_name">FrostAlert</string>
+    <string name="widget_description">Alertes gel – Température minimale nocturne</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Accueil</string>
+    <string name="tab_settings">Paramètres</string>
+    <string name="tab_history">Historique</string>
+    <string name="tab_map">Carte</string>
+    <string name="garden_tab_title">Jardin</string>
+    <string name="tab_debug">Debug</string>
+    <string name="offline_banner_title">Pas de connexion</string>
+    <string name="offline_banner_description">Vérifier la connexion Internet pour actualiser les données météo.</string>
+    <string name="offline_banner_action">PARAMÈTRES</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Chargement des données météo…</string>
+    <string name="risk_high">Risque de gel élevé !</string>
+    <string name="risk_garden">Risque de gel !</string>
+    <string name="risk_none">Aucun risque de gel</string>
+    <string name="night_min_temp">Prévision nocturne (min)</string>
+    <string name="hourly_forecast">Prochaines 24 heures</string>
+    <string name="refresh_success">Données actualisées</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Paramètres</string>
+    <string name="section_location">Localisation</string>
+    <string name="manual_location_toggle">Définir la localisation manuellement</string>
+    <string name="location_gps_auto">Utiliser le GPS (automatique)</string>
+    <string name="section_appearance">Apparence</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_auto">Système</string>
+    <string name="section_units">Unités</string>
+    <string name="use_fahrenheit_label">Utiliser Fahrenheit (°F)</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Bienvenue sur FrostAlert</string>
+    <string name="welcome_desc">Votre assistant intelligent qui prédit le gel sur les vitres de votre voiture.</string>
+    <string name="feature_1_title">Algorithme précis</string>
+    <string name="feature_1_desc">Nous analysons le point de rosée et le refroidissement radiatif des vitres.</string>
+    <string name="feature_2_title">Alertes en arrière-plan</string>
+    <string name="feature_2_desc">Nous vous préviendrons le soir si vous devez gratter les vitres le matin.</string>
+    <string name="onboarding_next">SUIVANT</string>
+    <string name="onboarding_skip">Passer</string>
+    <string name="onboarding_finish">COMMENCER</string>
+
+    <!-- Language Selection -->
+    <string name="onboarding_language_title">Choisir la langue</string>
+    <string name="onboarding_language_desc">Personnalisez l\'application selon vos préférences linguistiques.</string>
+    <string name="language_system">Système par défaut</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_czech">Čeština</string>
+
+    <!-- Mode Selection -->
+    <string name="onboarding_mode_title">Choisir votre profil</string>
+    <string name="onboarding_mode_desc">Configurez l\'application selon vos besoins.</string>
+    <string name="onboarding_mode_car_label">Voiture</string>
+    <string name="onboarding_mode_car_desc">Gel sur les vitres de voiture le matin.</string>
+    <string name="onboarding_mode_garden_label">Jardin</string>
+    <string name="onboarding_mode_garden_desc">Gel menaçant les plantes du jardin.</string>
+
+    <!-- Permissions -->
+    <string name="onboarding_permissions_title">Autorisations</string>
+    <string name="onboarding_permissions_desc">FrostAlert a besoin d\'accéder à votre localisation et d\'envoyer des notifications pour vous avertir du risque de gel.</string>
+    <string name="onboarding_grant_location">Autoriser la localisation</string>
+    <string name="onboarding_grant_notifications">Autoriser les notifications</string>
+    <string name="onboarding_permissions_note">Vous pouvez modifier ces paramètres ultérieurement.</string>
+
+    <!-- Notifications -->
+    <string name="notification_frost_car_title">Risque de glace sur les vitres !</string>
+    <string name="notification_frost_garden_title">Risque de gel au jardin !</string>
+    <string name="notification_frost_forecast_message">Minimum prévu : %.1f°C.</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Historique du gel</string>
+    <string name="stats_season">Statistiques de la saison</string>
+    <string name="export_csv">Exporter en CSV</string>
+
+    <!-- Actions -->
+    <string name="action_ignore">Ignorer aujourd\'hui</string>
+    <string name="retry_button">Réessayer</string>
+</resources>

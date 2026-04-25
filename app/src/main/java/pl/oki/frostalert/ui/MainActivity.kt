@@ -21,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,6 +30,7 @@ import pl.oki.frostalert.ui.screens.OnboardingScreen
 import pl.oki.frostalert.ui.screens.SettingsViewModel
 import pl.oki.frostalert.ui.theme.FrostAlertTheme
 import pl.oki.frostalert.utils.NotificationHelper
+import pl.oki.frostalert.utils.LocaleHelper
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -64,7 +66,14 @@ class MainActivity : ComponentActivity() {
                 }
             } else {
                 val prefs = userPreferences!!
-                
+
+                // Build a locale-wrapped context so that all stringResource() calls
+                // in this subtree use the user-selected language. The returned context
+                // is memoised and only rebuilt when appLanguage changes.
+                val localizedContext = remember(prefs.appLanguage) {
+                    LocaleHelper.setLocale(this@MainActivity, prefs.appLanguage)
+                }
+
                 LaunchedEffect(Unit) {
                     val permissionsToRequest = mutableListOf(
                         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -76,19 +85,21 @@ class MainActivity : ComponentActivity() {
                     permissionLauncher.launch(permissionsToRequest.toTypedArray())
                 }
 
-                FrostAlertTheme(
-                    darkTheme = when (prefs.theme) {
-                        0 -> false
-                        1 -> true
-                        else -> isSystemInDarkTheme()
-                    }
-                ) {
-                    if (prefs.isOnboardingCompleted) {
-                        MainScreen(initialTab = initialTabState.intValue)
-                    } else {
-                        OnboardingScreen(onFinish = {
-                            settingsViewModel.setOnboardingCompleted(true)
-                        })
+                CompositionLocalProvider(LocalContext provides localizedContext) {
+                    FrostAlertTheme(
+                        darkTheme = when (prefs.theme) {
+                            0 -> false
+                            1 -> true
+                            else -> isSystemInDarkTheme()
+                        }
+                    ) {
+                        if (prefs.isOnboardingCompleted) {
+                            MainScreen(initialTab = initialTabState.intValue)
+                        } else {
+                            OnboardingScreen(onFinish = {
+                                settingsViewModel.setOnboardingCompleted(true)
+                            })
+                        }
                     }
                 }
             }

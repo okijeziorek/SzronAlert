@@ -1,0 +1,89 @@
+<resources>
+    <string name="app_name">FrostAlert</string>
+    <string name="widget_description">Frostwarnungen – Min. Nachttemperatur</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Start</string>
+    <string name="tab_settings">Einstellungen</string>
+    <string name="tab_history">Verlauf</string>
+    <string name="tab_map">Karte</string>
+    <string name="garden_tab_title">Garten</string>
+    <string name="tab_debug">Debug</string>
+    <string name="offline_banner_title">Keine Verbindung</string>
+    <string name="offline_banner_description">Internetverbindung prüfen, um Wetterdaten zu aktualisieren.</string>
+    <string name="offline_banner_action">EINSTELLUNGEN</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Wetterdaten werden geladen…</string>
+    <string name="risk_high">Hohes Frostrisiko!</string>
+    <string name="risk_garden">Frostgefahr!</string>
+    <string name="risk_none">Sicher – kein Frostrisiko</string>
+    <string name="night_min_temp">Nachtprognose (min)</string>
+    <string name="hourly_forecast">Nächste 24 Stunden</string>
+    <string name="refresh_success">Daten aktualisiert</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="section_location">Standort</string>
+    <string name="manual_location_toggle">Standort manuell festlegen</string>
+    <string name="location_gps_auto">GPS verwenden (automatisch)</string>
+    <string name="section_appearance">Darstellung</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_auto">System</string>
+    <string name="section_units">Einheiten</string>
+    <string name="use_fahrenheit_label">Fahrenheit (°F) verwenden</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Willkommen bei FrostAlert</string>
+    <string name="welcome_desc">Ihr intelligenter Assistent zur Vorhersage von Frost auf Ihren Autoscheiben.</string>
+    <string name="feature_1_title">Präziser Algorithmus</string>
+    <string name="feature_1_desc">Wir analysieren Taupunkt und Strahlungskühlung der Scheiben.</string>
+    <string name="feature_2_title">Hintergrundalarme</string>
+    <string name="feature_2_desc">Wir benachrichtigen Sie abends, wenn morgens Scheiben kratzen ansteht.</string>
+    <string name="onboarding_next">WEITER</string>
+    <string name="onboarding_skip">Überspringen</string>
+    <string name="onboarding_finish">LOSLEGEN</string>
+
+    <!-- Language Selection -->
+    <string name="onboarding_language_title">Sprache wählen</string>
+    <string name="onboarding_language_desc">Passen Sie die App an Ihre Sprachpräferenzen an.</string>
+    <string name="language_system">Systemstandard</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_czech">Čeština</string>
+
+    <!-- Mode Selection -->
+    <string name="onboarding_mode_title">Profil wählen</string>
+    <string name="onboarding_mode_desc">Konfigurieren Sie die App für Ihre Bedürfnisse.</string>
+    <string name="onboarding_mode_car_label">Auto</string>
+    <string name="onboarding_mode_car_desc">Frost auf Autoscheiben am Morgen.</string>
+    <string name="onboarding_mode_garden_label">Garten</string>
+    <string name="onboarding_mode_garden_desc">Frost, der Gartenpflanzen bedroht.</string>
+
+    <!-- Permissions -->
+    <string name="onboarding_permissions_title">Berechtigungen</string>
+    <string name="onboarding_permissions_desc">FrostAlert benötigt Zugriff auf Ihren Standort und die Möglichkeit, Benachrichtigungen zu senden, um Sie vor Frostgefahr zu warnen.</string>
+    <string name="onboarding_grant_location">Standort erlauben</string>
+    <string name="onboarding_grant_notifications">Benachrichtigungen erlauben</string>
+    <string name="onboarding_permissions_note">Sie können diese Einstellungen später in den Einstellungen ändern.</string>
+
+    <!-- Notifications -->
+    <string name="notification_frost_car_title">Eisgefahr auf Scheiben!</string>
+    <string name="notification_frost_garden_title">Frostgefahr im Garten!</string>
+    <string name="notification_frost_forecast_message">Prognose min: %.1f°C.</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Frosthistorie</string>
+    <string name="stats_season">Saisonstatistik</string>
+    <string name="export_csv">Als CSV exportieren</string>
+
+    <!-- Actions -->
+    <string name="action_ignore">Heute ignorieren</string>
+    <string name="retry_button">Erneut versuchen</string>
+</resources>

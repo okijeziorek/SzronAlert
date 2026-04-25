@@ -1,0 +1,89 @@
+<resources>
+    <string name="app_name">FrostAlert</string>
+    <string name="widget_description">Avvisi gelo – Temperatura minima notturna</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Home</string>
+    <string name="tab_settings">Impostazioni</string>
+    <string name="tab_history">Cronologia</string>
+    <string name="tab_map">Mappa</string>
+    <string name="garden_tab_title">Giardino</string>
+    <string name="tab_debug">Debug</string>
+    <string name="offline_banner_title">Nessuna connessione</string>
+    <string name="offline_banner_description">Controlla la connessione Internet per aggiornare i dati meteo.</string>
+    <string name="offline_banner_action">IMPOSTAZIONI</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Caricamento dati meteo…</string>
+    <string name="risk_high">Alto rischio di gelo!</string>
+    <string name="risk_garden">Rischio di gelo!</string>
+    <string name="risk_none">Sicuro – nessun rischio di gelo</string>
+    <string name="night_min_temp">Previsione notturna (min)</string>
+    <string name="hourly_forecast">Prossime 24 ore</string>
+    <string name="refresh_success">Dati aggiornati</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Impostazioni</string>
+    <string name="section_location">Posizione</string>
+    <string name="manual_location_toggle">Imposta posizione manualmente</string>
+    <string name="location_gps_auto">Usa GPS (automatico)</string>
+    <string name="section_appearance">Aspetto</string>
+    <string name="theme_light">Chiaro</string>
+    <string name="theme_dark">Scuro</string>
+    <string name="theme_auto">Sistema</string>
+    <string name="section_units">Unità</string>
+    <string name="use_fahrenheit_label">Usa Fahrenheit (°F)</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Benvenuto in FrostAlert</string>
+    <string name="welcome_desc">Il tuo assistente intelligente che prevede il gelo sui vetri della tua auto.</string>
+    <string name="feature_1_title">Algoritmo preciso</string>
+    <string name="feature_1_desc">Analizziamo il punto di rugiada e il raffreddamento radiativo dei vetri.</string>
+    <string name="feature_2_title">Avvisi in background</string>
+    <string name="feature_2_desc">Ti avviseremo la sera se dovrai raschiare il ghiaccio al mattino.</string>
+    <string name="onboarding_next">AVANTI</string>
+    <string name="onboarding_skip">Salta</string>
+    <string name="onboarding_finish">INIZIA</string>
+
+    <!-- Language Selection -->
+    <string name="onboarding_language_title">Scegli la lingua</string>
+    <string name="onboarding_language_desc">Personalizza l\'app secondo le tue preferenze linguistiche.</string>
+    <string name="language_system">Predefinito del sistema</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_czech">Čeština</string>
+
+    <!-- Mode Selection -->
+    <string name="onboarding_mode_title">Scegli il tuo profilo</string>
+    <string name="onboarding_mode_desc">Configura l\'app per le tue esigenze.</string>
+    <string name="onboarding_mode_car_label">Auto</string>
+    <string name="onboarding_mode_car_desc">Gelo sui vetri dell\'auto al mattino.</string>
+    <string name="onboarding_mode_garden_label">Giardino</string>
+    <string name="onboarding_mode_garden_desc">Gelo che minaccia le piante del giardino.</string>
+
+    <!-- Permissions -->
+    <string name="onboarding_permissions_title">Autorizzazioni</string>
+    <string name="onboarding_permissions_desc">FrostAlert necessita dell\'accesso alla tua posizione e della possibilità di inviare notifiche per avvisarti del rischio di gelo.</string>
+    <string name="onboarding_grant_location">Consenti posizione</string>
+    <string name="onboarding_grant_notifications">Consenti notifiche</string>
+    <string name="onboarding_permissions_note">Puoi modificare queste impostazioni in seguito nelle Impostazioni.</string>
+
+    <!-- Notifications -->
+    <string name="notification_frost_car_title">Rischio di ghiaccio sui vetri!</string>
+    <string name="notification_frost_garden_title">Rischio di gelo in giardino!</string>
+    <string name="notification_frost_forecast_message">Minima prevista: %.1f°C.</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Cronologia gelo</string>
+    <string name="stats_season">Statistiche stagione</string>
+    <string name="export_csv">Esporta in CSV</string>
+
+    <!-- Actions -->
+    <string name="action_ignore">Ignora oggi</string>
+    <string name="retry_button">Riprova</string>
+</resources>

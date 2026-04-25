@@ -1,0 +1,89 @@
+<resources>
+    <string name="app_name">FrostAlert</string>
+    <string name="widget_description">Alertas de heladas – Temperatura mínima nocturna</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Inicio</string>
+    <string name="tab_settings">Ajustes</string>
+    <string name="tab_history">Historial</string>
+    <string name="tab_map">Mapa</string>
+    <string name="garden_tab_title">Jardín</string>
+    <string name="tab_debug">Debug</string>
+    <string name="offline_banner_title">Sin conexión</string>
+    <string name="offline_banner_description">Comprueba la conexión a Internet para actualizar los datos meteorológicos.</string>
+    <string name="offline_banner_action">AJUSTES</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Cargando datos meteorológicos…</string>
+    <string name="risk_high">¡Alto riesgo de heladas!</string>
+    <string name="risk_garden">¡Riesgo de heladas!</string>
+    <string name="risk_none">Seguro – sin riesgo de heladas</string>
+    <string name="night_min_temp">Previsión nocturna (mín)</string>
+    <string name="hourly_forecast">Próximas 24 horas</string>
+    <string name="refresh_success">Datos actualizados</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Ajustes</string>
+    <string name="section_location">Ubicación</string>
+    <string name="manual_location_toggle">Establecer ubicación manualmente</string>
+    <string name="location_gps_auto">Usar GPS (automático)</string>
+    <string name="section_appearance">Apariencia</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_auto">Sistema</string>
+    <string name="section_units">Unidades</string>
+    <string name="use_fahrenheit_label">Usar Fahrenheit (°F)</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Bienvenido a FrostAlert</string>
+    <string name="welcome_desc">Tu asistente inteligente que predice las heladas en las ventanas de tu coche.</string>
+    <string name="feature_1_title">Algoritmo preciso</string>
+    <string name="feature_1_desc">Analizamos el punto de rocío y el enfriamiento radiante de las ventanas.</string>
+    <string name="feature_2_title">Alertas en segundo plano</string>
+    <string name="feature_2_desc">Te avisaremos por la noche si necesitas raspar hielo por la mañana.</string>
+    <string name="onboarding_next">SIGUIENTE</string>
+    <string name="onboarding_skip">Omitir</string>
+    <string name="onboarding_finish">EMPEZAR</string>
+
+    <!-- Language Selection -->
+    <string name="onboarding_language_title">Elegir idioma</string>
+    <string name="onboarding_language_desc">Personaliza la aplicación según tus preferencias de idioma.</string>
+    <string name="language_system">Predeterminado del sistema</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_czech">Čeština</string>
+
+    <!-- Mode Selection -->
+    <string name="onboarding_mode_title">Elige tu perfil</string>
+    <string name="onboarding_mode_desc">Configura la aplicación según tus necesidades.</string>
+    <string name="onboarding_mode_car_label">Coche</string>
+    <string name="onboarding_mode_car_desc">Heladas en las ventanas del coche por la mañana.</string>
+    <string name="onboarding_mode_garden_label">Jardín</string>
+    <string name="onboarding_mode_garden_desc">Heladas que amenazan las plantas del jardín.</string>
+
+    <!-- Permissions -->
+    <string name="onboarding_permissions_title">Permisos</string>
+    <string name="onboarding_permissions_desc">FrostAlert necesita acceso a tu ubicación y la capacidad de enviar notificaciones para advertirte sobre el riesgo de heladas.</string>
+    <string name="onboarding_grant_location">Permitir ubicación</string>
+    <string name="onboarding_grant_notifications">Permitir notificaciones</string>
+    <string name="onboarding_permissions_note">Puedes cambiar estos ajustes más tarde en Configuración.</string>
+
+    <!-- Notifications -->
+    <string name="notification_frost_car_title">¡Riesgo de hielo en las ventanas!</string>
+    <string name="notification_frost_garden_title">¡Riesgo de heladas en el jardín!</string>
+    <string name="notification_frost_forecast_message">Mínima prevista: %.1f°C.</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Historial de heladas</string>
+    <string name="stats_season">Estadísticas de temporada</string>
+    <string name="export_csv">Exportar a CSV</string>
+
+    <!-- Actions -->
+    <string name="action_ignore">Ignorar hoy</string>
+    <string name="retry_button">Reintentar</string>
+</resources>

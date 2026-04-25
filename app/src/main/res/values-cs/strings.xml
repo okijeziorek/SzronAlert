@@ -1,0 +1,89 @@
+<resources>
+    <string name="app_name">FrostAlert</string>
+    <string name="widget_description">Upozornění na mráz – Minimální noční teplota</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Domů</string>
+    <string name="tab_settings">Nastavení</string>
+    <string name="tab_history">Historie</string>
+    <string name="tab_map">Mapa</string>
+    <string name="garden_tab_title">Zahrada</string>
+    <string name="tab_debug">Ladění</string>
+    <string name="offline_banner_title">Bez připojení</string>
+    <string name="offline_banner_description">Zkontrolujte připojení k internetu pro aktualizaci údajů o počasí.</string>
+    <string name="offline_banner_action">NASTAVENÍ</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Načítání údajů o počasí…</string>
+    <string name="risk_high">Vysoké riziko mrazu!</string>
+    <string name="risk_garden">Riziko mrazu!</string>
+    <string name="risk_none">Bezpečné – žádné riziko mrazu</string>
+    <string name="night_min_temp">Noční předpověď (min)</string>
+    <string name="hourly_forecast">Příštích 24 hodin</string>
+    <string name="refresh_success">Data aktualizována</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Nastavení</string>
+    <string name="section_location">Poloha</string>
+    <string name="manual_location_toggle">Nastavit polohu ručně</string>
+    <string name="location_gps_auto">Použít GPS (automaticky)</string>
+    <string name="section_appearance">Vzhled</string>
+    <string name="theme_light">Světlý</string>
+    <string name="theme_dark">Tmavý</string>
+    <string name="theme_auto">Systém</string>
+    <string name="section_units">Jednotky</string>
+    <string name="use_fahrenheit_label">Použít Fahrenheity (°F)</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Vítejte ve FrostAlert</string>
+    <string name="welcome_desc">Váš inteligentní asistent, který předpovídá mráz na oknech vašeho auta.</string>
+    <string name="feature_1_title">Přesný algoritmus</string>
+    <string name="feature_1_desc">Analyzujeme rosný bod a radiační chlazení oken.</string>
+    <string name="feature_2_title">Upozornění na pozadí</string>
+    <string name="feature_2_desc">Upozorníme vás večer, pokud ráno budete muset škrábat led.</string>
+    <string name="onboarding_next">DALŠÍ</string>
+    <string name="onboarding_skip">Přeskočit</string>
+    <string name="onboarding_finish">ZAČÍT</string>
+
+    <!-- Language Selection -->
+    <string name="onboarding_language_title">Vyberte jazyk</string>
+    <string name="onboarding_language_desc">Přizpůsobte aplikaci svým jazykovým preferencím.</string>
+    <string name="language_system">Výchozí systémový</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_czech">Čeština</string>
+
+    <!-- Mode Selection -->
+    <string name="onboarding_mode_title">Vyberte profil</string>
+    <string name="onboarding_mode_desc">Nakonfigurujte aplikaci pro své potřeby.</string>
+    <string name="onboarding_mode_car_label">Auto</string>
+    <string name="onboarding_mode_car_desc">Mráz na oknech auta ráno.</string>
+    <string name="onboarding_mode_garden_label">Zahrada</string>
+    <string name="onboarding_mode_garden_desc">Mráz ohrožující zahradní rostliny.</string>
+
+    <!-- Permissions -->
+    <string name="onboarding_permissions_title">Oprávnění</string>
+    <string name="onboarding_permissions_desc">FrostAlert potřebuje přístup k vaší poloze a možnost odesílat oznámení, aby vás varoval před rizikem mrazu.</string>
+    <string name="onboarding_grant_location">Povolit polohu</string>
+    <string name="onboarding_grant_notifications">Povolit oznámení</string>
+    <string name="onboarding_permissions_note">Tato nastavení můžete později změnit v Nastavení.</string>
+
+    <!-- Notifications -->
+    <string name="notification_frost_car_title">Riziko ledu na oknech!</string>
+    <string name="notification_frost_garden_title">Riziko mrazu v zahradě!</string>
+    <string name="notification_frost_forecast_message">Předpověď min: %.1f°C.</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Historie mrazu</string>
+    <string name="stats_season">Statistiky sezóny</string>
+    <string name="export_csv">Exportovat do CSV</string>
+
+    <!-- Actions -->
+    <string name="action_ignore">Ignorovat dnes</string>
+    <string name="retry_button">Zkusit znovu</string>
+</resources>

@@ -14,8 +14,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Agriculture
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -31,11 +33,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pl.oki.frostalert.R
+import pl.oki.frostalert.utils.LocaleHelper
 
 private data class OnboardingPageData(
     val icon: ImageVector,
@@ -49,9 +56,10 @@ private val infoPages = listOf(
     OnboardingPageData(Icons.Default.NotificationsActive, R.string.feature_2_title, R.string.feature_2_desc),
 )
 
-private const val PAGE_MODE = 3
-private const val PAGE_PERMISSIONS = 4
-private const val TOTAL_PAGES = 5
+private const val PAGE_LANGUAGE = 3
+private const val PAGE_MODE = 4
+private const val PAGE_PERMISSIONS = 5
+private const val TOTAL_PAGES = 6
 
 @Composable
 fun OnboardingScreen(
@@ -59,8 +67,17 @@ fun OnboardingScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     var step by remember { mutableIntStateOf(0) }
+    // Selected language code: "system", "pl", "en", "de", "fr", "es", "it", "uk", "cs"
+    var selectedLanguage by remember { mutableStateOf("system") }
     // Selected app mode: 0 = car, 1 = garden
     var selectedMode by remember { mutableIntStateOf(0) }
+
+    // Save language selection when moving away from language page
+    LaunchedEffect(step) {
+        if (step == PAGE_LANGUAGE + 1) {
+            settingsViewModel.updateAppLanguage(selectedLanguage)
+        }
+    }
 
     // Save mode selection only once — when the user moves away from the mode page
     LaunchedEffect(step) {
@@ -97,6 +114,10 @@ fun OnboardingScreen(
                 label = "onboarding_page"
             ) { currentStep ->
                 when (currentStep) {
+                    PAGE_LANGUAGE -> OnboardingLanguagePage(
+                        selectedLanguage = selectedLanguage,
+                        onLanguageSelected = { selectedLanguage = it }
+                    )
                     PAGE_MODE -> OnboardingModePage(
                         selectedMode = selectedMode,
                         onModeSelected = { selectedMode = it }
@@ -363,5 +384,90 @@ fun OnboardingPage(icon: ImageVector, title: String, description: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
         )
+    }
+}
+
+/** Page 1: Language selection. */
+@Composable
+private fun OnboardingLanguagePage(selectedLanguage: String, onLanguageSelected: (String) -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(R.string.onboarding_language_title),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = stringResource(R.string.onboarding_language_desc),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(32.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 380.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            LocaleHelper.supportedLanguages.forEach { languageCode ->
+                OnboardingLanguageCard(
+                    languageCode = languageCode,
+                    selected = selectedLanguage == languageCode,
+                    onClick = { onLanguageSelected(languageCode) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OnboardingLanguageCard(
+    languageCode: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+    val bgColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, borderColor, RoundedCornerShape(12.dp))
+            .semantics {
+                role = Role.RadioButton
+                this.selected = selected
+            }
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = bgColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = LocaleHelper.getLanguageName(androidx.compose.ui.platform.LocalContext.current, languageCode),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                modifier = Modifier.weight(1f)
+            )
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Default.Speed,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
     }
 }

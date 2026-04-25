@@ -44,6 +44,7 @@ interface SettingsRepository {
     suspend fun updateMorningBriefEnabled(isEnabled: Boolean)
     suspend fun updateMorningLearningDays(days: Int)
     suspend fun updateMorningBriefDelayMinutes(minutes: Int)
+    suspend fun updateAppLanguage(languageCode: String)
 }
 
 class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) : SettingsRepository {
@@ -196,5 +197,9 @@ class SettingsRepositoryImpl(private val settingsDataStore: SettingsDataStore) :
 
     override suspend fun updateMorningBriefDelayMinutes(minutes: Int) {
         settingsDataStore.updateMorningBriefDelayMinutes(minutes)
+    }
+
+    override suspend fun updateAppLanguage(languageCode: String) {
+        settingsDataStore.updateAppLanguage(languageCode)
     }
 }
