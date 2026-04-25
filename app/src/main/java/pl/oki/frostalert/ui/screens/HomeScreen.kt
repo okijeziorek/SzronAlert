@@ -600,6 +600,7 @@ fun UvIndexCard(uvIndex: Double) {
 
 @Composable
 fun GardenAdviceCard(minTemp: Double) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
@@ -617,7 +618,7 @@ fun GardenAdviceCard(minTemp: Double) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = WeatherCalculations.getGardenTip(minTemp),
+                    text = WeatherCalculations.getGardenTip(context, minTemp),
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
