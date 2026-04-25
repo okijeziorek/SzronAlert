@@ -5,7 +5,6 @@ import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -67,8 +67,10 @@ class MainActivity : ComponentActivity() {
             } else {
                 val prefs = userPreferences!!
 
-                // Apply the locale based on user preferences
-                LaunchedEffect(prefs.appLanguage) {
+                // Build a locale-wrapped context so that all stringResource() calls
+                // in this subtree use the user-selected language. The returned context
+                // is memoised and only rebuilt when appLanguage changes.
+                val localizedContext = remember(prefs.appLanguage) {
                     LocaleHelper.setLocale(this@MainActivity, prefs.appLanguage)
                 }
 
@@ -83,28 +85,25 @@ class MainActivity : ComponentActivity() {
                     permissionLauncher.launch(permissionsToRequest.toTypedArray())
                 }
 
-                FrostAlertTheme(
-                    darkTheme = when (prefs.theme) {
-                        0 -> false
-                        1 -> true
-                        else -> isSystemInDarkTheme()
-                    }
-                ) {
-                    if (prefs.isOnboardingCompleted) {
-                        MainScreen(initialTab = initialTabState.intValue)
-                    } else {
-                        OnboardingScreen(onFinish = {
-                            settingsViewModel.setOnboardingCompleted(true)
-                        })
+                CompositionLocalProvider(LocalContext provides localizedContext) {
+                    FrostAlertTheme(
+                        darkTheme = when (prefs.theme) {
+                            0 -> false
+                            1 -> true
+                            else -> isSystemInDarkTheme()
+                        }
+                    ) {
+                        if (prefs.isOnboardingCompleted) {
+                            MainScreen(initialTab = initialTabState.intValue)
+                        } else {
+                            OnboardingScreen(onFinish = {
+                                settingsViewModel.setOnboardingCompleted(true)
+                            })
+                        }
                     }
                 }
             }
         }
-    }
-
-    override fun attachBaseContext(newBase: Context) {
-        // Apply locale from preferences before attaching base context
-        super.attachBaseContext(newBase)
     }
 
     override fun onNewIntent(intent: Intent) {

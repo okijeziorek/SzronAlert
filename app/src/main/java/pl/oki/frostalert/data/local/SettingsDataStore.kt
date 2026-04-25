@@ -47,7 +47,6 @@ data class UserPreferences(
     val isOnboardingCompleted: Boolean,
     val useFahrenheit: Boolean,
     val appLanguage: String = "system", // Language code (e.g., "pl", "en", "de", "fr", "system")
-    ,
     val geofenceRadiusMeters: Double,
     val activeLocationId: Int,
     val isTtsEnabled: Boolean = false,
@@ -183,8 +182,7 @@ class SettingsDataStore(private val context: Context) {
                 manualLocationName = preferences[Keys.MANUAL_LOCATION_NAME] ?: "Warszawa",
                 isOnboardingCompleted = preferences[Keys.IS_ONBOARDING_COMPLETED] ?: false,
                 useFahrenheit = preferences[Keys.USE_FAHRENHEIT] ?: false,
-                appLanguage = preferences[Keys.APP_LANGUAGE] ?: "system"
-                ,
+                appLanguage = preferences[Keys.APP_LANGUAGE] ?: "system",
                 geofenceRadiusMeters = preferences[Keys.GEOFENCE_RADIUS] ?: 20000.0,
                 activeLocationId = preferences[Keys.ACTIVE_LOCATION_ID] ?: 0,
                 isTtsEnabled = preferences[Keys.IS_TTS_ENABLED] ?: false,

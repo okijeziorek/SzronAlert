@@ -1,23 +1,30 @@
 package pl.oki.frostalert.utils
 
 import android.content.Context
+import android.content.res.Resources
 import android.os.Build
 import java.util.Locale
 
 object LocaleHelper {
 
+    private fun getSystemLocale(): Locale {
+        val systemConfig = Resources.getSystem().configuration
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            systemConfig.locales[0]
+        } else {
+            @Suppress("DEPRECATION")
+            systemConfig.locale
+        }
+    }
+
     /**
      * Updates the app's locale based on the language code.
      * @param languageCode Language code (e.g., "pl", "en", "de", "fr", "system")
-     * @return A context with the updated locale
+     * @return A context with the updated locale applied
      */
     fun setLocale(context: Context, languageCode: String): Context {
-        if (languageCode == "system") {
-            // Use system default - no override
-            return context
-        }
-
         val locale = when (languageCode) {
+            "system" -> getSystemLocale()
             "pl" -> Locale("pl")
             "en" -> Locale("en")
             "de" -> Locale("de")
@@ -26,7 +33,7 @@ object LocaleHelper {
             "it" -> Locale("it")
             "uk" -> Locale("uk")
             "cs" -> Locale("cs")
-            else -> Locale.getDefault()
+            else -> getSystemLocale()
         }
 
         Locale.setDefault(locale)
