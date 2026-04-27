@@ -1,5 +1,7 @@
 package pl.oki.frostalert.utils
 
+import android.content.Context
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.CalibrationFeedback
 import kotlin.math.abs
 
@@ -132,11 +134,19 @@ object CalibrationEngine {
     /**
      * Generuje wiadomość wyjaśniającą rekomendacje kalibracji
      */
-    fun generateCalibrationExplanation(result: CalibrationResult): String {
+    fun generateCalibrationExplanation(context: Context, result: CalibrationResult): String {
         return when (result.confidenceLevel) {
-            ConfidenceLevel.LOW -> "Zbierz więcej danych (min. 10 feedbacków) aby otrzymać dokładniejsze rekomendacje."
-            ConfidenceLevel.MEDIUM -> "Na podstawie ${result.totalFeedback} feedbacków, dokładność predykcji wynosi ${"%.1f".format(result.accuracyPercentage)}%."
-            ConfidenceLevel.HIGH -> "Na podstawie ${result.totalFeedback} feedbacków, algorytm osiąga ${"%.1f".format(result.accuracyPercentage)}% dokładności. Rekomendowane thresholdy zostały obliczone."
+            ConfidenceLevel.LOW -> context.getString(R.string.calibration_explanation_low)
+            ConfidenceLevel.MEDIUM -> context.getString(
+                R.string.calibration_explanation_medium,
+                result.totalFeedback,
+                "%.1f".format(result.accuracyPercentage)
+            )
+            ConfidenceLevel.HIGH -> context.getString(
+                R.string.calibration_explanation_high,
+                result.totalFeedback,
+                "%.1f".format(result.accuracyPercentage)
+            )
         }
     }
 

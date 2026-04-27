@@ -319,7 +319,7 @@ private fun exportToCsv(context: Context, records: List<TemperatureRecord>) {
         }
         context.startActivity(Intent.createChooser(intent, context.getString(R.string.history_csv_chooser)))
     } catch (e: Exception) {
-        Toast.makeText(context, "Błąd eksportu: ${e.message}", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, context.getString(R.string.history_export_error, e.message), Toast.LENGTH_LONG).show()
     }
 }
 

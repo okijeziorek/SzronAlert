@@ -1,8 +1,10 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.map
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.remote.OpenMeteoApi
@@ -37,6 +40,7 @@ data class ExtendedTrendUiState(
 
 @HiltViewModel
 class TrendViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val temperatureDao: TemperatureDao,
     private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
@@ -53,12 +57,12 @@ class TrendViewModel @Inject constructor(
     val trendState: StateFlow<TrendUiState> = temperatureDao.getRecentRecords()
         .map { records ->
             try {
-                val stats = TrendCalculations.calculateWeeklyTrend(records)
+                val stats = TrendCalculations.calculateWeeklyTrend(records, context = context)
                 TrendUiState(weeklyStats = stats, isLoading = false)
             } catch (e: Exception) {
                 TrendUiState(
                     isLoading = false,
-                    errorMessage = "Błąd wyliczania trendu: ${e.message}"
+                    errorMessage = context.getString(R.string.error_trend_calculation, e.message)
                 )
             }
         }
@@ -78,18 +82,18 @@ class TrendViewModel @Inject constructor(
                 val weatherResult = OpenMeteoApi.getWeather(latitude, longitude)
                 when (weatherResult) {
                     is AppResult.Success -> {
-                        val futureStats = TrendCalculations.calculateFutureWeeklyTrend(weatherResult.data)
+                        val futureStats = TrendCalculations.calculateFutureWeeklyTrend(weatherResult.data, context = context)
                         _futureTrendState.value = FutureTrendUiState(futureWeeklyStats = futureStats)
                     }
                     is AppResult.Error -> {
                         _futureTrendState.value = FutureTrendUiState(
-                            errorMessage = "Błąd pobierania prognozy: ${weatherResult.error.message}"
+                            errorMessage = context.getString(R.string.error_trend_forecast, weatherResult.error.message)
                         )
                     }
                 }
             } catch (e: Exception) {
                 _futureTrendState.value = FutureTrendUiState(
-                    errorMessage = "Błąd ładowania przyszłego trendu: ${e.message}"
+                    errorMessage = context.getString(R.string.error_trend_future, e.message)
                 )
             }
         }
@@ -105,18 +109,18 @@ class TrendViewModel @Inject constructor(
                 val weatherResult = OpenMeteoApi.getWeather(latitude, longitude)
                 when (weatherResult) {
                     is AppResult.Success -> {
-                        val stats = TrendCalculations.calculateExtendedTrend(weatherResult.data)
+                        val stats = TrendCalculations.calculateExtendedTrend(weatherResult.data, context = context)
                         _extendedTrendState.value = ExtendedTrendUiState(extendedStats = stats)
                     }
                     is AppResult.Error -> {
                         _extendedTrendState.value = ExtendedTrendUiState(
-                            errorMessage = "Błąd pobierania prognozy: ${weatherResult.error.message}"
+                            errorMessage = context.getString(R.string.error_trend_forecast, weatherResult.error.message)
                         )
                     }
                 }
             } catch (e: Exception) {
                 _extendedTrendState.value = ExtendedTrendUiState(
-                    errorMessage = "Błąd ładowania prognozy 14-dniowej: ${e.message}"
+                    errorMessage = context.getString(R.string.error_trend_14day, e.message)
                 )
             }
         }

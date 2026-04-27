@@ -62,7 +62,7 @@ class CalibrationViewModel @Inject constructor(
                     } catch (e: Exception) {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = "Błąd podczas analizy kalibracji: ${e.message}"
+                            error = context.getString(R.string.calibration_error_analysis, e.message)
                         )
                     }
                 }
@@ -84,7 +84,7 @@ class CalibrationViewModel @Inject constructor(
                 // Stan zostanie automatycznie odświeżony przez observeCalibrationData()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Błąd podczas stosowania rekomendacji: ${e.message}"
+                    error = context.getString(R.string.calibration_error_apply, e.message)
                 )
             }
         }
@@ -100,7 +100,7 @@ class CalibrationViewModel @Inject constructor(
                 // Stan zostanie automatycznie odświeżony przez observeCalibrationData()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Błąd podczas czyszczenia danych: ${e.message}"
+                    error = context.getString(R.string.calibration_error_clear, e.message)
                 )
             }
         }
@@ -111,6 +111,6 @@ class CalibrationViewModel @Inject constructor(
      */
     fun getCalibrationExplanation(): String {
         val result = _uiState.value.calibrationResult ?: return context.getString(R.string.calibration_no_analysis_data)
-        return CalibrationEngine.generateCalibrationExplanation(result)
+        return CalibrationEngine.generateCalibrationExplanation(context, result)
     }
 }

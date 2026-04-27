@@ -63,12 +63,12 @@ fun GeofenceHistoryScreen(viewModel: GeofenceHistoryViewModel = hiltViewModel())
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "Data: ${dateFormat.format(Instant.ofEpochMilli(r.timestamp))}",
+                                text = stringResource(R.string.geofence_history_date, dateFormat.format(Instant.ofEpochMilli(r.timestamp))),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "Ryzyko: ${ (r.riskLevel * 100).toInt() }%",
+                                text = stringResource(R.string.geofence_history_risk, (r.riskLevel * 100).toInt()),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )

@@ -26,7 +26,7 @@ class FrostTileService : TileService() {
         super.onClick()
         val tile = qsTile
         tile.state = Tile.STATE_ACTIVE
-        tile.label = "Sprawdzanie..."
+        tile.label = getString(R.string.tile_checking)
         tile.updateTile()
 
         serviceScope.launch {
@@ -54,11 +54,11 @@ class FrostTileService : TileService() {
                                 windSpeed = weather.current.windSpeed
                             )
 
-                            tile.label = if (hasRisk) "Ryzyko: TAK" else "Ryzyko: NIE"
+                            tile.label = if (hasRisk) getString(R.string.tile_risk_yes) else getString(R.string.tile_risk_no)
                             tile.state = if (hasRisk) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
                         }
                         is AppResult.Error -> {
-                            tile.label = "Błąd sieci"
+                            tile.label = getString(R.string.tile_error_network)
                             tile.state = Tile.STATE_UNAVAILABLE
                         }
                     }
@@ -66,7 +66,7 @@ class FrostTileService : TileService() {
                 }
             } catch (e: Exception) {
                 launch(Dispatchers.Main) {
-                    tile.label = "Błąd"
+                    tile.label = getString(R.string.tile_error)
                     tile.state = Tile.STATE_UNAVAILABLE
                     tile.updateTile()
                 }
@@ -76,7 +76,7 @@ class FrostTileService : TileService() {
 
     private fun updateTile() {
         val tile = qsTile
-        tile.label = "FrostAlert"
+        tile.label = getString(R.string.app_name)
         tile.state = Tile.STATE_INACTIVE
         tile.updateTile()
     }

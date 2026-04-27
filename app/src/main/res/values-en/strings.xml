@@ -581,4 +581,34 @@
     <string name="diagnostics_critical_errors">Critical errors: %d</string>
     <string name="diagnostics_success_rate">Success rate: %d%%</string>
     <string name="diagnostics_no_run_data">no data</string>
+
+    <!-- Calibration ViewModel -->
+    <string name="calibration_error_analysis">Calibration analysis error: %s</string>
+    <string name="calibration_error_apply">Error applying recommendations: %s</string>
+    <string name="calibration_error_clear">Error clearing calibration data: %s</string>
+    <string name="calibration_explanation_low">Collect more data (min. 10 feedbacks) to get more accurate recommendations.</string>
+    <string name="calibration_explanation_medium">Based on %1$d feedbacks, prediction accuracy is %2$s%%.</string>
+    <string name="calibration_explanation_high">Based on %1$d feedbacks, the algorithm achieves %2$s%% accuracy. Recommended thresholds have been calculated.</string>
+
+    <!-- Quick Settings Tile -->
+    <string name="tile_checking">Checking…</string>
+    <string name="tile_risk_yes">Risk: YES</string>
+    <string name="tile_risk_no">Risk: NO</string>
+    <string name="tile_error_network">Network error</string>
+    <string name="tile_error">Error</string>
+
+    <!-- Geofence History Screen -->
+    <string name="geofence_history_date">Date: %s</string>
+    <string name="geofence_history_risk">Risk: %d%%</string>
+
+    <!-- History Screen -->
+    <string name="history_export_error">Export error: %s</string>
+
+    <!-- Error messages -->
+    <string name="error_unexpected_data">An unexpected data error occurred.</string>
+    <string name="error_location_unavailable">Unable to get location. Check permissions or set location manually.</string>
+    <string name="error_trend_calculation">Trend calculation error: %s</string>
+    <string name="error_trend_forecast">Forecast fetch error: %s</string>
+    <string name="error_trend_future">Error loading future trend: %s</string>
+    <string name="error_trend_14day">Error loading 14-day forecast: %s</string>
 </resources>

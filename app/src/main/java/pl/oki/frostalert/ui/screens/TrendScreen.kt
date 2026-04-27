@@ -286,6 +286,7 @@ fun TrendTemperatureChart(stats: TrendCalculations.WeeklyTrendStats) {
 
 @Composable
 fun TrendNightsDetail(stats: TrendCalculations.WeeklyTrendStats) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large
@@ -321,7 +322,7 @@ fun TrendNightsDetail(stats: TrendCalculations.WeeklyTrendStats) {
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = TrendCalculations.getDayOfWeekShort(point.timestamp),
+                                text = TrendCalculations.getDayOfWeekShortLocalized(context, point.timestamp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

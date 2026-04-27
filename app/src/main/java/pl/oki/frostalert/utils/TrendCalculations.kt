@@ -52,7 +52,8 @@ object TrendCalculations {
      */
     fun calculateWeeklyTrend(
         records: List<TemperatureRecord>,
-        timeZone: TimeZone = TimeZone.getDefault()
+        timeZone: TimeZone = TimeZone.getDefault(),
+        context: Context? = null
     ): WeeklyTrendStats {
         if (records.isEmpty()) {
             return WeeklyTrendStats(
@@ -75,7 +76,8 @@ object TrendCalculations {
         val trendPoints = dailySummaries.map { (dayStart, dayRecords) ->
             val minRecord = dayRecords.minBy { it.minTemp }
             DailyTrendPoint(
-                dayLabel = getRelativeDayLabel(dayStart, timeZone),
+                dayLabel = if (context != null) getRelativeDayLabelLocalized(context, dayStart, timeZone)
+                           else getRelativeDayLabel(dayStart, timeZone),
                 minTemp = minRecord.minTemp,
                 hasFrostRisk = dayRecords.any { it.hasRisk },
                 timestamp = dayStart
@@ -107,7 +109,8 @@ object TrendCalculations {
      */
     fun calculateFutureWeeklyTrend(
         weatherResponse: pl.oki.frostalert.data.remote.WeatherResponse,
-        timeZone: TimeZone = TimeZone.getDefault()
+        timeZone: TimeZone = TimeZone.getDefault(),
+        context: Context? = null
     ): WeeklyTrendStats {
         val hourly = weatherResponse.hourly
         val now = System.currentTimeMillis()
@@ -156,7 +159,8 @@ object TrendCalculations {
 
             val timestamp = tomorrowStart + (day * 24 * 60 * 60 * 1000L)
             trendPoints.add(DailyTrendPoint(
-                dayLabel = getFutureDayLabel(day),
+                dayLabel = if (context != null) getFutureDayLabelLocalized(context, day)
+                           else getFutureDayLabel(day),
                 minTemp = minTemp,
                 hasFrostRisk = hasFrostRisk,
                 timestamp = timestamp
@@ -375,7 +379,8 @@ object TrendCalculations {
      */
     fun calculateExtendedTrend(
         weatherResponse: pl.oki.frostalert.data.remote.WeatherResponse,
-        frostThreshold: Double = 2.0
+        frostThreshold: Double = 2.0,
+        context: Context? = null
     ): ExtendedTrendStats {
         val daily = weatherResponse.daily ?: return ExtendedTrendStats(
             forecastPoints = emptyList(),
@@ -400,7 +405,8 @@ object TrendCalculations {
             val timestamp = try { sdf.parse(dateStr)?.time ?: 0L } catch (_: Exception) { 0L }
 
             DailyForecastPoint(
-                dayLabel = getExtendedFutureDayLabel(i),
+                dayLabel = if (context != null) getExtendedFutureDayLabelLocalized(context, i)
+                           else getExtendedFutureDayLabel(i),
                 date = dateStr,
                 minTemp = minTemp,
                 maxTemp = maxTemp,
