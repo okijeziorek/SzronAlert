@@ -586,9 +586,9 @@
     <string name="calibration_error_analysis">Calibration analysis error: %s</string>
     <string name="calibration_error_apply">Error applying recommendations: %s</string>
     <string name="calibration_error_clear">Error clearing calibration data: %s</string>
-    <string name="calibration_explanation_low">Collect more data (min. 10 feedbacks) to get more accurate recommendations.</string>
-    <string name="calibration_explanation_medium">Based on %1$d feedbacks, prediction accuracy is %2$s%%.</string>
-    <string name="calibration_explanation_high">Based on %1$d feedbacks, the algorithm achieves %2$s%% accuracy. Recommended thresholds have been calculated.</string>
+    <string name="calibration_explanation_low">Collect more feedback (at least 10 entries) to get more accurate recommendations.</string>
+    <string name="calibration_explanation_medium">Based on %1$d feedback entries, prediction accuracy is %2$s%%.</string>
+    <string name="calibration_explanation_high">Based on %1$d feedback entries, the algorithm achieves %2$s%% accuracy. Recommended thresholds have been calculated.</string>
 
     <!-- Quick Settings Tile -->
     <string name="tile_checking">Checking…</string>

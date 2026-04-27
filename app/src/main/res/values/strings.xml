@@ -738,7 +738,7 @@
     <string name="calibration_error_analysis">Błąd podczas analizy kalibracji: %s</string>
     <string name="calibration_error_apply">Błąd podczas stosowania rekomendacji: %s</string>
     <string name="calibration_error_clear">Błąd podczas czyszczenia danych: %s</string>
-    <string name="calibration_explanation_low">Zbierz więcej danych (min. 10 feedbacków) aby otrzymać dokładniejsze rekomendacje.</string>
+    <string name="calibration_explanation_low">Zbierz więcej danych (min. 10 feedbacków), aby otrzymać dokładniejsze rekomendacje.</string>
     <string name="calibration_explanation_medium">Na podstawie %1$d feedbacków, dokładność predykcji wynosi %2$s%%.</string>
     <string name="calibration_explanation_high">Na podstawie %1$d feedbacków, algorytm osiąga %2$s%% dokładności. Rekomendowane thresholdy zostały obliczone.</string>
 
