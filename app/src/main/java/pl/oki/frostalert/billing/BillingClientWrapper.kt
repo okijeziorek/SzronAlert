@@ -63,6 +63,11 @@ class BillingClientWrapper @Inject constructor(
     private val _subscriptionState = MutableStateFlow(SubscriptionState.inactive())
     val subscriptionState = _subscriptionState.asStateFlow()
 
+    // Separate caches for each product type so two concurrent callbacks
+    // don't race on a shared mutable list.
+    @Volatile private var cachedInAppProducts: List<ProductInfo> = emptyList()
+    @Volatile private var cachedSubsProducts: List<ProductInfo> = emptyList()
+
     private var retryCount = 0
 
     private val billingClient = BillingClient.newBuilder(appContext)
@@ -201,15 +206,17 @@ class BillingClientWrapper @Inject constructor(
 
     /**
      * Queries all available PRO product offerings (subscriptions + one-time purchases).
+     *
+     * Each product type is queried independently. Results are stored in separate
+     * [cachedInAppProducts] / [cachedSubsProducts] fields so that concurrent callbacks
+     * from Play Billing never race on a shared mutable collection.
      */
     private fun queryAllProductDetails() {
         if (!billingClient.isReady) return
 
         scope.launch {
-            val products = mutableListOf<ProductInfo>()
-
             // Query INAPP products (one-time purchases)
-            val inAppProducts = ProductOffering.allOfferings()
+            val inAppQueryProducts = ProductOffering.allOfferings()
                 .filter { it.productType == BillingClient.ProductType.INAPP }
                 .map { offering ->
                     QueryProductDetailsParams.Product.newBuilder()
@@ -218,37 +225,31 @@ class BillingClientWrapper @Inject constructor(
                         .build()
                 }
 
-            if (inAppProducts.isNotEmpty()) {
+            if (inAppQueryProducts.isNotEmpty()) {
                 val inAppParams = QueryProductDetailsParams.newBuilder()
-                    .setProductList(inAppProducts)
+                    .setProductList(inAppQueryProducts)
                     .build()
 
                 billingClient.queryProductDetailsAsync(inAppParams) { result, detailsList ->
                     if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                        detailsList.forEach { details ->
-                            val offering = ProductOffering.fromProductId(details.productId)
-                            if (offering != null) {
-                                val oneTimeOffer = details.oneTimePurchaseOfferDetails
-                                if (oneTimeOffer != null) {
-                                    products.add(
-                                        ProductInfo(
-                                            offering = offering,
-                                            productDetails = details,
-                                            priceFormatted = oneTimeOffer.formattedPrice,
-                                            priceAmountMicros = oneTimeOffer.priceAmountMicros,
-                                            priceCurrencyCode = oneTimeOffer.priceCurrencyCode
-                                        )
-                                    )
-                                }
-                            }
+                        cachedInAppProducts = detailsList.mapNotNull { details ->
+                            val offering = ProductOffering.fromProductId(details.productId) ?: return@mapNotNull null
+                            val oneTimeOffer = details.oneTimePurchaseOfferDetails ?: return@mapNotNull null
+                            ProductInfo(
+                                offering = offering,
+                                productDetails = details,
+                                priceFormatted = oneTimeOffer.formattedPrice,
+                                priceAmountMicros = oneTimeOffer.priceAmountMicros,
+                                priceCurrencyCode = oneTimeOffer.priceCurrencyCode
+                            )
                         }
-                        _availableProducts.value = products.toList()
+                        _availableProducts.value = cachedInAppProducts + cachedSubsProducts
                     }
                 }
             }
 
             // Query SUBS products (subscriptions)
-            val subsProducts = ProductOffering.allOfferings()
+            val subsQueryProducts = ProductOffering.allOfferings()
                 .filter { it.productType == BillingClient.ProductType.SUBS }
                 .map { offering ->
                     QueryProductDetailsParams.Product.newBuilder()
@@ -257,33 +258,27 @@ class BillingClientWrapper @Inject constructor(
                         .build()
                 }
 
-            if (subsProducts.isNotEmpty()) {
+            if (subsQueryProducts.isNotEmpty()) {
                 val subsParams = QueryProductDetailsParams.newBuilder()
-                    .setProductList(subsProducts)
+                    .setProductList(subsQueryProducts)
                     .build()
 
                 billingClient.queryProductDetailsAsync(subsParams) { result, detailsList ->
                     if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                        detailsList.forEach { details ->
-                            val offering = ProductOffering.fromProductId(details.productId)
-                            if (offering != null) {
-                                // Use the first available subscription offer returned by BillingClient.
-                                val subscriptionOffer = details.subscriptionOfferDetails?.firstOrNull()
-                                val pricingPhase = subscriptionOffer?.pricingPhases?.pricingPhaseList?.lastOrNull()
-                                if (pricingPhase != null) {
-                                    products.add(
-                                        ProductInfo(
-                                            offering = offering,
-                                            productDetails = details,
-                                            priceFormatted = pricingPhase.formattedPrice,
-                                            priceAmountMicros = pricingPhase.priceAmountMicros,
-                                            priceCurrencyCode = pricingPhase.priceCurrencyCode
-                                        )
-                                    )
-                                }
-                            }
+                        cachedSubsProducts = detailsList.mapNotNull { details ->
+                            val offering = ProductOffering.fromProductId(details.productId) ?: return@mapNotNull null
+                            // Use the first available subscription offer returned by BillingClient.
+                            val subscriptionOffer = details.subscriptionOfferDetails?.firstOrNull() ?: return@mapNotNull null
+                            val pricingPhase = subscriptionOffer.pricingPhases.pricingPhaseList.lastOrNull() ?: return@mapNotNull null
+                            ProductInfo(
+                                offering = offering,
+                                productDetails = details,
+                                priceFormatted = pricingPhase.formattedPrice,
+                                priceAmountMicros = pricingPhase.priceAmountMicros,
+                                priceCurrencyCode = pricingPhase.priceCurrencyCode
+                            )
                         }
-                        _availableProducts.value = products.toList()
+                        _availableProducts.value = cachedInAppProducts + cachedSubsProducts
                     }
                 }
             }
@@ -292,6 +287,10 @@ class BillingClientWrapper @Inject constructor(
 
     /**
      * Queries all purchases (both INAPP and SUBS) and updates PRO status.
+     *
+     * Unacknowledged purchases that are in PURCHASED state are re-acknowledged here so
+     * that PRO access is not lost if the initial acknowledgment failed (e.g. due to a
+     * transient network error at purchase time).
      */
     private fun queryAllPurchases() {
         var hasProFromInApp = false
@@ -303,6 +302,15 @@ class BillingClientWrapper @Inject constructor(
             .build()
         billingClient.queryPurchasesAsync(inAppParams) { result, purchases ->
             if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                // Retry acknowledgment for any purchase that completed but was not yet acked.
+                purchases.forEach { purchase ->
+                    if (ALL_PRO_PRODUCT_IDS.contains(purchase.products.firstOrNull()) &&
+                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                        !purchase.isAcknowledged
+                    ) {
+                        acknowledgePurchase(purchase)
+                    }
+                }
                 hasProFromInApp = purchases.any { purchase ->
                     ALL_PRO_PRODUCT_IDS.contains(purchase.products.firstOrNull()) &&
                             purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
@@ -321,6 +329,16 @@ class BillingClientWrapper @Inject constructor(
             .build()
         billingClient.queryPurchasesAsync(subsParams) { result, purchases ->
             if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                // Retry acknowledgment for any subscription that was not yet acked.
+                purchases.forEach { purchase ->
+                    if (ALL_PRO_PRODUCT_IDS.contains(purchase.products.firstOrNull()) &&
+                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                        !purchase.isAcknowledged
+                    ) {
+                        acknowledgePurchase(purchase)
+                    }
+                }
+
                 val activeSub = purchases.firstOrNull { purchase ->
                     ALL_PRO_PRODUCT_IDS.contains(purchase.products.firstOrNull()) &&
                             purchase.purchaseState == Purchase.PurchaseState.PURCHASED
@@ -378,6 +396,8 @@ class BillingClientWrapper @Inject constructor(
             billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     _isPro.value = true
+                    // Refresh full purchase state so subscriptionState is also updated.
+                    queryAllPurchases()
                     AppTelemetry.recordBillingPurchase(appContext)
                 } else {
                     _purchaseError.value = billingResult.debugMessage

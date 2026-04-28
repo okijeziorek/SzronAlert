@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,7 +44,6 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val userPreferences by viewModel.userPreferences.collectAsState()
     val isPro by viewModel.isPro.collectAsState()
     val purchaseError by viewModel.purchaseError.collectAsState()
@@ -58,8 +56,17 @@ fun SettingsScreen(
 
     purchaseError?.let { error ->
         LaunchedEffect(error) {
+            isPurchasing = false
             android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
             viewModel.clearPurchaseError()
+        }
+    }
+
+    // Close the purchase dialog automatically once PRO status is confirmed.
+    LaunchedEffect(isPro) {
+        if (isPro) {
+            isPurchasing = false
+            showPurchaseDialog = false
         }
     }
 
@@ -864,12 +871,7 @@ fun SettingsScreen(
                     onProductSelected = { productInfo ->
                         isPurchasing = true
                         viewModel.launchPurchaseFlow(context as Activity, productInfo)
-                        // Reset purchasing state after a delay (purchase flow is async)
-                        scope.launch {
-                            kotlinx.coroutines.delay(2000)
-                            isPurchasing = false
-                            showPurchaseDialog = false
-                        }
+                        // Dialog is closed reactively via LaunchedEffect(isPro) above.
                     },
                     onRestorePurchases = {
                         viewModel.restorePurchases()
