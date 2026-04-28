@@ -1,10 +1,13 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.TemperatureDao
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.repository.HistoryRepository
@@ -21,6 +24,7 @@ data class HistoryUiState(
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repository: HistoryRepository,
     private val temperatureDao: TemperatureDao
 ) : ViewModel() {
@@ -56,7 +60,7 @@ class HistoryViewModel @Inject constructor(
             } else {
                 val error = (statsResult as? AppResult.Error)?.error?.message 
                     ?: (minTempResult as? AppResult.Error)?.error?.message 
-                    ?: "Wystąpił nieoczekiwany błąd danych."
+                    ?: context.getString(R.string.error_unexpected_data)
                 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

@@ -735,4 +735,32 @@
 
     <!-- Calibration ViewModel -->
     <string name="calibration_no_analysis_data">Brak danych do analizy.</string>
+    <string name="calibration_error_analysis">Błąd podczas analizy kalibracji: %s</string>
+    <string name="calibration_error_apply">Błąd podczas stosowania rekomendacji: %s</string>
+    <string name="calibration_error_clear">Błąd podczas czyszczenia danych: %s</string>
+    <string name="calibration_explanation_low">Zbierz więcej danych (min. 10 feedbacków), aby otrzymać dokładniejsze rekomendacje.</string>
+    <string name="calibration_explanation_medium">Na podstawie %1$d feedbacków, dokładność predykcji wynosi %2$s%%.</string>
+    <string name="calibration_explanation_high">Na podstawie %1$d feedbacków, algorytm osiąga %2$s%% dokładności. Rekomendowane thresholdy zostały obliczone.</string>
+
+    <!-- Quick Settings Tile -->
+    <string name="tile_checking">Sprawdzanie…</string>
+    <string name="tile_risk_yes">Ryzyko: TAK</string>
+    <string name="tile_risk_no">Ryzyko: NIE</string>
+    <string name="tile_error_network">Błąd sieci</string>
+    <string name="tile_error">Błąd</string>
+
+    <!-- Geofence History Screen -->
+    <string name="geofence_history_date">Data: %s</string>
+    <string name="geofence_history_risk">Ryzyko: %d%%</string>
+
+    <!-- History Screen -->
+    <string name="history_export_error">Błąd eksportu: %s</string>
+
+    <!-- Error messages -->
+    <string name="error_unexpected_data">Wystąpił nieoczekiwany błąd danych.</string>
+    <string name="error_location_unavailable">Nie udało się uzyskać lokalizacji. Sprawdź uprawnienia lub ustaw lokalizację ręcznie.</string>
+    <string name="error_trend_calculation">Błąd wyliczania trendu: %s</string>
+    <string name="error_trend_forecast">Błąd pobierania prognozy: %s</string>
+    <string name="error_trend_future">Błąd ładowania przyszłego trendu: %s</string>
+    <string name="error_trend_14day">Błąd ładowania prognozy 14-dniowej: %s</string>
 </resources>

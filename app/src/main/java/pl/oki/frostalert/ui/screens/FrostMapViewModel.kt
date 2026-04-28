@@ -1,13 +1,16 @@
 package pl.oki.frostalert.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.remote.OpenMeteoApi
 import pl.oki.frostalert.data.repository.LocationRepository
@@ -36,6 +39,7 @@ data class FrostMapUiState(
 
 @HiltViewModel
 class FrostMapViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val settingsDataStore: SettingsDataStore,
     private val locationRepository: LocationRepository
 ) : ViewModel() {
@@ -53,7 +57,7 @@ class FrostMapViewModel @Inject constructor(
                 if (location == null) {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = "Nie udało się uzyskać lokalizacji. Sprawdź uprawnienia lub ustaw lokalizację ręcznie."
+                        errorMessage = context.getString(R.string.error_location_unavailable)
                     )
                     return@launch
                 }
