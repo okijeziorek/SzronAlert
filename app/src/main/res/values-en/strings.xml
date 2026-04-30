@@ -290,7 +290,7 @@
     <string name="language_italian">Italiano</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_czech">Čeština</string>
-    <string name="onboarding_mode_title">Choose your profile</string>
+    <string name="language_polish_vulgar">Polish (Vulgar) 🤬</string>
     <string name="onboarding_mode_desc">Configure the app for your needs right now.</string>
     <string name="onboarding_mode_car_label">Car</string>
     <string name="onboarding_mode_car_desc">Frost on car windshields in the morning.</string>

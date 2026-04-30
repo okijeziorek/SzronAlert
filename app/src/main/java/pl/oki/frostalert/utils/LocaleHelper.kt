@@ -28,6 +28,7 @@ object LocaleHelper {
             "it" -> Locale.forLanguageTag("it")
             "uk" -> Locale.forLanguageTag("uk")
             "cs" -> Locale.forLanguageTag("cs")
+            "pl_vulgar" -> Locale.Builder().setLanguage("qpl").build()
             else -> getSystemLocale()
         }
 
@@ -60,6 +61,7 @@ object LocaleHelper {
             "it" -> context.getString(pl.oki.frostalert.R.string.language_italian)
             "uk" -> context.getString(pl.oki.frostalert.R.string.language_ukrainian)
             "cs" -> context.getString(pl.oki.frostalert.R.string.language_czech)
+            "pl_vulgar" -> context.getString(pl.oki.frostalert.R.string.language_polish_vulgar)
             else -> languageCode
         }
     }
@@ -76,6 +78,7 @@ object LocaleHelper {
         "es",
         "it",
         "uk",
-        "cs"
+        "cs",
+        "pl_vulgar"
     )
 }

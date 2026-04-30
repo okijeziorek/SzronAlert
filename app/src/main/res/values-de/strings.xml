@@ -60,6 +60,7 @@
     <string name="language_italian">Italiano</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_czech">Čeština</string>
+    <string name="language_polish_vulgar">Polnisch (vulgär) 🤬</string>
 
     <!-- Mode Selection -->
     <string name="onboarding_mode_title">Profil wählen</string>
