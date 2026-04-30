@@ -477,7 +477,7 @@
     <string name="diagnostics_geofence_count">Record geofence: %d</string>
     <string name="diagnostics_last_5_records">Ultimi 5 record:</string>
     <string name="diagnostics_no_data">(nessun dato)</string>
-    <string name="diagnostics_record_entry">%1$s | %2$s | Um: %.0f%% | %3$s</string>
+    <string name="diagnostics_record_entry">%1$s | %2$s | Um: %3$.0f%% | %4$s</string>
     <string name="diagnostics_risk">RISCHIO</string>
     <string name="diagnostics_ok">OK</string>
     <string name="diagnostics_worker_section">--- Telemetria worker ---</string>

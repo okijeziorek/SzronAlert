@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Szron Alert</string>
     <string name="widget_description">Ostrzeżenia Szron – min. temperatura w nocy</string>
 
@@ -407,7 +407,7 @@
     <!-- C5: Smart Home -->
     <string name="smart_home_title">Smart Home</string>
     <string name="smart_home_desc">Integracja z automatyką domową</string>
-    <string name="smart_home_webhook_url">Adres URL webhooka</string>
+    <string name="smart_home_webhook_url" tools:ignore="Typos">Adres URL webhooka</string>
     <string name="smart_home_webhook_test">Testuj webhook</string>
     <string name="smart_home_webhook_success">Webhook wysłany pomyślnie</string>
     <string name="smart_home_webhook_error">Błąd wysyłania webhooka</string>
@@ -633,7 +633,7 @@
     <string name="diagnostics_geofence_count">Rekordów geofence: %d</string>
     <string name="diagnostics_last_5_records">Ostatnie 5 rekordów:</string>
     <string name="diagnostics_no_data">(brak danych)</string>
-    <string name="diagnostics_record_entry">%1$s | %2$s | Wilg: %.0f%% | %3$s</string>
+    <string name="diagnostics_record_entry">%1$s | %2$s | Wilg: %3$.0f%% | %4$s</string>
     <string name="diagnostics_risk">RYZYKO</string>
     <string name="diagnostics_ok">OK</string>
     <string name="diagnostics_worker_section">--- Telemetria Worker ---</string>

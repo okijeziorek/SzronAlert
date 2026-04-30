@@ -10,7 +10,6 @@
 # ====== BILLING PROTECTION ======
 # Keep public interface but obfuscate internals
 -keep interface pl.oki.frostalert.billing.BillingManagerInterface { *; }
--keep class com.android.billingclient.api.** { *; }
 
 # CRITICAL: Obfuscate billing implementation while keeping functionality
 -keep,allowobfuscation class pl.oki.frostalert.billing.BillingClientWrapper {
@@ -28,7 +27,7 @@
 
 # ====== HIDE DEBUG FUNCTIONALITY ======
 # Remove debug screen in release builds
--assumenosideeffects class pl.oki.frostalert.ui.screens.DebugScreen {
+-assumenosideeffects class pl.oki.frostalert.ui.screens.DebugScreenKt {
     *;
 }
 -assumenosideeffects class android.util.Log {
@@ -68,8 +67,8 @@
 -dontwarn androidx.room.paging.**
 
 # ====== GLANCE WIDGET ======
--keep class androidx.glance.** { *; }
 -keep class * extends androidx.glance.appwidget.GlanceAppWidget { *; }
+-keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }
 
 # ====== KTOR ======
 # Ktor and coroutines ship their own consumer ProGuard rules; no blanket keeps needed here.

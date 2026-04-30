@@ -477,7 +477,7 @@
     <string name="diagnostics_geofence_count">Записів геозон: %d</string>
     <string name="diagnostics_last_5_records">Останні 5 записів:</string>
     <string name="diagnostics_no_data">(немає даних)</string>
-    <string name="diagnostics_record_entry">%1$s | %2$s | Волог: %.0f%% | %3$s</string>
+    <string name="diagnostics_record_entry">%1$s | %2$s | Волог: %3$.0f%% | %4$s</string>
     <string name="diagnostics_risk">РИЗИК</string>
     <string name="diagnostics_ok">OK</string>
     <string name="diagnostics_worker_section">--- Телеметрія worker ---</string>
