@@ -57,6 +57,9 @@ class BillingClientWrapper @Inject constructor(
     private val _purchaseError = MutableStateFlow<String?>(null)
     override val purchaseError = _purchaseError.asStateFlow()
 
+    private val _purchaseCancelled = MutableStateFlow(false)
+    override val purchaseCancelled = _purchaseCancelled.asStateFlow()
+
     private val _availableProducts = MutableStateFlow<List<ProductInfo>>(emptyList())
     val availableProducts = _availableProducts.asStateFlow()
 
@@ -379,7 +382,8 @@ class BillingClientWrapper @Inject constructor(
                 }
             }
             BillingClient.BillingResponseCode.USER_CANCELED -> {
-                // User dismissed the purchase sheet — not an error, no action needed.
+                // User dismissed the purchase sheet — signal the UI to clear its "purchasing" state.
+                _purchaseCancelled.value = true
             }
             else -> {
                 _purchaseError.value = billingResult.debugMessage
@@ -409,6 +413,10 @@ class BillingClientWrapper @Inject constructor(
 
     override fun clearError() {
         _purchaseError.value = null
+    }
+
+    override fun clearCancellation() {
+        _purchaseCancelled.value = false
     }
 
     override fun restorePurchases() {

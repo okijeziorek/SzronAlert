@@ -64,6 +64,14 @@ class SettingsViewModel @Inject constructor(
             initialValue = null
         )
 
+    /** Emits `true` when the user cancelled the Play purchase sheet. */
+    val purchaseCancelled: StateFlow<Boolean> = billingManager.purchaseCancelled
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
     /** Available PRO product offerings (subscriptions + one-time). */
     val availableProducts: StateFlow<List<ProductInfo>> =
         (billingManager as? BillingClientWrapper)?.availableProducts
@@ -94,6 +102,11 @@ class SettingsViewModel @Inject constructor(
     /** Clears the last purchase error (e.g. after showing a snackbar). */
     fun clearPurchaseError() {
         billingManager.clearError()
+    }
+
+    /** Clears the purchase-cancelled signal after the UI has handled it. */
+    fun clearPurchaseCancellation() {
+        billingManager.clearCancellation()
     }
 
     fun updateLastFeedbackTimestamp(timestamp: Long) {

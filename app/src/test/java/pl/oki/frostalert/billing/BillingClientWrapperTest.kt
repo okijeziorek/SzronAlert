@@ -31,6 +31,9 @@ class BillingClientWrapperTest {
         private val _purchaseError = MutableStateFlow<String?>(null)
         override val purchaseError: StateFlow<String?> = _purchaseError
 
+        private val _purchaseCancelled = MutableStateFlow(false)
+        override val purchaseCancelled: StateFlow<Boolean> = _purchaseCancelled
+
         private var storedProductDetails: ProductDetails? = null
         var lastLaunchedActivity: Activity? = null
         var disconnectCalled = false
@@ -42,6 +45,10 @@ class BillingClientWrapperTest {
 
         fun simulatePurchaseError(message: String) {
             _purchaseError.value = message
+        }
+
+        fun simulateUserCancelled() {
+            _purchaseCancelled.value = true
         }
 
         fun simulateRestore(hasPro: Boolean) {
@@ -66,6 +73,10 @@ class BillingClientWrapperTest {
 
         override fun clearError() {
             _purchaseError.value = null
+        }
+
+        override fun clearCancellation() {
+            _purchaseCancelled.value = false
         }
 
         override fun disconnect() {
@@ -108,9 +119,21 @@ class BillingClientWrapperTest {
     @Test
     fun `user cancel does not set isPro and leaves no error`() = runTest {
         val billing = FakeBillingManager()
-        // Simulate cancel: neither isPro nor purchaseError changes
+        billing.simulateUserCancelled()
+        // Cancel must not grant PRO and must not set an error
         assertFalse(billing.isPro.value)
         assertNull(billing.purchaseError.value)
+        // But the cancellation signal must be raised
+        assertTrue(billing.purchaseCancelled.value)
+    }
+
+    @Test
+    fun `clearCancellation resets purchaseCancelled to false`() = runTest {
+        val billing = FakeBillingManager()
+        billing.simulateUserCancelled()
+        assertTrue(billing.purchaseCancelled.value)
+        billing.clearCancellation()
+        assertFalse(billing.purchaseCancelled.value)
     }
 
     @Test

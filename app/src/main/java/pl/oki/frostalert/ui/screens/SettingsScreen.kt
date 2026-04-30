@@ -53,12 +53,21 @@ fun SettingsScreen(
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
     var showPurchaseDialog by remember { mutableStateOf(false) }
     var isPurchasing by remember { mutableStateOf(false) }
+    val purchaseCancelled by viewModel.purchaseCancelled.collectAsState()
 
     purchaseError?.let { error ->
         LaunchedEffect(error) {
             isPurchasing = false
             android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
             viewModel.clearPurchaseError()
+        }
+    }
+
+    // Reset purchasing state when the user cancels the Play purchase sheet.
+    LaunchedEffect(purchaseCancelled) {
+        if (purchaseCancelled) {
+            isPurchasing = false
+            viewModel.clearPurchaseCancellation()
         }
     }
 
@@ -857,7 +866,10 @@ fun SettingsScreen(
 
     // Purchase Dialog
     if (showPurchaseDialog) {
-        Dialog(onDismissRequest = { showPurchaseDialog = false }) {
+        Dialog(onDismissRequest = {
+            isPurchasing = false
+            showPurchaseDialog = false
+        }) {
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -877,6 +889,7 @@ fun SettingsScreen(
                         viewModel.restorePurchases()
                     },
                     onDismiss = {
+                        isPurchasing = false
                         showPurchaseDialog = false
                     }
                 )
