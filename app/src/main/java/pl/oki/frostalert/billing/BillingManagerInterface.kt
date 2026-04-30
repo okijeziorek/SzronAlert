@@ -11,6 +11,13 @@ interface BillingManagerInterface {
     /** Emits the last billing error message, or `null` when there is no error. */
     val purchaseError: StateFlow<String?>
 
+    /**
+     * Emits `true` when the user explicitly cancels the Play purchase sheet
+     * (`BillingResponseCode.USER_CANCELED`). The UI should observe this to reset
+     * any "purchasing in progress" indicator. Reset to `false` by calling [clearCancellation].
+     */
+    val purchaseCancelled: StateFlow<Boolean>
+
     /** Queries Play Billing for PRO product details and delivers the result via [onDetailsReady]. */
     fun queryProductDetails(onDetailsReady: (ProductDetails?) -> Unit)
 
@@ -22,6 +29,9 @@ interface BillingManagerInterface {
 
     /** Clears the last purchase error so the UI can dismiss any error message. */
     fun clearError()
+
+    /** Clears the purchase-cancelled signal after the UI has handled it. */
+    fun clearCancellation()
 
     /** Ends the billing client connection (call from lifecycle onDestroy). */
     fun disconnect()

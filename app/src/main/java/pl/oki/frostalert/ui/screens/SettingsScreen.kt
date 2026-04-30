@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,7 +44,6 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val userPreferences by viewModel.userPreferences.collectAsState()
     val isPro by viewModel.isPro.collectAsState()
     val purchaseError by viewModel.purchaseError.collectAsState()
@@ -55,11 +53,29 @@ fun SettingsScreen(
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
     var showPurchaseDialog by remember { mutableStateOf(false) }
     var isPurchasing by remember { mutableStateOf(false) }
+    val purchaseCancelled by viewModel.purchaseCancelled.collectAsState()
 
     purchaseError?.let { error ->
         LaunchedEffect(error) {
+            isPurchasing = false
             android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
             viewModel.clearPurchaseError()
+        }
+    }
+
+    // Reset purchasing state when the user cancels the Play purchase sheet.
+    LaunchedEffect(purchaseCancelled) {
+        if (purchaseCancelled) {
+            isPurchasing = false
+            viewModel.clearPurchaseCancellation()
+        }
+    }
+
+    // Close the purchase dialog automatically once PRO status is confirmed.
+    LaunchedEffect(isPro) {
+        if (isPro) {
+            isPurchasing = false
+            showPurchaseDialog = false
         }
     }
 
@@ -850,7 +866,10 @@ fun SettingsScreen(
 
     // Purchase Dialog
     if (showPurchaseDialog) {
-        Dialog(onDismissRequest = { showPurchaseDialog = false }) {
+        Dialog(onDismissRequest = {
+            isPurchasing = false
+            showPurchaseDialog = false
+        }) {
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -864,17 +883,13 @@ fun SettingsScreen(
                     onProductSelected = { productInfo ->
                         isPurchasing = true
                         viewModel.launchPurchaseFlow(context as Activity, productInfo)
-                        // Reset purchasing state after a delay (purchase flow is async)
-                        scope.launch {
-                            kotlinx.coroutines.delay(2000)
-                            isPurchasing = false
-                            showPurchaseDialog = false
-                        }
+                        // Dialog is closed reactively via LaunchedEffect(isPro) above.
                     },
                     onRestorePurchases = {
                         viewModel.restorePurchases()
                     },
                     onDismiss = {
+                        isPurchasing = false
                         showPurchaseDialog = false
                     }
                 )
