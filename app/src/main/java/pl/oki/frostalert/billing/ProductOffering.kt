@@ -2,6 +2,7 @@ package pl.oki.frostalert.billing
 
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.ProductDetails
+import java.util.Locale
 
 /**
  * Represents a product offering with its type and metadata.
@@ -91,7 +92,7 @@ data class ProductInfo(
      */
     val monthlyPriceFormatted: String? = monthlyEquivalentMicros?.let {
         val monthlyPrice = it / 1_000_000.0
-        String.format("%.2f %s/miesiąc", monthlyPrice, priceCurrencyCode)
+        String.format(Locale.ROOT, "%.2f %s/miesiąc", monthlyPrice, priceCurrencyCode)
     }
 }
 

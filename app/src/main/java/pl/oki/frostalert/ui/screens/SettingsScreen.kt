@@ -323,7 +323,7 @@ fun SettingsScreen(
                 // Geofence radius setting
                 Text(stringResource(R.string.geofence_radius_title), style = MaterialTheme.typography.titleMedium)
                 val radiusKm = prefs.geofenceRadiusMeters / 1000.0
-                var sliderRadius by remember { mutableStateOf(radiusKm.toFloat()) }
+                var sliderRadius by remember { mutableFloatStateOf(radiusKm.toFloat()) }
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Slider(value = sliderRadius, onValueChange = {
                         sliderRadius = it

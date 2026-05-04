@@ -3,6 +3,7 @@ package pl.oki.frostalert.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.flow.first
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.FrostDatabase
@@ -37,7 +38,7 @@ object DiagnosticsHelper {
         sb.appendLine(context.getString(R.string.diagnostics_app_section))
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            sb.appendLine(context.getString(R.string.diagnostics_version, pInfo.versionName, pInfo.longVersionCode))
+            sb.appendLine(context.getString(R.string.diagnostics_version, pInfo.versionName, PackageInfoCompat.getLongVersionCode(pInfo)))
         } catch (_: PackageManager.NameNotFoundException) {
             sb.appendLine(context.getString(R.string.diagnostics_version_unknown))
         }
@@ -63,11 +64,11 @@ object DiagnosticsHelper {
             sb.appendLine(context.getString(R.string.diagnostics_precip_threshold, "${prefs.precipitationThreshold}"))
             sb.appendLine(context.getString(R.string.diagnostics_sensitivity, prefs.sensitivity))
             sb.appendLine(context.getString(R.string.diagnostics_alert_time, prefs.alertStartHour, prefs.alertEndHour))
-            sb.appendLine(context.getString(R.string.diagnostics_auto_mode, prefs.isAutoModeEnabled))
-            sb.appendLine(context.getString(R.string.diagnostics_pro_forced, prefs.isProForced))
-            sb.appendLine(context.getString(R.string.diagnostics_geofencing, prefs.isGeofencingEnabled))
-            sb.appendLine(context.getString(R.string.diagnostics_trend_notif, prefs.isTrendChangeNotificationsEnabled))
-            val locationStr = context.getString(R.string.diagnostics_manual_location, prefs.isManualLocationEnabled) +
+            sb.appendLine(context.getString(R.string.diagnostics_auto_mode, prefs.isAutoModeEnabled.toString()))
+            sb.appendLine(context.getString(R.string.diagnostics_pro_forced, prefs.isProForced.toString()))
+            sb.appendLine(context.getString(R.string.diagnostics_geofencing, prefs.isGeofencingEnabled.toString()))
+            sb.appendLine(context.getString(R.string.diagnostics_trend_notif, prefs.isTrendChangeNotificationsEnabled.toString()))
+            val locationStr = context.getString(R.string.diagnostics_manual_location, prefs.isManualLocationEnabled.toString()) +
                 if (prefs.isManualLocationEnabled) context.getString(R.string.diagnostics_manual_location_name, prefs.manualLocationName) else ""
             sb.appendLine(locationStr)
             val unitStr = if (prefs.useFahrenheit) "°F" else "°C"

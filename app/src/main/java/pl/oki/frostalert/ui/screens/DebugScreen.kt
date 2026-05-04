@@ -88,10 +88,10 @@ fun DebugScreen(
     }
 
     // Stan dla symulatora
-    var simTemp by remember { mutableStateOf(0.0f) }
-    var simHumidity by remember { mutableStateOf(80.0f) }
-    var simWind by remember { mutableStateOf(5.0f) }
-    var simUv by remember { mutableStateOf(1.0f) }
+    var simTemp by remember { mutableFloatStateOf(0.0f) }
+    var simHumidity by remember { mutableFloatStateOf(80.0f) }
+    var simWind by remember { mutableFloatStateOf(5.0f) }
+    var simUv by remember { mutableFloatStateOf(1.0f) }
 
     Scaffold(
         topBar = {
