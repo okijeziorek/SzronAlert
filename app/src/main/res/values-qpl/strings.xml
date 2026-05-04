@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Szron, Kurwa!</string>
+    <string name="widget_description">Ostrzeżenia szronowe – bo jakbyś nie wiedział/a</string>
+
+    <!-- Tab Bar -->
+    <string name="tab_home">Główna</string>
+    <string name="tab_settings">Ustawienia</string>
+    <string name="tab_history">Historia</string>
+    <string name="tab_map">Mapa</string>
+
+    <!-- Home Screen -->
+    <string name="loading_weather">Pobieranie danych, cierpliwości kurwa…</string>
+    <string name="risk_high">Kurwa, będzie szron!</string>
+    <string name="risk_garden">Cholera, przymrozek idzie!</string>
+    <string name="risk_none">Luz panie, żadnego szronu</string>
+    <string name="night_min_temp">Nocna temperatura (minimalna, o zgrozo)</string>
+    <string name="night_min_garden">Przewidywane min. w ogrodzie (trzymaj się)</string>
+    <string name="hourly_forecast">Najbliższe 24 godziny (prognozy)</string>
+    <string name="refresh_success">Odświeżono, nareszcie!</string>
+    <string name="battery_warning_title">Bateria to wróg alertów</string>
+    <string name="battery_warning_desc">Wyłącz optymalizację baterii, bo inaczej dostaniesz powiadomienie po fakcie.</string>
+    <string name="battery_fix_btn">NO TO USTAW</string>
+    <string name="home_garden_title">Mój Ogródek</string>
+    <string name="home_car_title">Twoje Auto (biedne)</string>
+    <string name="garden_status_label">Stan Roślin</string>
+    <string name="feedback_thanks">Dzięki, przynajmniej ktoś odpowiedział!</string>
+    <string name="summer_optimal">Warunki optymalne (cud, miód, orzeszki)</string>
+    <string name="watering_needed">💧 Podlewaj te rośliny, bo zschną!</string>
+    <string name="uv_label">UV: %1$s (%2$s) – chroń skórę, głuptasie</string>
+    <string name="muted_banner_title">Alerty wyciszone (sam chciałeś)</string>
+    <string name="muted_banner_desc">Mata założona albo zignorowałeś. Twój wybór, kolego.</string>
+    <string name="restore_btn">ODCISZ TO</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Ustawienia (czytaj uważnie)</string>
+    <string name="section_location">Lokalizacja</string>
+    <string name="manual_location_toggle">Ustaw lokalizację ręcznie (bo GPS to nieudacznik)</string>
+    <string name="location_gps_auto">GPS (o ile raczy działać)</string>
+    <string name="save_location">Zapisz lokalizację</string>
+    <string name="location_name_label">Nazwa miejsca</string>
+    <string name="location_input_error">Błąd – sprawdź co wpisujesz</string>
+    <string name="section_appearance">Wygląd</string>
+    <string name="section_language">Język</string>
+    <string name="settings_language_current">Aktualny język</string>
+    <string name="settings_language_dialog_title">Wybierz swój język</string>
+    <string name="theme_light">Jasny</string>
+    <string name="theme_dark">Ciemny</string>
+    <string name="theme_auto">System (sam zdecyduje)</string>
+    <string name="section_algorithm">Algorytm Szronu</string>
+    <string name="auto_mode">Tryb automatyczny (inteligentny, w przeciwieństwie do pogody)</string>
+    <string name="sensitivity_label">Czułość algorytmu</string>
+    <string name="sensitivity_desc">Zwiększ, jeśli Twoje auto zamarza szybciej niż u sąsiada.</string>
+    <string name="temp_threshold">Próg temperatury</string>
+    <string name="humidity_threshold">Próg wilgotności</string>
+    <string name="precipitation_threshold">Próg opadów</string>
+
+    <string name="section_frost_options">Opcje Szronu</string>
+    <string name="mata_option_label">Opcja \'Mata założona\'</string>
+    <string name="mata_option_desc">Włącza przycisk do uciszenia alertów po przykryciu auta. Serio to działa.</string>
+
+    <string name="section_summer_settings">Ustawienia Letnie – GORĄCO JAK W PIEKLE</string>
+    <string name="storm_alert_label">Ostrzegaj o burzach i gradzie (ważne, naprawdę)</string>
+    <string name="watering_reminder_label">Przypominaj o podlewaniu (rośliny nie piją same)</string>
+    <string name="heat_threshold_label">Próg upału (kurwa gorąco)</string>
+
+    <string name="section_app_profile">Profil Aplikacji</string>
+    <string name="profile_car">Samochód</string>
+    <string name="profile_garden">Ogród</string>
+    <string name="profile_car_desc">Szron na szybach – wiadomo, dramat poranny.</string>
+    <string name="profile_garden_desc">Przymrozki przy gruncie – rośliny płaczą nocami.</string>
+
+    <string name="section_units">Jednostki</string>
+    <string name="use_fahrenheit_label">Fahrenheit? Serio? No dobra, jak chcesz.</string>
+
+    <string name="section_notifications">Powiadomienia (żebyś wiedział/a co się dzieje)</string>
+    <string name="section_geofencing">Geofencing – wiesz gdzie jesteś?</string>
+    <string name="geofencing_label">Powiadomienia geolokacyjne</string>
+    <string name="geofencing_desc">Ostrzeżenie gdy wjedziesz w rejon z wyższym ryzykiem szronu</string>
+    <string name="geofence_history_title">Historia Geofence</string>
+    <string name="geofence_history_empty">Brak zapisów geofence – spokój</string>
+    <string name="geofence_radius_title">Promień Geofence</string>
+    <string name="geofence_radius_save">Zapisz promień</string>
+    <string name="trend_change_notifications_label">Powiadomienia o zmianie trendu</string>
+
+    <!-- Notifications Buttons -->
+    <string name="action_ignore">Olej to dziś</string>
+    <string name="action_mata">Mata założona, spokój</string>
+    <string name="action_snooze">Przypomnij za 2h (i tak zapomnę)</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Historia Szronu (pamiętnik mrozu)</string>
+    <string name="stats_season">Statystyki sezonu</string>
+    <string name="stat_risk_days">Dni z ryzykiem</string>
+    <string name="stat_avg_temp">Średnia temp.</string>
+    <string name="history_empty">Brak danych – czysta karta, miło</string>
+    <string name="history_hint">Zbierz dane z 2 nocy, żeby cokolwiek zobaczyć</string>
+    <string name="trend_title">Trend temperatury (nowszy po lewej, stary po prawej)</string>
+    <string name="monthly_report_title">Raport Miesięczny</string>
+    <string name="export_csv">Eksportuj do CSV (dla nerdów)</string>
+    <string name="buy_pro">Odblokuj PRO i wywal te reklamy</string>
+
+    <!-- Billing & Subscriptions -->
+    <string name="product_lifetime_title">PRO Dożywotni (raz a dobrze)</string>
+    <string name="product_lifetime_desc">Jednorazowy wydatek • Bez reklam • Wszystkie funkcje PRO na wieki</string>
+    <string name="product_monthly_title">PRO Miesięczny</string>
+    <string name="product_monthly_desc">Subskrypcja miesięczna • Anuluj kiedy chcesz • Wszystkie funkcje PRO</string>
+    <string name="product_yearly_title">PRO Roczny (oszczędza kasę)</string>
+    <string name="product_yearly_desc">Subskrypcja roczna • Najlepsza cena • Oszczędź blisko 33%</string>
+    <string name="purchase_dialog_title">Wybierz plan PRO (wydaj kasę)</string>
+    <string name="purchase_best_value">NAJLEPSZA OPCJA</string>
+    <string name="purchase_most_popular">NAJPOPULARNIEJSZE</string>
+    <string name="purchase_button">Kup, no dalej</string>
+    <string name="purchase_restore">Przywróć zakupy</string>
+    <string name="purchase_success">Dzięki za kasę! PRO odblokowane!</string>
+    <string name="purchase_success_desc">Funkcje PRO są Twoje</string>
+    <string name="purchase_pending">Przetwarzanie… czekaj</string>
+    <string name="purchase_cancelled">Zakup anulowany. Następnym razem może się uda.</string>
+
+    <!-- Trend Screen -->
+    <string name="trend_screen_title">Trend 7-dniowy (tydzień grozy)</string>
+    <string name="trend_high_risk">⚠️ Bardzo wysokie ryzyko szronu – ale to wiemy, prawda?</string>
+    <string name="trend_moderate_risk">⚡ Umiarkowane ryzyko szronu – pół biedy</string>
+    <string name="trend_low_risk">🧊 Sporadyczne przymrozki – może się uda</string>
+    <string name="trend_no_risk">✅ Żadnego szronu – nareszcie coś dobrego</string>
+    <string name="trend_stat_nights_with_risk">Noce z ryzykiem</string>
+    <string name="trend_stat_avg_min">Średnia min</string>
+    <string name="trend_stat_lowest">Najniższa</string>
+    <string name="trend_chart_no_data">Brak danych – jeszcze za wcześnie</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Witaj w Szron, Kurwa!</string>
+    <string name="welcome_desc">Twój inteligentny pomocnik, który ostrzeże Cię przed lodem na szybach. Bo rano i tak zapomnisz.</string>
+    <string name="feature_1_title">Precyzyjny algorytm</string>
+    <string name="feature_1_desc">Analizujemy punkt rosy i wychłodzenie radiacyjne. Tak, to skomplikowane.</string>
+    <string name="feature_2_title">Alerty w tle</string>
+    <string name="feature_2_desc">Dostaniesz powiadomienie wieczorem, żeby rano nie klnąć przy skrobaniu szyb.</string>
+    <string name="onboarding_next">DALEJ, NO DALEJ</string>
+    <string name="onboarding_skip">Pomiń (zły pomysł)</string>
+    <string name="onboarding_finish">ZACZYNAMY!</string>
+
+    <!-- Feedback Section -->
+    <string name="feedback_question">Czy prognoza rano była trafna? Bądź szczery/a.</string>
+    <string name="feedback_yes">TAK</string>
+    <string name="feedback_no">NIE</string>
+    <string name="feedback_calibration">Twoje odpowiedzi uczą algorytm. Jak dobrze.</string>
+
+    <!-- Home ViewModel -->
+    <string name="home_pull_to_refresh">Pociągnij, żeby odświeżyć dane.</string>
+
+    <!-- Widget labels -->
+    <string name="widget_risk_high_short">Wysokie!</string>
+    <string name="widget_risk_low_short">Luz</string>
+    <string name="widget_no_data">Brak danych</string>
+    <string name="widget_tap_to_refresh">Dotknij, żeby odświeżyć</string>
+    <string name="widget_refresh_button">Odśwież</string>
+    <string name="widget_temp_label">Min: %s</string>
+    <string name="widget_risk_label">Ryzyko: %s</string>
+    <string name="widget_title_with_date">Szron, Kurwa! • %s</string>
+
+    <!-- Notification titles and messages -->
+    <string name="notification_test_title">Test – Nie panikuj</string>
+    <string name="notification_test_message">To tylko testowe powiadomienie. Żadnego szronu (na razie).</string>
+    <string name="notification_trend_title">Zmiana trendu temperatury</string>
+    <string name="notification_trend_warming">Wreszcie trochę cieplej! 📈</string>
+    <string name="notification_trend_cooling">Niestety, chłodnieje. 📉</string>
+    <string name="notification_trend_stable">Temperatura taka, jaka jest. ➡️</string>
+    <string name="notification_geofence_title">⚠️ Wjechałeś/aś w rejon szronu!</string>
+    <string name="notification_geofence_message">W kierunku %1$s ryzyko jest o %2$d%% wyższe. Prognoza: %3$.1f°C. Baczność!</string>
+    <string name="notification_frost_car_title">Szron na szybach – czas na skrobak!</string>
+    <string name="notification_frost_garden_title">Przymrozek w ogrodzie – przykryj rośliny!</string>
+    <string name="notification_frost_car_alert_title">Uwaga, szron! Weź skrobak!</string>
+    <string name="notification_frost_garden_alert_title">Ratuj rośliny, przymrozek idzie!</string>
+    <string name="notification_frost_forecast_message">Prognozowane min: %.1f°C. Nie lekceważ tego.</string>
+    <string name="notification_frost_night_message">Możliwy przymrozek w nocy. Serio.</string>
+    <string name="notification_morning_brief_title">☀️ Dzień dobry! Sprawdź czy czeka Cię skrobanie</string>
+    <string name="notification_morning_brief_risk_message">⚠️ Szron tej nocy, stary! Min: %1$.1f°C, prawdop.: %2$d%%</string>
+    <string name="notification_morning_brief_no_risk_message">✅ Bez szronu. Prognozowane min: %.1f°C – możesz spać spokojnie.</string>
+
+    <!-- Frost Probability -->
+    <string name="frost_probability_very_high">Bardzo wysokie – pakuj skrobak</string>
+    <string name="frost_probability_high">Wysokie – lepiej się przygotuj</string>
+    <string name="frost_probability_moderate">Umiarkowane – może być różnie</string>
+    <string name="frost_probability_low">Niskie – raczej OK</string>
+    <string name="frost_probability_minimal">Minimalne – luz, ale niepewne</string>
+    <string name="frost_probability_label">Prawdopodobieństwo szronu</string>
+
+    <!-- Warning Messages -->
+    <string name="warning_strong_wind">Wiatr taki silny, że szron nie siada. Szczęście!</string>
+    <string name="warning_frost_risk_garden">Przymrozek w ogrodzie – działaj!</string>
+    <string name="warning_frost_risk_high">Wysokie ryzyko szronu – szykuj skrobak!</string>
+    <string name="warning_no_frost_risk">Bezpiecznie – żadnego szronu\nTemperatura: %s</string>
+    <string name="warning_frost_air_surface">%1$s\nPowietrze: %2$s | Powierzchnia: %3$s\nPunkt rosy: %4$s</string>
+
+    <!-- Summer Warning Messages -->
+    <string name="summer_warning_hail">⚠️ UWAGA: Grad idzie!\n</string>
+    <string name="summer_warning_storm">⛈️ Burza się zbiera!\n</string>
+    <string name="summer_warning_heat_car">🔥 KURWA GORĄCO: Wnętrze auta to piekarnik! Nie zostawiaj dzieci i zwierząt!\n</string>
+    <string name="summer_warning_uv_high">☀️ Wysoki UV: %1$s (%2$s) – krem z filtrem, bo tego nie cofniesz!\n</string>
+
+    <!-- Garden Tips -->
+    <string name="garden_tip_safe">Spokojnie, rośliny cieszą się życiem.</string>
+    <string name="garden_tip_light_frost">Lekki przymrozek. Wrażliwe rośliny przykryj, bo będą płakać.</string>
+    <string name="garden_tip_moderate_frost">Solidny mróz. Przenieś donice do środka albo przykryj mocno – serio.</string>
+    <string name="garden_tip_severe_frost">Silny mróz! Nawet przykryte rośliny mogą nie przeżyć. Działaj szybko!</string>
+
+    <!-- Trend Descriptions -->
+    <string name="trend_description_very_high">⚠️ Bardzo wysokie ryzyko szronu – koszmarny tydzień</string>
+    <string name="trend_description_moderate">⚡ Umiarkowane ryzyko – pół biedy</string>
+    <string name="trend_description_low">🧊 Sporadyczne przymrozki – może przeżyjemy</string>
+    <string name="trend_description_none">✅ Brak szronu – o to chodzi!</string>
+
+    <!-- Trend Direction Emoji -->
+    <string name="trend_direction_up">📈 Robi się cieplej – nareszcie!</string>
+    <string name="trend_direction_down">📉 Niestety, chłodnieje</string>
+    <string name="trend_direction_stable">➡️ Bez zmian – przynajmniej pewność</string>
+
+    <!-- UV Descriptions -->
+    <string name="uv_description_low">Niskie</string>
+    <string name="uv_description_moderate">Umiarkowane</string>
+    <string name="uv_description_high">Wysokie</string>
+    <string name="uv_description_very_high">Bardzo wysokie</string>
+    <string name="uv_description_extreme">Ekstremalne – zostań w domu!</string>
+
+    <!-- UV Advice -->
+    <string name="uv_advice_low">Bezpiecznie. Wyjdź na słońce bez obaw.</string>
+    <string name="uv_advice_moderate">Nałóż krem i okulary, żeby nie żałować.</string>
+    <string name="uv_advice_high">Unikaj słońca 11–16. Naprawdę, to nie żarty.</string>
+    <string name="uv_advice_extreme">Zostań w domu! Możesz się dosłownie usmażyć.</string>
+
+    <!-- Retry -->
+    <string name="retry_button">Spróbuj jeszcze raz</string>
+    <string name="no_forecast_data">Brak danych prognozy – internet działa?</string>
+    <string name="offline_banner_title">Brak sieci</string>
+    <string name="offline_banner_description">Sprawdź internet, bo bez niego to aplikacja jest ślepa jak kret.</string>
+    <string name="offline_banner_action">USTAWIENIA</string>
+
+    <!-- Tile -->
+    <string name="tile_checking">Sprawdzam…</string>
+    <string name="tile_risk_yes">Ryzyko: TAK (szykuj skrobak)</string>
+    <string name="tile_risk_no">Ryzyko: NIE (możesz spać)</string>
+    <string name="tile_error_network">Błąd sieci</string>
+    <string name="tile_error">Błąd</string>
+
+    <!-- Calibration -->
+    <string name="calibration_accuracy">Dokładność predykcji</string>
+    <string name="calibration_feedback_count">Ile razy nam odpowiedziałeś/aś</string>
+    <string name="calibration_apply_recommendations">Zastosuj rekomendacje (algorytm się uczy)</string>
+    <string name="calibration_explanation">Algorytm uczy się z Twoich odpowiedzi. Im więcej odpowiesz, tym mądrzejszy.</string>
+    <string name="calibration_no_data">Brak danych – odpowiedz na kilka pytań, żebyśmy wiedzieli co robimy.</string>
+    <string name="calibration_dialog_title">Kalibracja Algorytmu</string>
+    <string name="calibration_dialog_question">Czy w nocy wystąpił szron?</string>
+    <string name="calibration_dialog_help">Twoja odpowiedź sprawi, że aplikacja będzie mądrzejsza.</string>
+    <string name="calibration_dialog_yes">TAK – Był szron</string>
+    <string name="calibration_dialog_no">NIE – Nic nie było</string>
+
+    <!-- Onboarding language/mode -->
+    <string name="onboarding_language_title">Wybierz język</string>
+    <string name="onboarding_language_desc">Aplikacja może mówić do Ciebie jak chcesz.</string>
+    <string name="language_system">Systemowy</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_czech">Čeština</string>
+    <string name="language_polish_vulgar">Polski (wulgarny) 🤬</string>
+    <string name="onboarding_mode_title">Wybierz profil</string>
+    <string name="onboarding_mode_desc">Skonfiguruj aplikację pod siebie.</string>
+    <string name="onboarding_mode_car_label">Samochód</string>
+    <string name="onboarding_mode_car_desc">Szron na szybach auta rano – klasyczny problem.</string>
+    <string name="onboarding_mode_garden_label">Ogród</string>
+    <string name="onboarding_mode_garden_desc">Przymrozki zagrażające roślinom – też ważne.</string>
+    <string name="onboarding_permissions_title">Uprawnienia (konieczne, niestety)</string>
+    <string name="onboarding_permissions_desc">Aplikacja potrzebuje lokalizacji i powiadomień, żeby ostrzegać Cię o szronie. Bez tego jesteśmy ślepi.</string>
+    <string name="onboarding_grant_location">Zezwól na lokalizację</string>
+    <string name="onboarding_grant_location_granted">✓ Lokalizacja – OK</string>
+    <string name="onboarding_grant_notifications">Zezwól na powiadomienia</string>
+    <string name="onboarding_grant_notifications_granted">✓ Powiadomienia – OK</string>
+    <string name="onboarding_grant_exact_alarm">Zezwól na dokładne alarmy</string>
+    <string name="onboarding_grant_exact_alarm_granted">✓ Alarmy – OK</string>
+    <string name="onboarding_permissions_note">Możesz to zmienić później w ustawieniach systemu.</string>
+
+    <!-- Garden Screen -->
+    <string name="garden_tab_title">Ogród</string>
+    <string name="garden_screen_title">Baza Roślin (co masz w ogrodzie?)</string>
+    <string name="garden_my_plants">Moje rośliny</string>
+    <string name="garden_plant_count">Roślin w ogrodzie: %d (i każda potrzebuje uwagi)</string>
+    <string name="garden_most_sensitive">Najbardziej wrażliwa: %1$s (próg: %2$.1f°C) – pilnuj jej</string>
+    <string name="garden_search_hint">Szukaj rośliny…</string>
+    <string name="garden_all_categories">Wszystkie</string>
+    <string name="garden_no_results">Nic nie znalazłem – spróbuj inaczej</string>
+    <string name="garden_frost_threshold">Próg mrozu: %.1f°C</string>
+    <string name="garden_add_plant">Dodaj do ogrodu</string>
+    <string name="garden_remove_plant">Usuń z ogrodu</string>
+    <string name="garden_plants_at_risk_title">⚠️ Uwaga, rośliny w niebezpieczeństwie!</string>
+    <string name="garden_plants_at_risk_temp">Prognozowane minimum tej nocy: %.1f°C</string>
+    <string name="garden_plant_at_risk_item">%1$s (próg: %2$.1f°C)</string>
+    <string name="garden_mark_watered">Podlano</string>
+    <string name="garden_watering_never">Nigdy nie podlewano – to niedobrze</string>
+    <string name="garden_watering_today">Podlano dziś – brawo</string>
+    <string name="garden_watering_yesterday">Podlano wczoraj</string>
+    <string name="garden_watering_days_ago">Podlano %d dni temu – czas to zrobić</string>
+
+    <!-- Error messages -->
+    <string name="error_unexpected_data">Coś się posypało z danymi. Nieoczekiwany błąd.</string>
+    <string name="error_location_unavailable">Nie udało się uzyskać lokalizacji. Sprawdź uprawnienia albo ustaw ręcznie.</string>
+
+    <!-- Quick Settings Tile -->
+
+    <!-- Location -->
+    <string name="location_save_as_separate">Zapisz jako lokalizację</string>
+    <string name="location_saved_locations_title">Zapisane lokalizacje</string>
+    <string name="location_delete">Usuń</string>
+    <string name="location_limit_reached">Już masz 5 lokalizacji, więcej nie wejdzie</string>
+
+    <!-- Frost Map -->
+    <string name="frost_map_title">Mapa Szronu (dla PRO)</string>
+    <string name="frost_map_loading">Ładowanie mapy…</string>
+    <string name="frost_map_pro_required">Mapa tylko dla PRO – wykup dostęp</string>
+    <string name="frost_map_your_location">Twoja lokalizacja</string>
+    <string name="frost_map_legend_high">Wysokie ryzyko</string>
+    <string name="frost_map_legend_moderate">Umiarkowane</string>
+    <string name="frost_map_legend_low">Niskie ryzyko</string>
+    <string name="frost_map_legend_none">Brak ryzyka</string>
+    <string name="frost_map_no_location">Brak dostępu do lokalizacji</string>
+    <string name="frost_map_load_button">Załaduj mapę</string>
+    <string name="frost_map_pro_description">Odblokuj mapę w wersji PRO</string>
+    <string name="frost_map_min_temp">Min: %s</string>
+
+    <!-- Geofence History -->
+    <string name="geofence_history_date">Data: %s</string>
+    <string name="geofence_history_risk">Ryzyko: %d%%</string>
+
+    <!-- Diagnostics (skrócone) -->
+    <string name="diagnostics_enabled">Włączony</string>
+    <string name="diagnostics_disabled">Wyłączony</string>
+    <string name="diagnostics_never">nigdy</string>
+    <string name="diagnostics_risk">RYZYKO</string>
+    <string name="diagnostics_ok">OK</string>
+
+    <!-- Report -->
+    <string name="report_yes">TAK</string>
+    <string name="report_no">NIE</string>
+    <string name="report_footer">Wygenerowano przez Szron, Kurwa! • %s</string>
+
+    <!-- Trend export -->
+    <string name="trend_export_risk_yes">TAK</string>
+    <string name="trend_export_risk_no">NIE</string>
+
+    <!-- Pro features -->
+    <string name="pro_features_title">Funkcje PRO (warte każdej złotówki)</string>
+    <string name="pro_feature_no_ads">🚫 Bez reklam – nikt Ci nie przeszkadza</string>
+    <string name="pro_feature_frost_map">🗺️ Mapa szronu w okolicy</string>
+    <string name="pro_feature_extended_forecast">📅 Prognoza 14-dniowa</string>
+    <string name="pro_feature_multi_location">📍 Wiele lokalizacji</string>
+    <string name="pro_feature_pdf_reports">📄 Raporty PDF</string>
+    <string name="pro_feature_priority_support">⚡ Priorytetowe wsparcie</string>
+</resources>
