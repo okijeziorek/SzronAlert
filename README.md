@@ -105,7 +105,7 @@
 - PRO odblokowuje: mapę szronu, zaawansowane statystyki, usunięcie reklam
 
 ### 🌍 Lokalizacja
-- **Polski** i **Angielski**
+- **Polski**, **Angielski**, **Niemiecki**, **Francuski**, **Hiszpański**, **Włoski**, **Ukraiński**, **Czeski** oraz tryb **Polski (wulgarny)**
 - Tryb Fahrenheit/Celsius (przełączany w ustawieniach)
 - Wszystkie ciągi znaków w zasobach (`res/values/strings.xml`)
 
@@ -140,7 +140,7 @@ Szczegółowy opis architektury → [`ARCHITECTURE.md`](ARCHITECTURE.md)
 | UI | Jetpack Compose + Material 3 + Dynamic Colors |
 | Architektura | MVVM (ViewModel, Repository, StateFlow) |
 | DI | Hilt (+ Hilt WorkManager) |
-| Baza danych | Room (wersja **8**, z migracjami) + SQLCipher (szyfrowanie) |
+| Baza danych | Room (wersja **8**, z migracjami) + SQLCipher **4.6.1** (szyfrowanie) |
 | Preferencje | Jetpack DataStore (`DataStore<Preferences>`) |
 | Sieć | Ktor Client + Kotlinx Serialization |
 | Praca w tle | WorkManager (HiltWorker) |
