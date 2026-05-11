@@ -105,7 +105,7 @@
 - PRO odblokowuje: mapę szronu, zaawansowane statystyki, usunięcie reklam
 
 ### 🌍 Lokalizacja
-- **Język systemowy** (domyślny) lub jeden z 9 dostępnych: **Polski**, **Angielski**, **Niemiecki**, **Francuski**, **Hiszpański**, **Włoski**, **Ukraiński**, **Czeski**, **Polski (wulgarny)**
+- **Język systemowy** (domyślny) lub jeden z 9 opcji: **Polski**, **Angielski**, **Niemiecki**, **Francuski**, **Hiszpański**, **Włoski**, **Ukraiński**, **Czeski**, **Polski (wulgarny)** *(wariant)*
 - Tryb Fahrenheit/Celsius (przełączany w ustawieniach)
 - Wszystkie ciągi znaków w zasobach (`res/values/strings.xml`)
 
