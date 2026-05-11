@@ -70,7 +70,7 @@
 - **Splash Screen API** – płynny start
 
 ### 🔒 Bezpieczeństwo
-- **Szyfrowana baza danych** (SQLCipher) – chroni dane użytkownika w spoczynku
+- **SQLCipher** (zależność obecna; szyfrowanie bazy danych do włączenia) – biblioteka gotowa, integracja z Room zaplanowana
 - **Play Integrity API** (`IntegrityChecker`) – weryfikuje integralność instalacji
 - **Root Detection** (`RootDetector`) – wykrywa roota/odblokowany bootloader
 - **Hook Detection** (`HookDetector`) – wykrywa frameworki do hooking'u (np. Magisk, Xposed)
@@ -105,7 +105,7 @@
 - PRO odblokowuje: mapę szronu, zaawansowane statystyki, usunięcie reklam
 
 ### 🌍 Lokalizacja
-- **Polski**, **Angielski**, **Niemiecki**, **Francuski**, **Hiszpański**, **Włoski**, **Ukraiński**, **Czeski** oraz tryb **Polski (wulgarny)**
+- **Język systemowy** (domyślny) lub jeden z 9 dostępnych: **Polski**, **Angielski**, **Niemiecki**, **Francuski**, **Hiszpański**, **Włoski**, **Ukraiński**, **Czeski**, **Polski (wulgarny)**
 - Tryb Fahrenheit/Celsius (przełączany w ustawieniach)
 - Wszystkie ciągi znaków w zasobach (`res/values/strings.xml`)
 
@@ -140,7 +140,7 @@ Szczegółowy opis architektury → [`ARCHITECTURE.md`](ARCHITECTURE.md)
 | UI | Jetpack Compose + Material 3 + Dynamic Colors |
 | Architektura | MVVM (ViewModel, Repository, StateFlow) |
 | DI | Hilt (+ Hilt WorkManager) |
-| Baza danych | Room (wersja **8**, z migracjami) + SQLCipher **4.6.1** (szyfrowanie) |
+| Baza danych | Room (wersja **8**, z migracjami) + SQLCipher **4.6.1** (biblioteka obecna; szyfrowanie do włączenia) |
 | Preferencje | Jetpack DataStore (`DataStore<Preferences>`) |
 | Sieć | Ktor Client + Kotlinx Serialization |
 | Praca w tle | WorkManager (HiltWorker) |
@@ -150,7 +150,7 @@ Szczegółowy opis architektury → [`ARCHITECTURE.md`](ARCHITECTURE.md)
 | Lokalizacja | Google Play Services Location |
 | Reklamy | Google Mobile Ads |
 | Zakupy | Google Play Billing KTX |
-| Bezpieczeństwo | SQLCipher, Play Integrity API, Security Crypto |
+| Bezpieczeństwo | SQLCipher (zależność obecna, szyfrowanie DB do włączenia), Play Integrity API, Security Crypto |
 | Testy | JUnit 4, Mockito-kotlin, Robolectric, Espresso |
 
 ---
