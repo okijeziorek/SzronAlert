@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android Studio inspection & analysis reports
+index.html
+*.html
+script.js
+styles.css
+inspectionProfiles/

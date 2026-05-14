@@ -247,8 +247,7 @@ Wszystkie kontrole są wykonywane lokalnie – brak zewnętrznego serwera.
 | `IntegrityChecker` | Wywołuje **Play Integrity API** – weryfikuje autentyczność instalacji z Google Play |
 | `SecurityManager` | Orkiestruje wszystkie kontrole; zwraca zbiorczy wynik bezpieczeństwa |
 
-Baza danych jest szyfrowana przy użyciu **SQLCipher** (`net.zetetic:sqlcipher-android:4.5.4`).  
-Klucz przechowywany przez `androidx.security:security-crypto` (EncryptedSharedPreferences).
+Zależność **SQLCipher** (`net.zetetic:sqlcipher-android:4.6.1`) jest obecna w projekcie i spełnia wymóg 16KB page size dla Androida 15+. Jednak `FrostDatabase.getDatabase()` nie konfiguruje jeszcze `SupportFactory`/`openHelperFactory` — baza danych **nie jest** aktualnie szyfrowana. Włączenie szyfrowania jest zaplanowane i będzie wymagało migracji danych dla istniejących instalacji.
 
 ---
 
