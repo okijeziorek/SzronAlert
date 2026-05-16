@@ -6,6 +6,11 @@ import java.util.Locale
 
 object SummerCalculations {
 
+    private const val UV_THRESHOLD_LOW = 3.0
+    private const val UV_THRESHOLD_MODERATE = 6.0
+    private const val UV_THRESHOLD_HIGH = 8.0
+    private const val UV_THRESHOLD_VERY_HIGH = 11.0
+
     /**
      * Sprawdza, czy występuje ryzyko burzy lub gradu na podstawie kodów pogodowych WMO.
      * Kody 95, 96, 99 oznaczają burze, przy czym 96 i 99 to burze z gradem.
@@ -34,10 +39,10 @@ object SummerCalculations {
      */
     fun getUvDescription(context: Context, uvIndex: Double): String {
         return when {
-            uvIndex < 3 -> context.getString(R.string.uv_description_low)
-            uvIndex < 6 -> context.getString(R.string.uv_description_moderate)
-            uvIndex < 8 -> context.getString(R.string.uv_description_high)
-            uvIndex < 11 -> context.getString(R.string.uv_description_very_high)
+            uvIndex < UV_THRESHOLD_LOW -> context.getString(R.string.uv_description_low)
+            uvIndex < UV_THRESHOLD_MODERATE -> context.getString(R.string.uv_description_moderate)
+            uvIndex < UV_THRESHOLD_HIGH -> context.getString(R.string.uv_description_high)
+            uvIndex < UV_THRESHOLD_VERY_HIGH -> context.getString(R.string.uv_description_very_high)
             else -> context.getString(R.string.uv_description_extreme)
         }
     }
@@ -47,9 +52,9 @@ object SummerCalculations {
      */
     fun getUvAdvice(context: Context, uvIndex: Double): String {
         return when {
-            uvIndex < 3 -> context.getString(R.string.uv_advice_low)
-            uvIndex < 6 -> context.getString(R.string.uv_advice_moderate)
-            uvIndex < 8 -> context.getString(R.string.uv_advice_high)
+            uvIndex < UV_THRESHOLD_LOW -> context.getString(R.string.uv_advice_low)
+            uvIndex < UV_THRESHOLD_MODERATE -> context.getString(R.string.uv_advice_moderate)
+            uvIndex < UV_THRESHOLD_HIGH -> context.getString(R.string.uv_advice_high)
             else -> context.getString(R.string.uv_advice_extreme)
         }
     }
@@ -60,10 +65,10 @@ object SummerCalculations {
      */
     fun getUvDescription(uvIndex: Double): String {
         return when {
-            uvIndex < 3 -> "Niskie"
-            uvIndex < 6 -> "Umiarkowane"
-            uvIndex < 8 -> "Wysokie"
-            uvIndex < 11 -> "Bardzo wysokie"
+            uvIndex < UV_THRESHOLD_LOW -> "Niskie"
+            uvIndex < UV_THRESHOLD_MODERATE -> "Umiarkowane"
+            uvIndex < UV_THRESHOLD_HIGH -> "Wysokie"
+            uvIndex < UV_THRESHOLD_VERY_HIGH -> "Bardzo wysokie"
             else -> "Ekstremalne"
         }
     }
@@ -91,7 +96,7 @@ object SummerCalculations {
             }
         }
 
-        if (uvIndex >= 6) {
+        if (uvIndex >= UV_THRESHOLD_MODERATE) {
             val formattedUv = String.format(Locale.US, "%.1f", uvIndex)
             sb.append("☀️ Wysokie UV: $formattedUv. Chroń skórę.")
         }
@@ -125,7 +130,7 @@ object SummerCalculations {
             }
         }
 
-        if (uvIndex >= 6) {
+        if (uvIndex >= UV_THRESHOLD_MODERATE) {
             val formattedUv = String.format(Locale.US, "%.1f", uvIndex)
             val uvDesc = getUvDescription(context, uvIndex)
             sb.append(context.getString(R.string.summer_warning_uv_high, formattedUv, uvDesc))

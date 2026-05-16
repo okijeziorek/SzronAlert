@@ -170,25 +170,21 @@ object WeatherCalculations {
      * Zwraca konkretną poradę dla ogrodnika na podstawie intensywności mrozu (bez kontekstu – hardcoded Polish strings).
      * Używany w testach jednostkowych i kodzie niewymagającym lokalizacji.
      */
-    fun getGardenTip(minTemp: Double): String {
-        return when {
-            minTemp > 0 -> "Bezpiecznie dla roślin"
-            minTemp > -2 -> "Lekki przymrozek – okryj wrażliwe rośliny"
-            minTemp > -5 -> "Umiarkowany mróz – zabezpiecz rośliny"
-            else -> "Silny mróz – ryzyko poważnych szkód"
-        }
+    fun getGardenTip(minTemp: Double): String = when (gardenFrostLevel(minTemp)) {
+        GardenFrostLevel.SAFE -> "Bezpiecznie dla roślin"
+        GardenFrostLevel.LIGHT -> "Lekki przymrozek – okryj wrażliwe rośliny"
+        GardenFrostLevel.MODERATE -> "Umiarkowany mróz – zabezpiecz rośliny"
+        GardenFrostLevel.SEVERE -> "Silny mróz – ryzyko poważnych szkód"
     }
 
     /**
      * Zwraca konkretną poradę dla ogrodnika na podstawie intensywności mrozu
      */
-    fun getGardenTip(context: Context, minTemp: Double): String {
-        return when {
-            minTemp > 0 -> context.getString(R.string.garden_tip_safe)
-            minTemp > -2 -> context.getString(R.string.garden_tip_light_frost)
-            minTemp > -5 -> context.getString(R.string.garden_tip_moderate_frost)
-            else -> context.getString(R.string.garden_tip_severe_frost)
-        }
+    fun getGardenTip(context: Context, minTemp: Double): String = when (gardenFrostLevel(minTemp)) {
+        GardenFrostLevel.SAFE -> context.getString(R.string.garden_tip_safe)
+        GardenFrostLevel.LIGHT -> context.getString(R.string.garden_tip_light_frost)
+        GardenFrostLevel.MODERATE -> context.getString(R.string.garden_tip_moderate_frost)
+        GardenFrostLevel.SEVERE -> context.getString(R.string.garden_tip_severe_frost)
     }
 
     fun celsiusToFahrenheit(celsius: Double): Double {
@@ -333,5 +329,14 @@ object WeatherCalculations {
             minTemp < 2.0 -> 0.2
             else -> 0.0
         }
+    }
+
+    private enum class GardenFrostLevel { SAFE, LIGHT, MODERATE, SEVERE }
+
+    private fun gardenFrostLevel(minTemp: Double): GardenFrostLevel = when {
+        minTemp > 0 -> GardenFrostLevel.SAFE
+        minTemp > -2 -> GardenFrostLevel.LIGHT
+        minTemp > -5 -> GardenFrostLevel.MODERATE
+        else -> GardenFrostLevel.SEVERE
     }
 }
