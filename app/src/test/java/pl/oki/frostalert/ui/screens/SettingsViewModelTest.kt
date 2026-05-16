@@ -74,10 +74,12 @@ class SettingsViewModelTest {
         class FakeBillingManager : BillingManagerInterface {
             override val isPro: StateFlow<Boolean> = MutableStateFlow(false)
             override val purchaseError: StateFlow<String?> = MutableStateFlow(null)
+            override val purchaseCancelled: StateFlow<Boolean> = MutableStateFlow(false)
             override fun queryProductDetails(onDetailsReady: (com.android.billingclient.api.ProductDetails?) -> Unit) {}
             override fun launchPurchaseFlow(activity: android.app.Activity, productDetails: com.android.billingclient.api.ProductDetails) {}
             override fun restorePurchases() {}
             override fun clearError() {}
+            override fun clearCancellation() {}
             override fun disconnect() {}
         }
 

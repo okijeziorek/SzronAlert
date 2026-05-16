@@ -55,6 +55,20 @@ object SummerCalculations {
     }
 
     /**
+     * Zwraca opis poziomu zagrożenia promieniowaniem UV (bez kontekstu – hardcoded Polish strings).
+     * Używany w testach jednostkowych i kodzie niewymagającym lokalizacji.
+     */
+    fun getUvDescription(uvIndex: Double): String {
+        return when {
+            uvIndex < 3 -> "Niskie"
+            uvIndex < 6 -> "Umiarkowane"
+            uvIndex < 8 -> "Wysokie"
+            uvIndex < 11 -> "Bardzo wysokie"
+            else -> "Ekstremalne"
+        }
+    }
+
+    /**
      * Generuje komunikat ostrzegawczy dla trybu letniego (bez kontekstu – hardcoded).
      * Używany w testach jednostkowych i kodzie niewymagającym lokalizacji.
      */

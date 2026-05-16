@@ -332,4 +332,119 @@ class WeatherCalculationsTest {
         assertEquals(WeatherCalculations.FrostProbabilityLevel.HIGH, WeatherCalculations.getFrostProbabilityLevel(65))
         assertEquals(WeatherCalculations.FrostProbabilityLevel.VERY_HIGH, WeatherCalculations.getFrostProbabilityLevel(90))
     }
+
+    // ── calculateRiskLevel ────────────────────────────────────────────────────
+
+    @Test
+    fun `calculateRiskLevel returns 1_0 for frost risk and minTemp below minus 5`() {
+        assertEquals(1.0, WeatherCalculations.calculateRiskLevel(hasRisk = true, minTemp = -6.0), 0.001)
+        assertEquals(1.0, WeatherCalculations.calculateRiskLevel(hasRisk = true, minTemp = -5.1), 0.001)
+    }
+
+    @Test
+    fun `calculateRiskLevel returns 0_7 for frost risk and minTemp between minus5 and 0`() {
+        assertEquals(0.7, WeatherCalculations.calculateRiskLevel(hasRisk = true, minTemp = -4.9), 0.001)
+        assertEquals(0.7, WeatherCalculations.calculateRiskLevel(hasRisk = true, minTemp = -0.1), 0.001)
+    }
+
+    @Test
+    fun `calculateRiskLevel returns 0_5 for frost risk and minTemp at or above 0`() {
+        assertEquals(0.5, WeatherCalculations.calculateRiskLevel(hasRisk = true, minTemp = 0.0), 0.001)
+        assertEquals(0.5, WeatherCalculations.calculateRiskLevel(hasRisk = true, minTemp = 1.5), 0.001)
+    }
+
+    @Test
+    fun `calculateRiskLevel returns 0_2 for no frost risk and minTemp below 2`() {
+        assertEquals(0.2, WeatherCalculations.calculateRiskLevel(hasRisk = false, minTemp = 1.9), 0.001)
+        assertEquals(0.2, WeatherCalculations.calculateRiskLevel(hasRisk = false, minTemp = -1.0), 0.001)
+    }
+
+    @Test
+    fun `calculateRiskLevel returns 0_0 for no frost risk and minTemp at or above 2`() {
+        assertEquals(0.0, WeatherCalculations.calculateRiskLevel(hasRisk = false, minTemp = 2.0), 0.001)
+        assertEquals(0.0, WeatherCalculations.calculateRiskLevel(hasRisk = false, minTemp = 10.0), 0.001)
+    }
+
+    // ── calculateDewPoint edge cases ──────────────────────────────────────────
+
+    @Test
+    fun `calculateDewPoint returns value below air temp for typical conditions`() {
+        // Dew point is always <= air temperature
+        val temp = 20.0
+        val humidity = 50.0
+        val dewPoint = WeatherCalculations.calculateDewPoint(temp, humidity)
+        assertTrue("Dew point should be below air temperature at 50% humidity", dewPoint < temp)
+    }
+
+    @Test
+    fun `calculateDewPoint returns value near air temp at high humidity`() {
+        // At 100% humidity dew point equals air temperature
+        val temp = 15.0
+        val dewPoint = WeatherCalculations.calculateDewPoint(temp, 100.0)
+        assertEquals(temp, dewPoint, 0.5)
+    }
+
+    @Test
+    fun `calculateDewPoint returns negative value for cold dry conditions`() {
+        // At 0C and 50% humidity, dew point should be well below 0
+        val dewPoint = WeatherCalculations.calculateDewPoint(0.0, 50.0)
+        assertTrue("Dew point should be negative for cold dry conditions", dewPoint < 0.0)
+    }
+
+    // ── hasFrostRisk boundary conditions ──────────────────────────────────────
+
+    @Test
+    fun `hasFrostRisk wind at exactly 15 does not cancel risk`() {
+        // windSpeed > 15.0 cancels; at exactly 15.0 it should not cancel
+        val hasRisk = WeatherCalculations.hasFrostRisk(
+            temp = -2.0, humidity = 90.0, precip = 0.0, weatherCode = 0,
+            tempThreshold = 0.0, humidityThreshold = 75.0, precipitationThreshold = 0.2,
+            windSpeed = 15.0
+        )
+        // With windSpeed=15 the wind adjustment (>5) still applies, but frost shouldn't be fully cancelled
+        assertTrue("Wind at exactly 15 km/h should not cancel risk", hasRisk)
+    }
+
+    @Test
+    fun `hasFrostRisk high precipitation with non-rain code does not cancel risk`() {
+        // weatherCode >= 70 means snow/fog — precipitation should NOT cancel risk.
+        // temp=-5.0, humidity=99.0 ensures surfaceTemp <= dewPoint holds for snow code.
+        val hasRisk = WeatherCalculations.hasFrostRisk(
+            temp = -5.0, humidity = 99.0, precip = 5.0, weatherCode = 71, // snow code
+            tempThreshold = 0.0, humidityThreshold = 75.0, precipitationThreshold = 0.2,
+            windSpeed = 0.0
+        )
+        assertTrue("Snow precipitation should not cancel frost risk", hasRisk)
+    }
+
+    @Test
+    fun `hasFrostRisk high precipitation with rain code cancels risk`() {
+        // weatherCode < 70 (rain) with precip > threshold should cancel
+        val hasRisk = WeatherCalculations.hasFrostRisk(
+            temp = -1.0, humidity = 90.0, precip = 5.0, weatherCode = 61, // rain code
+            tempThreshold = 0.0, humidityThreshold = 75.0, precipitationThreshold = 0.2,
+            windSpeed = 0.0
+        )
+        assertFalse("Rain precipitation above threshold should cancel frost risk", hasRisk)
+    }
+
+    @Test
+    fun `hasFrostRisk wind between 5 and 15 applies wind adjustment`() {
+        // temp=5.0, weatherCode=0 (clear sky, car mode): surfaceTemp = 5.0 - 4.5 = 0.5
+        // humidity=74.0: dewPoint ≈ 0.75 (between surfaceTemp+0 and surfaceTemp+0.5)
+        // Without wind: effectiveSurface=0.5 <= dewPoint(0.75) → risk present
+        // With wind=10: effectiveSurface=0.5+0.5=1.0 > dewPoint(0.75) → risk absent
+        val riskAtNoWind = WeatherCalculations.hasFrostRisk(
+            temp = 5.0, humidity = 74.0, precip = 0.0, weatherCode = 0,
+            tempThreshold = 1.0, humidityThreshold = 70.0, precipitationThreshold = 0.2,
+            windSpeed = 0.0
+        )
+        val riskAtModerateWind = WeatherCalculations.hasFrostRisk(
+            temp = 5.0, humidity = 74.0, precip = 0.0, weatherCode = 0,
+            tempThreshold = 1.0, humidityThreshold = 70.0, precipitationThreshold = 0.2,
+            windSpeed = 10.0
+        )
+        assertTrue("No wind should allow frost risk at borderline temperature", riskAtNoWind)
+        assertFalse("Moderate wind should eliminate frost risk at borderline temperature", riskAtModerateWind)
+    }
 }
