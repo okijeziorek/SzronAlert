@@ -212,7 +212,9 @@ abstract class FrostDatabase : RoomDatabase() {
             } catch (e: Exception) {
                 // The database file likely exists in unencrypted form (pre-SQLCipher).
                 // For closed testing we delete the old file and start fresh with encryption.
-                Log.w(TAG, "Failed to open encrypted DB (possibly unencrypted legacy file). Deleting and recreating. ${e.message}")
+                Log.w(TAG, "Failed to open encrypted DB [${e::class.simpleName}]: ${e.message}. " +
+                    "This typically means an existing unencrypted database file was found. " +
+                    "Deleting and recreating with encryption.")
                 context.deleteDatabase("frost_database")
                 Room.databaseBuilder(
                     context,

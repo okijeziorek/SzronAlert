@@ -67,14 +67,18 @@ fun HomeScreen(
             try {
                 val manager = com.google.android.play.core.review.ReviewManagerFactory.create(context)
                 val request = manager.requestReviewFlow()
-                request.addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
+                request.addOnCompleteListener { requestTask ->
+                    if (requestTask.isSuccessful) {
                         val activity = context as? android.app.Activity
                         if (activity != null) {
-                            manager.launchReviewFlow(activity, task.result)
+                            manager.launchReviewFlow(activity, requestTask.result)
+                                .addOnCompleteListener { viewModel.onReviewLaunched() }
+                        } else {
+                            viewModel.onReviewLaunched()
                         }
+                    } else {
+                        viewModel.onReviewLaunched()
                     }
-                    viewModel.onReviewLaunched()
                 }
             } catch (e: Exception) {
                 viewModel.onReviewLaunched()
