@@ -73,6 +73,19 @@ class TrendCalculationsExtTest {
         assertEquals("Nd", TrendCalculations.getDayOfWeekShort(calendar.timeInMillis))
     }
 
+    @Test
+    fun `getDayOfWeekShort returns correct abbreviation for all days of week`() {
+        // Anchor: 2024-01-01 = Monday
+        val calendar = java.util.Calendar.getInstance().apply {
+            set(2024, java.util.Calendar.JANUARY, 1, 12, 0, 0)
+        }
+        val expectedAbbreviations = listOf("Pn", "Wt", "Śr", "Czw", "Pt", "Sb", "Nd")
+        expectedAbbreviations.forEach { expected ->
+            assertEquals(expected, TrendCalculations.getDayOfWeekShort(calendar.timeInMillis))
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+    }
+
     // ── calculateWeeklyTrend — additional edge cases ─────────────────────────
 
     @Test

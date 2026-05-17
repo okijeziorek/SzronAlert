@@ -167,15 +167,24 @@ object WeatherCalculations {
     }
 
     /**
+     * Zwraca konkretną poradę dla ogrodnika na podstawie intensywności mrozu (bez kontekstu – hardcoded Polish strings).
+     * Używany w testach jednostkowych i kodzie niewymagającym lokalizacji.
+     */
+    fun getGardenTip(minTemp: Double): String = when (gardenFrostLevel(minTemp)) {
+        GardenFrostLevel.SAFE -> "Bezpiecznie dla roślin"
+        GardenFrostLevel.LIGHT -> "Lekki przymrozek – okryj wrażliwe rośliny"
+        GardenFrostLevel.MODERATE -> "Umiarkowany mróz – zabezpiecz rośliny"
+        GardenFrostLevel.SEVERE -> "Silny mróz – ryzyko poważnych szkód"
+    }
+
+    /**
      * Zwraca konkretną poradę dla ogrodnika na podstawie intensywności mrozu
      */
-    fun getGardenTip(context: Context, minTemp: Double): String {
-        return when {
-            minTemp > 0 -> context.getString(R.string.garden_tip_safe)
-            minTemp > -2 -> context.getString(R.string.garden_tip_light_frost)
-            minTemp > -5 -> context.getString(R.string.garden_tip_moderate_frost)
-            else -> context.getString(R.string.garden_tip_severe_frost)
-        }
+    fun getGardenTip(context: Context, minTemp: Double): String = when (gardenFrostLevel(minTemp)) {
+        GardenFrostLevel.SAFE -> context.getString(R.string.garden_tip_safe)
+        GardenFrostLevel.LIGHT -> context.getString(R.string.garden_tip_light_frost)
+        GardenFrostLevel.MODERATE -> context.getString(R.string.garden_tip_moderate_frost)
+        GardenFrostLevel.SEVERE -> context.getString(R.string.garden_tip_severe_frost)
     }
 
     fun celsiusToFahrenheit(celsius: Double): Double {
@@ -186,6 +195,40 @@ object WeatherCalculations {
         val converted = if (useFahrenheit) celsiusToFahrenheit(temp) else temp
         val unit = if (useFahrenheit) "°F" else "°C"
         return String.format(Locale.US, "%.1f%s", converted, unit)
+    }
+
+    /**
+     * Generuje komunikat ostrzegawczy (bez kontekstu – hardcoded Polish strings).
+     * Używany w testach jednostkowych i kodzie niewymagającym lokalizacji.
+     */
+    fun getWarningMessage(
+        temp: Double,
+        humidity: Double,
+        precip: Double,
+        weatherCode: Int,
+        tempThreshold: Double,
+        humidityThreshold: Double,
+        precipitationThreshold: Double,
+        sensitivity: Double = 1.0,
+        windSpeed: Double = 0.0,
+        appMode: Int = 0,
+        useFahrenheit: Boolean = false
+    ): String {
+        if (windSpeed > 15.0) return "⚠️ Brak ryzyka: silny wiatr powyżej 15 km/h"
+
+        val dewPoint = calculateDewPoint(temp, humidity)
+        val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity, appMode)
+
+        val formattedTemp = formatTemperature(temp, useFahrenheit)
+        val formattedDewPoint = formatTemperature(dewPoint, useFahrenheit)
+        val formattedSurface = formatTemperature(surfaceTemp, useFahrenheit)
+
+        return if (hasFrostRisk(temp, humidity, precip, weatherCode, tempThreshold, humidityThreshold, precipitationThreshold, sensitivity, windSpeed, appMode)) {
+            val prefix = if (appMode == 1) "⚠️ Ryzyko szronu w ogrodzie!" else "⚠️ Wysokie ryzyko szronu!"
+            "$prefix Temp: $formattedTemp, powierzchnia: $formattedSurface, punkt rosy: $formattedDewPoint"
+        } else {
+            "✅ Bezpiecznie – brak ryzyka szronu. Temperatura: $formattedTemp"
+        }
     }
 
     fun getWarningMessage(
@@ -286,5 +329,14 @@ object WeatherCalculations {
             minTemp < 2.0 -> 0.2
             else -> 0.0
         }
+    }
+
+    private enum class GardenFrostLevel { SAFE, LIGHT, MODERATE, SEVERE }
+
+    private fun gardenFrostLevel(minTemp: Double): GardenFrostLevel = when {
+        minTemp > 0 -> GardenFrostLevel.SAFE
+        minTemp > -2 -> GardenFrostLevel.LIGHT
+        minTemp > -5 -> GardenFrostLevel.MODERATE
+        else -> GardenFrostLevel.SEVERE
     }
 }
