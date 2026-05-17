@@ -160,6 +160,7 @@ dependencies {
     // Ads & Billing
     implementation(libs.play.services.ads)
     implementation(libs.billing.ktx)
+    implementation("com.google.android.play:review-ktx:2.0.2")
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")

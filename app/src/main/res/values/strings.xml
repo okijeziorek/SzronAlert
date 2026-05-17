@@ -235,6 +235,8 @@
     <string name="widget_no_data">Brak danych</string>
     <string name="widget_tap_to_refresh">Dotknij, aby odświeżyć</string>
     <string name="widget_refresh_button">Odśwież</string>
+    <string name="widget_action_mata">Zastosowałem matę</string>
+    <string name="widget_mata_applied">Mata ✓</string>
     <string name="widget_temp_label">Min: %s</string>
     <string name="widget_risk_label">Ryzyko: %s</string>
     <string name="widget_title_with_date">FrostAlert • %s</string>

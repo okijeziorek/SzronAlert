@@ -1,13 +1,18 @@
 package pl.oki.frostalert.data.local
 
 import android.content.Context
+import android.util.Base64
+import android.util.Log
 import androidx.room.Database
 import pl.oki.frostalert.data.local.GeofenceDao
 import pl.oki.frostalert.data.local.GeofenceRecord
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import androidx.sqlite.db.SupportSQLiteDatabase
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Database(entities = [TemperatureRecord::class, CalibrationFeedback::class, pl.oki.frostalert.data.local.GeofenceRecord::class, Plant::class, UserPlant::class, SavedLocation::class, FrostPhoto::class, GardenZone::class, WateringLog::class], version = 8, exportSchema = false)
 abstract class FrostDatabase : RoomDatabase() {
@@ -146,20 +151,77 @@ abstract class FrostDatabase : RoomDatabase() {
             }
         }
 
+        private const val TAG = "FrostDatabase"
+        private const val KEY_PREFS_FILE = "frost_db_key_prefs"
+        private const val KEY_PREFS_PASSPHRASE = "db_passphrase"
+
+        /**
+         * Returns the database encryption passphrase.
+         * On first call a random 32-byte key is generated and stored in
+         * EncryptedSharedPreferences (backed by Android Keystore).
+         * Subsequent calls return the same persisted key.
+         */
+        private fun getOrCreatePassphrase(context: Context): ByteArray {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val prefs = EncryptedSharedPreferences.create(
+                context,
+                KEY_PREFS_FILE,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
+            val stored = prefs.getString(KEY_PREFS_PASSPHRASE, null)
+            if (stored != null) {
+                return Base64.decode(stored, Base64.DEFAULT)
+            }
+
+            val passphrase = ByteArray(32)
+            java.security.SecureRandom().nextBytes(passphrase)
+            prefs.edit().putString(KEY_PREFS_PASSPHRASE, Base64.encodeToString(passphrase, Base64.DEFAULT)).apply()
+            return passphrase
+        }
+
         fun getDatabase(context: Context): FrostDatabase {
             return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: buildDatabase(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+
+        private fun buildDatabase(context: Context): FrostDatabase {
+            val passphrase = getOrCreatePassphrase(context)
+            val factory = SupportOpenHelperFactory(passphrase)
+            return try {
                 val instance = Room.databaseBuilder(
-                    context.applicationContext,
+                    context,
                     FrostDatabase::class.java,
                     "frost_database"
                 )
+                .openHelperFactory(factory)
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                 // Do NOT add fallbackToDestructiveMigration — explicit migrations are defined
                 // for every version bump; a missing migration should surface as a hard error,
                 // not silently delete user data.
                 .build()
-                INSTANCE = instance
+                // Force-open to detect if an unencrypted DB exists under the same name.
+                instance.openHelper.writableDatabase
                 instance
+            } catch (e: Exception) {
+                // The database file likely exists in unencrypted form (pre-SQLCipher).
+                // For closed testing we delete the old file and start fresh with encryption.
+                Log.w(TAG, "Failed to open encrypted DB (possibly unencrypted legacy file). Deleting and recreating. ${e.message}")
+                context.deleteDatabase("frost_database")
+                Room.databaseBuilder(
+                    context,
+                    FrostDatabase::class.java,
+                    "frost_database"
+                )
+                .openHelperFactory(factory)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                .build()
             }
         }
     }

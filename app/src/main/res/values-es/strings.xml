@@ -232,6 +232,8 @@
     <string name="widget_risk_low_short">Bajo</string>
     <string name="widget_no_data">Sin datos</string>
     <string name="widget_tap_to_refresh">Toca para actualizar</string>
+    <string name="widget_action_mata">Usé la manta</string>
+    <string name="widget_mata_applied">Manta ✓</string>
     <string name="widget_refresh_button">Actualizar</string>
     <string name="widget_temp_label">Mín: %s</string>
     <string name="widget_risk_label">Riesgo: %s</string>

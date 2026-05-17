@@ -232,6 +232,8 @@
     <string name="widget_risk_low_short">Faible</string>
     <string name="widget_no_data">Aucune donnée</string>
     <string name="widget_tap_to_refresh">Appuyer pour actualiser</string>
+    <string name="widget_action_mata">Appliqué le tapis</string>
+    <string name="widget_mata_applied">Tapis ✓</string>
     <string name="widget_refresh_button">Actualiser</string>
     <string name="widget_temp_label">Min : %s</string>
     <string name="widget_risk_label">Risque : %s</string>
