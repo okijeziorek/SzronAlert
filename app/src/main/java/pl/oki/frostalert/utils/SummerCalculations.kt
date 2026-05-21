@@ -2,6 +2,7 @@ package pl.oki.frostalert.utils
 
 import android.content.Context
 import pl.oki.frostalert.R
+import pl.oki.frostalert.shared.core.SummerCore
 import java.util.Locale
 
 object SummerCalculations {
@@ -16,14 +17,14 @@ object SummerCalculations {
      * Kody 95, 96, 99 oznaczają burze, przy czym 96 i 99 to burze z gradem.
      */
     fun hasStormOrHailRisk(weatherCode: Int): Boolean {
-        return weatherCode == 95 || weatherCode == 96 || weatherCode == 99
+        return SummerCore.hasStormOrHailRisk(weatherCode)
     }
 
     /**
      * Sprawdza, czy występuje ryzyko upału w samochodzie.
      */
     fun hasHeatRisk(currentTemp: Double, heatThreshold: Double): Boolean {
-        return currentTemp >= heatThreshold
+        return SummerCore.hasHeatRisk(currentTemp, heatThreshold)
     }
 
     /**
@@ -31,7 +32,7 @@ object SummerCalculations {
      * Logika: Jeśli suma opadów z dzisiaj jest niska (< 2mm) i temperatura jutro ma być wysoka (> 25°C).
      */
     fun needsWatering(dailyPrecipitationSum: Double, tomorrowMaxTemp: Double): Boolean {
-        return dailyPrecipitationSum < 2.0 && tomorrowMaxTemp > 25.0
+        return SummerCore.needsWatering(dailyPrecipitationSum, tomorrowMaxTemp)
     }
 
     /**
