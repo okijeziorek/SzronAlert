@@ -3,6 +3,8 @@ package pl.oki.frostalert.shared.core
 import kotlin.math.ln
 
 object FrostCore {
+    private const val GARDEN_MODE_COOLING = 1.0
+    private const val STRONG_WIND_THRESHOLD_KMH = 15.0
 
     enum class ProbabilityLevel {
         VERY_HIGH, HIGH, MODERATE, LOW, MINIMAL
@@ -18,7 +20,7 @@ object FrostCore {
     }
 
     fun estimateSurfaceTemp(temp: Double, weatherCode: Int, sensitivity: Double = 1.0, appMode: Int = 0): Double {
-        if (appMode == 1) return temp - 1.0
+        if (appMode == 1) return temp - GARDEN_MODE_COOLING
         val baseCoolingFactor = when (weatherCode) {
             0 -> 4.5
             1 -> 3.5
@@ -41,7 +43,7 @@ object FrostCore {
         windSpeed: Double = 0.0,
         appMode: Int = 0
     ): Boolean {
-        if (windSpeed > 15.0) return false
+        if (windSpeed > STRONG_WIND_THRESHOLD_KMH) return false
         if (precip > precipitationThreshold && weatherCode < 70) return false
 
         val dewPoint = calculateDewPoint(temp, humidity)
@@ -65,7 +67,7 @@ object FrostCore {
         windSpeed: Double = 0.0,
         appMode: Int = 0
     ): Int {
-        if (windSpeed > 15.0) return 0
+        if (windSpeed > STRONG_WIND_THRESHOLD_KMH) return 0
 
         val dewPoint = calculateDewPoint(temp, humidity)
         val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity, appMode)

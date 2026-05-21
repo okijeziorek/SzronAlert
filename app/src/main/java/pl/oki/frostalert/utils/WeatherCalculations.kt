@@ -20,12 +20,7 @@ object WeatherCalculations {
             Log.w(TAG, "calculateDewPoint: invalid humidity=$humidity, falling back to temp=$temp")
             return temp
         }
-        val result = FrostCore.calculateDewPoint(temp, humidity)
-        if (result.isNaN() || result.isInfinite()) {
-            Log.w(TAG, "calculateDewPoint: NaN/Inf result for temp=$temp humidity=$humidity, falling back to temp")
-            return temp
-        }
-        return result
+        return FrostCore.calculateDewPoint(temp, humidity)
     }
 
     fun estimateSurfaceTemp(temp: Double, weatherCode: Int, sensitivity: Double = 1.0, appMode: Int = 0): Double {
