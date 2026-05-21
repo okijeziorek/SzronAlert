@@ -19,9 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
+import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -35,6 +37,7 @@ import pl.oki.frostalert.utils.WeatherCalculations
 import pl.oki.frostalert.worker.FrostCheckWorker
 import pl.oki.frostalert.R
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -45,6 +48,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         var lastRecord: pl.oki.frostalert.data.local.TemperatureRecord? = null
         var useFahrenheit = false
+        var isMataOptionEnabled = false
 
         try {
             val db = FrostDatabase.getDatabase(context)
@@ -59,6 +63,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
             try {
                 val settings = SettingsDataStore(context).userPreferencesFlow.first()
                 useFahrenheit = settings.useFahrenheit
+                isMataOptionEnabled = settings.isMataOptionEnabled
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to read settings for widget: ${e.message}")
             }
@@ -74,6 +79,7 @@ class FrostGlanceWidget : GlanceAppWidget() {
         val tempLabelFormat = context.getString(R.string.widget_temp_label)
         val riskLabelFormat = context.getString(R.string.widget_risk_label)
         val refreshLabel = context.getString(R.string.widget_refresh_button)
+        val mataLabel = context.getString(R.string.widget_action_mata)
 
         // Provide content directly (no try/catch around composable invocation)
         provideContent {
@@ -81,12 +87,14 @@ class FrostGlanceWidget : GlanceAppWidget() {
                 WidgetContent(
                     lastRecord = lastRecord,
                     useFahrenheit = useFahrenheit,
+                    isMataOptionEnabled = isMataOptionEnabled,
                     riskHighLabel = riskHighLabel,
                     riskLowLabel = riskLowLabel,
                     noDataLabel = noDataLabel,
                     tempLabelFormat = tempLabelFormat,
                     riskLabelFormat = riskLabelFormat,
-                    refreshLabel = refreshLabel
+                    refreshLabel = refreshLabel,
+                    mataLabel = mataLabel
                 )
             }
         }
@@ -96,12 +104,14 @@ class FrostGlanceWidget : GlanceAppWidget() {
     private fun WidgetContent(
         lastRecord: pl.oki.frostalert.data.local.TemperatureRecord?,
         useFahrenheit: Boolean,
+        isMataOptionEnabled: Boolean,
         riskHighLabel: String,
         riskLowLabel: String,
         noDataLabel: String,
         tempLabelFormat: String,
         riskLabelFormat: String,
-        refreshLabel: String
+        refreshLabel: String,
+        mataLabel: String
     ) {
         Column(
             modifier = GlanceModifier
@@ -141,10 +151,21 @@ class FrostGlanceWidget : GlanceAppWidget() {
             }
 
             Spacer(modifier = GlanceModifier.padding(top = 4.dp))
-            Button(
-                text = refreshLabel,
-                onClick = actionRunCallback<RefreshActionCallback>()
-            )
+
+            Row {
+                Button(
+                    text = refreshLabel,
+                    onClick = actionRunCallback<RefreshActionCallback>()
+                )
+                // Show "Applied mat" button only when frost risk detected and feature is enabled
+                if (lastRecord?.hasRisk == true && isMataOptionEnabled) {
+                    Spacer(modifier = GlanceModifier.width(4.dp))
+                    Button(
+                        text = mataLabel,
+                        onClick = actionRunCallback<UsedMatActionCallback>()
+                    )
+                }
+            }
         }
     }
 }
@@ -165,6 +186,32 @@ class RefreshActionCallback : ActionCallback {
             )
         } catch (e: Exception) {
             Log.w(TAG, "Failed to enqueue widget refresh worker: ${e.message}")
+        }
+    }
+}
+
+/** Sets ignoreUntil to 08:00 next morning so the user is not disturbed after applying their mat. */
+class UsedMatActionCallback : ActionCallback {
+    override suspend fun onAction(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters
+    ) {
+        try {
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 8)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            if (cal.timeInMillis <= Calendar.getInstance().timeInMillis) {
+                cal.add(Calendar.DAY_OF_YEAR, 1)
+            }
+            SettingsDataStore(context).updateIgnoreUntil(cal.timeInMillis)
+            Log.i(TAG, "UsedMatActionCallback: ignoreUntil set to ${cal.time}")
+            WidgetSyncHelper.updateAll(context)
+        } catch (e: Exception) {
+            Log.w(TAG, "UsedMatActionCallback failed: ${e.message}")
         }
     }
 }

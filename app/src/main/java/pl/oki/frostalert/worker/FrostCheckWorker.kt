@@ -253,6 +253,7 @@ class FrostCheckWorker @AssistedInject constructor(
                             val message = applicationContext.getString(R.string.notification_frost_forecast_message, minTemp)
                             NotificationHelper.sendNotification(applicationContext, title, message,
                                 isMataOptionEnabled = userPreferences.isMataOptionEnabled)
+                            settingsDataStore.incrementFrostAlertSentCount()
                         }
                     } else {
                         val calendar = Calendar.getInstance()
@@ -264,6 +265,7 @@ class FrostCheckWorker @AssistedInject constructor(
                                 val title = if (appMode == 1) applicationContext.getString(R.string.notification_frost_garden_alert_title) else applicationContext.getString(R.string.notification_frost_car_alert_title)
                                 NotificationHelper.sendNotification(applicationContext, title, applicationContext.getString(R.string.notification_frost_night_message),
                                     isMataOptionEnabled = userPreferences.isMataOptionEnabled)
+                                settingsDataStore.incrementFrostAlertSentCount()
                             }
                         }
                     }

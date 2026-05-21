@@ -67,7 +67,10 @@ data class UserPreferences(
     val morningWindowEndMinute: Int = 600,
     val morningLastNotificationEpochDay: Long = -1L,
     val morningLastUnlockEpochDay: Long = -1L,
-    val morningLastScheduledAtMs: Long = 0L
+    val morningLastScheduledAtMs: Long = 0L,
+    // In-App Review
+    val frostAlertSentCount: Int = 0,
+    val reviewShownTimestamp: Long = 0L
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -130,6 +133,9 @@ class SettingsDataStore(private val context: Context) {
         val MORNING_LAST_NOTIFICATION_EPOCH_DAY = longPreferencesKey("morning_last_notification_epoch_day")
         val MORNING_LAST_UNLOCK_EPOCH_DAY = longPreferencesKey("morning_last_unlock_epoch_day")
         val MORNING_LAST_SCHEDULED_AT_MS = longPreferencesKey("morning_last_scheduled_at_ms")
+        // In-App Review tracking
+        val FROST_ALERT_SENT_COUNT = intPreferencesKey("frost_alert_sent_count")
+        val REVIEW_SHOWN_TIMESTAMP = longPreferencesKey("review_shown_timestamp")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -202,7 +208,9 @@ class SettingsDataStore(private val context: Context) {
                 morningWindowEndMinute = preferences[Keys.MORNING_WINDOW_END_MINUTE] ?: 600,
                 morningLastNotificationEpochDay = preferences[Keys.MORNING_LAST_NOTIFICATION_EPOCH_DAY] ?: -1L,
                 morningLastUnlockEpochDay = preferences[Keys.MORNING_LAST_UNLOCK_EPOCH_DAY] ?: -1L,
-                morningLastScheduledAtMs = preferences[Keys.MORNING_LAST_SCHEDULED_AT_MS] ?: 0L
+                morningLastScheduledAtMs = preferences[Keys.MORNING_LAST_SCHEDULED_AT_MS] ?: 0L,
+                frostAlertSentCount = preferences[Keys.FROST_ALERT_SENT_COUNT] ?: 0,
+                reviewShownTimestamp = preferences[Keys.REVIEW_SHOWN_TIMESTAMP] ?: 0L
             )
         }
 
@@ -407,5 +415,15 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun updateAppLanguage(languageCode: String) {
         context.dataStore.edit { it[Keys.APP_LANGUAGE] = languageCode }
+    }
+
+    suspend fun incrementFrostAlertSentCount() {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.FROST_ALERT_SENT_COUNT] = (prefs[Keys.FROST_ALERT_SENT_COUNT] ?: 0) + 1
+        }
+    }
+
+    suspend fun updateReviewShownTimestamp(timestamp: Long) {
+        context.dataStore.edit { it[Keys.REVIEW_SHOWN_TIMESTAMP] = timestamp }
     }
 }

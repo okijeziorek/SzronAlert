@@ -21,6 +21,12 @@ Aplikacja posiada solidny rdzeń:
 | Telemetria i analityka | ❌ Brak |
 | Wersja iOS | ❌ Brak |
 
+### ✅ Co zostało już zrobione (ostatnie wdrożenia)
+
+- Aktywowane szyfrowanie bazy danych SQLCipher w `FrostDatabase`.
+- Dodany prompt In-App Review po trafnych alertach.
+- Wdrożony interaktywny widget Glance z akcją „Zastosowałem matę”.
+
 ---
 
 ## 🚀 Fazy rozwoju po stabilizacji
@@ -231,7 +237,7 @@ Szron jest sezonowy – wykorzystaj to:
 
 | Dług | Priorytet | Opis |
 |---|---|---|
-| Włączenie szyfrowania SQLCipher | **P0** | Biblioteka obecna, brakuje `SupportFactory` w `FrostDatabase` |
+| Włączenie szyfrowania SQLCipher | ✅ Zrobione | SQLCipher aktywny w `FrostDatabase` (SupportOpenHelperFactory + klucz per urządzenie) |
 | Migracja Room 8 → 9 | **P0** | Następna zmiana schematu DB wymaga `MIGRATION_8_9` |
 | Telemetria Firebase | **P0** | Brak danych = brak możliwości podejmowania decyzji |
 | Testy integracyjne widgetów | **P1** | Stale widget rate wymaga pokrycia testami |
@@ -265,11 +271,11 @@ Q2 2026  │ Integracja Google Home / Home Assistant
 ## 📝 Priorytety dla Kolejnego Sprintu
 
 1. ☐ Wdrożyć Firebase Analytics + Crashlytics (Faza 6)
-2. ☐ Aktywować szyfrowanie SQLCipher (dług techniczny P0)
-3. ☐ Dodać In-App Review prompt po 3 trafnych alertach
+2. ✅ Aktywowane szyfrowanie SQLCipher (dług techniczny P0)
+3. ✅ Dodany In-App Review prompt po 3 trafnych alertach
 4. ☐ Rozbudować UI dla `UserPlant` (tryb ogrodowy 2.0 – retencja)
 5. ☐ Prognoza probabilistyczna 0–100% na ekranie głównym
-6. ☐ Widget interaktywny Android 12+ (checkbox „Użyłem maty")
+6. ✅ Widget interaktywny Android 12+ (akcja „Użyłem maty")
 7. ☐ Tryb Offline z fallbackiem na ostatnią prognozę w cache
 
 ---

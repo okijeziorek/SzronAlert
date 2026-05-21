@@ -232,6 +232,7 @@
     <string name="widget_risk_low_short">Basso</string>
     <string name="widget_no_data">Nessun dato</string>
     <string name="widget_tap_to_refresh">Tocca per aggiornare</string>
+    <string name="widget_action_mata">Ho usato il tappetino</string>
     <string name="widget_refresh_button">Aggiorna</string>
     <string name="widget_temp_label">Min: %s</string>
     <string name="widget_risk_label">Rischio: %s</string>

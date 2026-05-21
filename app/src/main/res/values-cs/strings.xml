@@ -232,6 +232,7 @@
     <string name="widget_risk_low_short">Nízké</string>
     <string name="widget_no_data">Žádná data</string>
     <string name="widget_tap_to_refresh">Klepněte pro obnovení</string>
+    <string name="widget_action_mata">Použil jsem rohožku</string>
     <string name="widget_refresh_button">Obnovit</string>
     <string name="widget_temp_label">Min: %s</string>
     <string name="widget_risk_label">Riziko: %s</string>

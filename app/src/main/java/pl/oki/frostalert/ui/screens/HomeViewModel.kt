@@ -264,6 +264,12 @@ class HomeViewModel @Inject constructor(
                             _showCalibrationDialog.value = true
                         }
                     }
+
+                    // Trigger In-App Review after 3 frost alerts (once per install)
+                    val freshPrefs = settingsDataStore.userPreferencesFlow.first()
+                    if (freshPrefs.frostAlertSentCount >= 3 && freshPrefs.reviewShownTimestamp == 0L) {
+                        _triggerReview.value = true
+                    }
                 } else {
                     // API failed — try to show cached data (offline mode)
                     Log.w(TAG, "API call failed, trying cache")
@@ -316,6 +322,17 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             settingsDataStore.updateActiveLocationId(locationId)
             refreshData()
+        }
+    }
+
+    private val _triggerReview = MutableStateFlow(false)
+    /** Emits true once when the In-App Review flow should be launched. */
+    val triggerReview: StateFlow<Boolean> = _triggerReview.asStateFlow()
+
+    fun onReviewLaunched() {
+        viewModelScope.launch {
+            settingsDataStore.updateReviewShownTimestamp(System.currentTimeMillis())
+            _triggerReview.value = false
         }
     }
 
