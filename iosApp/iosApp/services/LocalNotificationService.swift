@@ -20,6 +20,11 @@ final class LocalNotificationService: ObservableObject {
     /// Schedules a frost alert notification at the specified hour (default 21:00),
     /// matching Android's alertStartHour from SettingsDataStore.
     /// Replaces any previously scheduled frost alert.
+    ///
+    /// Note: `UNCalendarNotificationTrigger` with `repeats: false` fires at the
+    /// next occurrence of the specified time. If the current time has already
+    /// passed `alertHour` today, the notification will be delivered tomorrow —
+    /// which is the intended behavior for evening frost alerts.
     func scheduleFrostAlert(title: String, body: String, alertHour: Int = 21) async {
         let content = UNMutableNotificationContent()
         content.title = title

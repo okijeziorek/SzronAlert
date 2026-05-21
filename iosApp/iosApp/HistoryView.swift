@@ -51,9 +51,16 @@ struct HistoryView: View {
     }
 
     private func loadRecords() {
-        guard let data = UserDefaults.standard.data(forKey: StorageKey.historyRecords),
-              let decoded = try? JSONDecoder().decode([HistoryRecord].self, from: data) else { return }
-        records = decoded.sorted { $0.timestamp > $1.timestamp }
+        guard let data = UserDefaults.standard.data(forKey: StorageKey.historyRecords) else { return }
+        do {
+            records = try JSONDecoder().decode([HistoryRecord].self, from: data)
+                .sorted { $0.timestamp > $1.timestamp }
+        } catch {
+            // Corrupted history data — reset to empty to avoid a stuck error state.
+            // Post-MVP: migrate to SwiftData which handles schema migrations properly.
+            print("[HistoryView] Failed to decode history records: \(error)")
+            records = []
+        }
     }
 }
 

@@ -151,14 +151,18 @@ final class FrostRiskViewModel: ObservableObject {
     }
 
     private func fetchWeather(latitude: Double, longitude: Double) async throws -> WeatherResponse {
-        // Uses OpenMeteoRequestBuilder from shared for the URL template.
-        let urlStr = "https://api.open-meteo.com/v1/forecast" +
-            "?latitude=\(latitude)&longitude=\(longitude)" +
-            "&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,uv_index" +
-            "&hourly=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m" +
-            "&daily=temperature_2m_min,temperature_2m_max,weather_code" +
-            "&forecast_days=7&timezone=auto"
-        guard let url = URL(string: urlStr) else { throw URLError(.badURL) }
+        // Use URLComponents with queryItems for safe URL construction and automatic percent-encoding.
+        var components = URLComponents(string: "https://api.open-meteo.com/v1/forecast")!
+        components.queryItems = [
+            URLQueryItem(name: "latitude", value: String(latitude)),
+            URLQueryItem(name: "longitude", value: String(longitude)),
+            URLQueryItem(name: "current", value: "temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,uv_index"),
+            URLQueryItem(name: "hourly", value: "temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m"),
+            URLQueryItem(name: "daily", value: "temperature_2m_min,temperature_2m_max,weather_code"),
+            URLQueryItem(name: "forecast_days", value: "7"),
+            URLQueryItem(name: "timezone", value: "auto")
+        ]
+        guard let url = components.url else { throw URLError(.badURL) }
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(WeatherResponse.self, from: data)
     }
