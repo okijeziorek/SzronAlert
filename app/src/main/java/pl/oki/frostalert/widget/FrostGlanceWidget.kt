@@ -14,7 +14,6 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.compose.ui.graphics.Color
 import androidx.glance.color.ColorProvider
@@ -199,20 +198,18 @@ class UsedMatActionCallback : ActionCallback {
         parameters: ActionParameters
     ) {
         try {
-            val cal = Calendar.getInstance()
-            // Only advance to the next day when it's already past 20:00 (the frost alert
-            // window starts). Before that, set ignoreUntil to 08:00 today so the user
-            // is not bothered for the rest of the morning.
-            if (cal.get(Calendar.HOUR_OF_DAY) >= 20) {
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 8)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            if (cal.timeInMillis <= Calendar.getInstance().timeInMillis) {
                 cal.add(Calendar.DAY_OF_YEAR, 1)
             }
-            cal.set(Calendar.HOUR_OF_DAY, 8)
-            cal.set(Calendar.MINUTE, 0)
-            cal.set(Calendar.SECOND, 0)
-            cal.set(Calendar.MILLISECOND, 0)
             SettingsDataStore(context).updateIgnoreUntil(cal.timeInMillis)
             Log.i(TAG, "UsedMatActionCallback: ignoreUntil set to ${cal.time}")
-            FrostGlanceWidget().updateAll(context)
+            WidgetSyncHelper.updateAll(context)
         } catch (e: Exception) {
             Log.w(TAG, "UsedMatActionCallback failed: ${e.message}")
         }

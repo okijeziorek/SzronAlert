@@ -270,7 +270,6 @@
     <string name="widget_no_data">Keine Daten</string>
     <string name="widget_tap_to_refresh">Zum Aktualisieren tippen</string>
     <string name="widget_action_mata">Matte verwendet</string>
-    <string name="widget_mata_applied">Matte ✓</string>
     <string name="widget_refresh_button">Aktualisieren</string>
     <string name="widget_temp_label">Min: %s</string>
     <string name="widget_risk_label">Risiko: %s</string>

@@ -51,9 +51,11 @@ android {
             //   keytool -list -v -keystore release.keystore
             // Leave empty to skip strict signature verification (development only)
             buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
+            buildConfigField("boolean", "ENABLE_DB_RESET_FALLBACK", "false")
         }
         debug {
             buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
+            buildConfigField("boolean", "ENABLE_DB_RESET_FALLBACK", "false")
         }
         // Closed testing variant with test ads to comply with AdMob policies
         create("closedTest") {
@@ -61,6 +63,7 @@ android {
             applicationIdSuffix = ".closedtest"
             versionNameSuffix = "-closedtest"
             buildConfigField("String", "EXPECTED_SIGNING_CERT_SHA256", "\"\"")
+            buildConfigField("boolean", "ENABLE_DB_RESET_FALLBACK", "true")
         }
     }
 

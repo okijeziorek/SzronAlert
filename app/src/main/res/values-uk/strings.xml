@@ -233,7 +233,6 @@
     <string name="widget_no_data">Немає даних</string>
     <string name="widget_tap_to_refresh">Натисніть для оновлення</string>
     <string name="widget_action_mata">Вжив килимок</string>
-    <string name="widget_mata_applied">Килимок ✓</string>
     <string name="widget_refresh_button">Оновити</string>
     <string name="widget_temp_label">Мін: %s</string>
     <string name="widget_risk_label">Ризик: %s</string>

@@ -13,6 +13,8 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import androidx.sqlite.db.SupportSQLiteDatabase
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
+import pl.oki.frostalert.BuildConfig
+import java.util.Locale
 
 @Database(entities = [TemperatureRecord::class, CalibrationFeedback::class, pl.oki.frostalert.data.local.GeofenceRecord::class, Plant::class, UserPlant::class, SavedLocation::class, FrostPhoto::class, GardenZone::class, WateringLog::class], version = 8, exportSchema = false)
 abstract class FrostDatabase : RoomDatabase() {
@@ -192,9 +194,9 @@ abstract class FrostDatabase : RoomDatabase() {
         }
 
         private fun buildDatabase(context: Context): FrostDatabase {
-            val passphrase = getOrCreatePassphrase(context)
-            val factory = SupportOpenHelperFactory(passphrase)
             return try {
+                val passphrase = getOrCreatePassphrase(context)
+                val factory = SupportOpenHelperFactory(passphrase)
                 val instance = Room.databaseBuilder(
                     context,
                     FrostDatabase::class.java,
@@ -210,21 +212,53 @@ abstract class FrostDatabase : RoomDatabase() {
                 instance.openHelper.writableDatabase
                 instance
             } catch (e: Exception) {
-                // The database file likely exists in unencrypted form (pre-SQLCipher).
-                // For closed testing we delete the old file and start fresh with encryption.
-                Log.w(TAG, "Failed to open encrypted DB [${e::class.simpleName}]: ${e.message}. " +
-                    "This typically means an existing unencrypted database file was found. " +
-                    "Deleting and recreating with encryption.")
-                context.deleteDatabase("frost_database")
-                Room.databaseBuilder(
-                    context,
-                    FrostDatabase::class.java,
-                    "frost_database"
-                )
-                .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
-                .build()
+                // Closed testing only: allows one-time reset when testers upgrade from
+                // pre-SQLCipher builds that left an unencrypted DB with the same name.
+                // Production builds keep this disabled to avoid destructive data loss.
+                if (BuildConfig.ENABLE_DB_RESET_FALLBACK && isLikelyUnencryptedDatabaseError(e)) {
+                    Log.w(
+                        TAG,
+                        "Failed to open encrypted DB [${e::class.simpleName}]: ${e.message}. " +
+                            "Closed testing fallback: deleting and recreating encrypted DB."
+                    )
+                    context.deleteDatabase("frost_database")
+                    val passphrase = getOrCreatePassphrase(context)
+                    val factory = SupportOpenHelperFactory(passphrase)
+                    val recoveredInstance = Room.databaseBuilder(
+                        context,
+                        FrostDatabase::class.java,
+                        "frost_database"
+                    )
+                        .openHelperFactory(factory)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                        .build()
+                    recoveredInstance
+                } else {
+                    Log.e(
+                        TAG,
+                        "Failed to initialize encrypted DB [${e::class.simpleName}]: ${e.message}",
+                        e
+                    )
+                    throw e
+                }
             }
+        }
+
+        private fun isLikelyUnencryptedDatabaseError(error: Throwable): Boolean {
+            val combinedMessage = buildString {
+                var current: Throwable? = error
+                while (current != null) {
+                    if (!current.message.isNullOrBlank()) {
+                        append(current.message)
+                        append(' ')
+                    }
+                    current = current.cause
+                }
+            }.lowercase(Locale.ROOT)
+
+            return combinedMessage.contains("file is not a database") ||
+                combinedMessage.contains("file is encrypted or is not a database") ||
+                combinedMessage.contains("not a database")
         }
     }
 }
