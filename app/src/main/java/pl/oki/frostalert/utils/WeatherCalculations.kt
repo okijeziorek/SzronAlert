@@ -5,13 +5,11 @@ import android.util.Log
 import pl.oki.frostalert.R
 import pl.oki.frostalert.data.local.TemperatureRecord
 import pl.oki.frostalert.data.remote.HourlyForecast
+import pl.oki.frostalert.shared.core.FrostCore
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import kotlin.math.ln
-import kotlin.math.max
-import kotlin.math.min
 
 object WeatherCalculations {
 
@@ -22,30 +20,11 @@ object WeatherCalculations {
             Log.w(TAG, "calculateDewPoint: invalid humidity=$humidity, falling back to temp=$temp")
             return temp
         }
-        val a = 17.27
-        val b = 237.7
-        val alpha = ((a * temp) / (b + temp)) + ln(humidity / 100.0)
-        val result = (b * alpha) / (a - alpha)
-        if (result.isNaN() || result.isInfinite()) {
-            Log.w(TAG, "calculateDewPoint: NaN/Inf result for temp=$temp humidity=$humidity, falling back to temp")
-            return temp
-        }
-        return result
+        return FrostCore.calculateDewPoint(temp, humidity)
     }
 
     fun estimateSurfaceTemp(temp: Double, weatherCode: Int, sensitivity: Double = 1.0, appMode: Int = 0): Double {
-        if (appMode == 1) { // Tryb Ogród: mniejszy wpływ radiacji na liście niż na szkło
-            return temp - 1.0 
-        }
-        
-        val baseCoolingFactor = when (weatherCode) {
-            0 -> 4.5
-            1 -> 3.5
-            2 -> 2.5
-            3 -> 1.5
-            else -> 0.5
-        }
-        return temp - (baseCoolingFactor * sensitivity)
+        return FrostCore.estimateSurfaceTemp(temp, weatherCode, sensitivity, appMode)
     }
 
     fun hasFrostRisk(
@@ -60,17 +39,18 @@ object WeatherCalculations {
         windSpeed: Double = 0.0,
         appMode: Int = 0
     ): Boolean {
-        if (windSpeed > 15.0) return false
-        if (precip > precipitationThreshold && weatherCode < 70) return false
-        
-        val dewPoint = calculateDewPoint(temp, humidity)
-        val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity, appMode)
-        
-        val windAdjustment = if (windSpeed > 5.0) 0.5 else 0.0
-        
-        return (surfaceTemp + windAdjustment) <= tempThreshold && 
-               (surfaceTemp + windAdjustment) <= dewPoint && 
-               humidity >= humidityThreshold
+        return FrostCore.hasFrostRisk(
+            temp = temp,
+            humidity = humidity,
+            precip = precip,
+            weatherCode = weatherCode,
+            tempThreshold = tempThreshold,
+            humidityThreshold = humidityThreshold,
+            precipitationThreshold = precipitationThreshold,
+            sensitivity = sensitivity,
+            windSpeed = windSpeed,
+            appMode = appMode
+        )
     }
 
     /**
@@ -90,53 +70,18 @@ object WeatherCalculations {
         windSpeed: Double = 0.0,
         appMode: Int = 0
     ): Int {
-        // Wiatr >15 km/h eliminuje ryzyko szronu
-        if (windSpeed > 15.0) return 0
-
-        val dewPoint = calculateDewPoint(temp, humidity)
-        val surfaceTemp = estimateSurfaceTemp(temp, weatherCode, sensitivity, appMode)
-        val windAdjustment = if (windSpeed > 5.0) 0.5 else 0.0
-        val effectiveSurface = surfaceTemp + windAdjustment
-
-        // 1. Czynnik temperaturowy: ile poniżej progu (0-40 punktów)
-        val tempDelta = tempThreshold - effectiveSurface
-        val tempFactor = (tempDelta.coerceIn(0.0, 8.0) / 8.0 * 40.0).toInt()
-
-        // 2. Czynnik wilgotności: bliskość 100% (0-25 punktów)
-        val humidityExcess = humidity - humidityThreshold
-        val humidityFactor = if (humidityExcess >= 0) {
-            val range = 100.0 - humidityThreshold
-            if (range > 0) (humidityExcess / range * 25.0).toInt() else 25
-        } else {
-            0
-        }
-
-        // 3. Czynnik klarowności nieba (0-20 punktów)
-        val skyFactor = when (weatherCode) {
-            0 -> 20
-            1 -> 15
-            2 -> 10
-            3 -> 5
-            else -> 0
-        }
-
-        // 4. Bliskość punktu rosy: powierzchnia <= punkt rosy → +15
-        val dewPointBonus = if (effectiveSurface <= dewPoint) 15 else 0
-
-        var score = tempFactor + humidityFactor + skyFactor + dewPointBonus
-
-        // 5. Kara za wiatr
-        when {
-            windSpeed > 10.0 -> score -= 30
-            windSpeed > 5.0 -> score -= 15
-        }
-
-        // Opady z kodem pogody < 70 (deszcz, nie śnieg/mgła) zmniejszają ryzyko szronu
-        if (precip > precipitationThreshold && weatherCode < 70) {
-            score -= 20
-        }
-
-        return score.coerceIn(0, 100)
+        return FrostCore.calculateFrostProbability(
+            temp = temp,
+            humidity = humidity,
+            precip = precip,
+            weatherCode = weatherCode,
+            tempThreshold = tempThreshold,
+            humidityThreshold = humidityThreshold,
+            precipitationThreshold = precipitationThreshold,
+            sensitivity = sensitivity,
+            windSpeed = windSpeed,
+            appMode = appMode
+        )
     }
 
     /**
@@ -150,12 +95,12 @@ object WeatherCalculations {
      * Zwraca poziom ryzyka szronu na podstawie prawdopodobieństwa (0-100).
      */
     fun getFrostProbabilityLevel(probability: Int): FrostProbabilityLevel {
-        return when {
-            probability >= 80 -> FrostProbabilityLevel.VERY_HIGH
-            probability >= 60 -> FrostProbabilityLevel.HIGH
-            probability >= 40 -> FrostProbabilityLevel.MODERATE
-            probability >= 20 -> FrostProbabilityLevel.LOW
-            else -> FrostProbabilityLevel.MINIMAL
+        return when (FrostCore.getFrostProbabilityLevel(probability)) {
+            FrostCore.ProbabilityLevel.VERY_HIGH -> FrostProbabilityLevel.VERY_HIGH
+            FrostCore.ProbabilityLevel.HIGH -> FrostProbabilityLevel.HIGH
+            FrostCore.ProbabilityLevel.MODERATE -> FrostProbabilityLevel.MODERATE
+            FrostCore.ProbabilityLevel.LOW -> FrostProbabilityLevel.LOW
+            FrostCore.ProbabilityLevel.MINIMAL -> FrostProbabilityLevel.MINIMAL
         }
     }
 
@@ -322,13 +267,7 @@ object WeatherCalculations {
      * used by geofencing and broadcast receivers for comparison purposes.
      */
     fun calculateRiskLevel(hasRisk: Boolean, minTemp: Double): Double {
-        return when {
-            hasRisk && minTemp < -5.0 -> 1.0
-            hasRisk && minTemp < 0.0 -> 0.7
-            hasRisk -> 0.5
-            minTemp < 2.0 -> 0.2
-            else -> 0.0
-        }
+        return FrostCore.calculateRiskLevel(hasRisk, minTemp)
     }
 
     private enum class GardenFrostLevel { SAFE, LIGHT, MODERATE, SEVERE }

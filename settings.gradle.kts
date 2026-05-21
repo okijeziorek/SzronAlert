@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "FrostAlert"
 include(":app")
+include(":shared")

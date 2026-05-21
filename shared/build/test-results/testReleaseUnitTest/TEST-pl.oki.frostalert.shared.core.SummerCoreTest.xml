@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pl.oki.frostalert.shared.core.SummerCoreTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-21T21:29:35.989Z" hostname="runnervmg397c" time="0.001">
+  <properties/>
+  <testcase name="storm and hail codes are detected" classname="pl.oki.frostalert.shared.core.SummerCoreTest" time="0.001"/>
+  <testcase name="needsWatering is true only for low precipitation and high temp" classname="pl.oki.frostalert.shared.core.SummerCoreTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
