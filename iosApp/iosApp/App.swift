@@ -1,21 +1,36 @@
 import SwiftUI
 
+// MARK: - AppContainer
+// Owns all services and the shared ViewModel so they are instantiated once
+// and their lifetimes are tied to the App, not to individual Views.
+
+final class AppContainer: ObservableObject {
+    let locationService = CoreLocationService()
+    let notificationService = LocalNotificationService()
+    let storeKitService = StoreKitSubscriptionService()
+    // ViewModel is created lazily so it can reference the already-created services.
+    lazy var viewModel = FrostRiskViewModel(
+        locationService: locationService,
+        notificationService: notificationService
+    )
+}
+
 @main
 struct SzronAlertApp: App {
-    @StateObject private var locationService = CoreLocationService()
-    @StateObject private var notificationService = LocalNotificationService()
+    @StateObject private var container = AppContainer()
 
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environmentObject(locationService)
-                .environmentObject(notificationService)
+                .environmentObject(container.locationService)
+                .environmentObject(container.notificationService)
+                .environmentObject(container.storeKitService)
+                .environmentObject(container.viewModel)
         }
     }
 }
 
 struct RootView: View {
-    @EnvironmentObject var locationService: CoreLocationService
     @EnvironmentObject var notificationService: LocalNotificationService
 
     var body: some View {

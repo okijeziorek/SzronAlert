@@ -59,9 +59,12 @@ final class StoreKitSubscriptionService: ObservableObject {
     // MARK: - Public API
 
     func purchase(_ product: AppSubscriptionProduct) async {
-        guard let skProduct = try? await Product.products(for: [product.id]).first else { return }
-
         do {
+            let skProducts = try await Product.products(for: [product.id])
+            guard let skProduct = skProducts.first else {
+                errorMessage = "Produkt niedostępny. Spróbuj ponownie później."
+                return
+            }
             let result = try await skProduct.purchase()
             switch result {
             case .success(let verification):

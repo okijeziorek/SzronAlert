@@ -14,6 +14,7 @@ final class CoreLocationService: NSObject, ObservableObject {
 
     private let manager = CLLocationManager()
     private var locationContinuation: CheckedContinuation<CLLocation?, Never>?
+    private var authorizationContinuation: CheckedContinuation<Void, Never>?
 
     override init() {
         super.init()
@@ -24,13 +25,21 @@ final class CoreLocationService: NSObject, ObservableObject {
 
     // MARK: - Public API
 
-    /// Requests a one-shot location fix. Requests permission if needed.
+    /// Requests a one-shot location fix. Requests permission if not yet determined
+    /// and waits for the user's response via the delegate callback before proceeding.
     func requestLocation() async -> CLLocation? {
         switch manager.authorizationStatus {
         case .notDetermined:
-            manager.requestWhenInUseAuthorization()
-            // Wait briefly for the authorization dialog to be answered.
-            try? await Task.sleep(for: .seconds(1))
+            // Wait for the authorization dialog to be answered via
+            // locationManagerDidChangeAuthorization before proceeding.
+            await withCheckedContinuation { continuation in
+                authorizationContinuation = continuation
+                manager.requestWhenInUseAuthorization()
+            }
+            guard manager.authorizationStatus == .authorizedWhenInUse ||
+                  manager.authorizationStatus == .authorizedAlways else {
+                return nil
+            }
             fallthrough
         case .authorizedWhenInUse, .authorizedAlways:
             return await withCheckedContinuation { continuation in
@@ -72,6 +81,11 @@ extension CoreLocationService: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor in
             self.authorizationStatus = manager.authorizationStatus
+            // Resume the authorization continuation when the dialog is dismissed.
+            if manager.authorizationStatus != .notDetermined {
+                authorizationContinuation?.resume()
+                authorizationContinuation = nil
+            }
         }
     }
 }

@@ -1,16 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
-    @EnvironmentObject var locationService: CoreLocationService
-    @EnvironmentObject var notificationService: LocalNotificationService
-    @StateObject private var viewModel: FrostRiskViewModel = {
-        // Services are passed via EnvironmentObject at app level;
-        // the StateObject is created lazily after onAppear provides them.
-        FrostRiskViewModel(
-            locationService: CoreLocationService(),
-            notificationService: LocalNotificationService()
-        )
-    }()
+    @EnvironmentObject var viewModel: FrostRiskViewModel
 
     var body: some View {
         NavigationStack {

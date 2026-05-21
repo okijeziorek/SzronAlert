@@ -37,23 +37,18 @@ final class FrostRiskViewModel: ObservableObject {
     private let notificationService: LocalNotificationService
 
     // MARK: Settings (backed by UserDefaults, mirrors Android SettingsDataStore)
+    // Use UserDefaults.object to distinguish "not set" from a legitimate 0.0 value.
 
-    var tempThreshold: Double {
-        let v = UserDefaults.standard.double(forKey: SettingsKey.tempThreshold)
-        return v == 0 ? 1.0 : v
+    private func getSetting(_ key: String, default defaultValue: Double) -> Double {
+        UserDefaults.standard.object(forKey: key) != nil
+            ? UserDefaults.standard.double(forKey: key)
+            : defaultValue
     }
-    var humidityThreshold: Double {
-        let v = UserDefaults.standard.double(forKey: SettingsKey.humidityThreshold)
-        return v == 0 ? 80.0 : v
-    }
-    var precipitationThreshold: Double {
-        let v = UserDefaults.standard.double(forKey: SettingsKey.precipitationThreshold)
-        return v == 0 ? 1.0 : v
-    }
-    var sensitivity: Double {
-        let v = UserDefaults.standard.double(forKey: SettingsKey.sensitivity)
-        return v == 0 ? 1.0 : v
-    }
+
+    var tempThreshold: Double { getSetting(SettingsKey.tempThreshold, default: 1.0) }
+    var humidityThreshold: Double { getSetting(SettingsKey.humidityThreshold, default: 80.0) }
+    var precipitationThreshold: Double { getSetting(SettingsKey.precipitationThreshold, default: 1.0) }
+    var sensitivity: Double { getSetting(SettingsKey.sensitivity, default: 1.0) }
     var appMode: Int {
         UserDefaults.standard.integer(forKey: SettingsKey.appMode)
     }
@@ -141,6 +136,8 @@ final class FrostRiskViewModel: ObservableObject {
         currentTemp = c.temperature
         currentHumidity = c.humidity
         currentWindSpeed = c.windSpeed
+        // Prefix 12 = the 12-hour overnight window (matching Android's 20:00–08:00
+        // nighttime check interval defined in SettingsDataStore.alertStartHour).
         nightMinTemp = weather.hourly.temperature.prefix(12).compactMap { $0 }.min() ?? c.temperature
 
         if risk {

@@ -2,6 +2,10 @@ import SwiftUI
 
 // MARK: - History item stored in UserDefaults (placeholder until SwiftData/SQLite is added)
 
+private enum StorageKey {
+    static let historyRecords = "historyRecords"
+}
+
 struct HistoryRecord: Identifiable, Codable {
     let id: UUID
     let timestamp: Date
@@ -47,7 +51,7 @@ struct HistoryView: View {
     }
 
     private func loadRecords() {
-        guard let data = UserDefaults.standard.data(forKey: "historyRecords"),
+        guard let data = UserDefaults.standard.data(forKey: StorageKey.historyRecords),
               let decoded = try? JSONDecoder().decode([HistoryRecord].self, from: data) else { return }
         records = decoded.sorted { $0.timestamp > $1.timestamp }
     }

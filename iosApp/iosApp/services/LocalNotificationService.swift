@@ -17,19 +17,24 @@ final class LocalNotificationService: ObservableObject {
 
     // MARK: - Scheduling
 
-    /// Schedules a frost alert notification delivered after a short delay.
-    /// If a notification with the same identifier already exists it is replaced.
-    func scheduleFrostAlert(title: String, body: String) async {
+    /// Schedules a frost alert notification at the specified hour (default 21:00),
+    /// matching Android's alertStartHour from SettingsDataStore.
+    /// Replaces any previously scheduled frost alert.
+    func scheduleFrostAlert(title: String, body: String, alertHour: Int = 21) async {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.sound = .default
         content.categoryIdentifier = "FROST_ALERT"
 
-        // Deliver 10 seconds from now (adjust to specific evening hour in production).
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 10, repeats: false)
+        var dateComponents = DateComponents()
+        dateComponents.hour = alertHour
+        dateComponents.minute = 0
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: "frost_alert", content: content, trigger: trigger)
 
+        center.removePendingNotificationRequests(withIdentifiers: ["frost_alert"])
         try? await center.add(request)
     }
 
