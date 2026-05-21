@@ -4,6 +4,56 @@ Dokument opisuje warstwową architekturę aplikacji, przepływ danych i kluczowe
 
 ---
 
+## Strategia wieloplatformowa (KMP)
+
+SzronAlert używa **Kotlin Multiplatform (KMP)** – jeden wspólny moduł logiki, dwa natywne frontendy:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    shared/ (KMP module)                     │
+│  FrostCore  SummerCore  WeatherModels  SystemServices APIs  │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ compiled to
+          ┌────────────┴────────────┐
+          ▼                         ▼
+┌─────────────────┐       ┌──────────────────┐
+│   app/ (Android)│       │  iosApp/ (Swift) │
+│  Jetpack Compose│       │     SwiftUI      │
+│  WeatherCalc.kt │       │ FrostRiskViewModel│
+│   → FrostCore   │       │  → FrostCore     │
+└─────────────────┘       └──────────────────┘
+```
+
+### Moduł `shared/`
+
+| Klasa / interfejs | Opis |
+|---|---|
+| `FrostCore` | Algorytm szronu: punkt rosy, wychłodzenie, ryzyko (0–100%) |
+| `SummerCore` | Ryzyko burzy, upał, potrzeba podlewania |
+| `WeatherResponseDto` | Modele Open-Meteo (Kotlinx Serialization) |
+| `WeatherClient` | Interfejs klienta pogodowego |
+| `LocationService` | Kontrakt lokalizacji (implementacja: Android GPS / CoreLocation) |
+| `NotificationService` | Kontrakt powiadomień (implementacja: WorkManager / UNNotificationCenter) |
+| `BackgroundTaskScheduler` | Kontrakt zadań tła (implementacja: WorkManager / BGTaskScheduler) |
+| `SubscriptionService` | Kontrakt subskrypcji (implementacja: Google Play Billing / StoreKit 2) |
+| `SecurityService` | Kontrakt bezpieczeństwa (implementacja: Play Integrity / AppAttest) |
+| `IosFeatureMatrix` | Macierz funkcji MVP vs. post-MVP dla iOS |
+
+### Integracja iOS z KMP (CocoaPods)
+
+```bash
+# 1. Wygeneruj placeholder framework
+./gradlew :shared:generateDummyFramework
+
+# 2. Zainstaluj pod (łączy framework KMP z projektem Xcode)
+cd iosApp && pod install
+
+# 3. Otwórz workspace (nie .xcodeproj!)
+open iosApp.xcworkspace
+```
+
+---
+
 ## Ogólny diagram przepływu
 
 ```

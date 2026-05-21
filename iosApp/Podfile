@@ -1,0 +1,8 @@
+platform :ios, '16.0'
+use_frameworks!
+
+target 'iosApp' do
+  # KMP shared module – built by Gradle via the cocoapods plugin.
+  # Run `./gradlew :shared:generateDummyFramework` once before `pod install`.
+  pod 'shared', :path => '../shared'
+end
