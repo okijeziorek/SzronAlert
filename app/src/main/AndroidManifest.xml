@@ -37,6 +37,15 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="@string/admob_app_id"/>
 
+        <!-- Firebase is initialized manually in FrostApplication using BuildConfig credentials.
+             Disable the auto-init ContentProvider to avoid startup failures when no
+             google-services.json is present (credentials come from local.properties). -->
+        <provider
+            android:name="com.google.firebase.provider.FirebaseInitProvider"
+            android:authorities="${applicationId}.firebaseinitprovider"
+            android:exported="false"
+            tools:node="remove" />
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"

@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import androidx.glance.appwidget.updateAll
+import pl.oki.frostalert.utils.AnalyticsHelper
 import pl.oki.frostalert.utils.AppTelemetry
 
 private const val TAG = "WidgetSyncHelper"
@@ -50,6 +51,7 @@ object WidgetSyncHelper {
             AppTelemetry.recordWidgetError(context)
         } else {
             AppTelemetry.recordWidgetUpdate(context)
+            AnalyticsHelper.logWidgetRefresh()
         }
     }
 }

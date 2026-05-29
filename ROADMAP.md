@@ -238,8 +238,8 @@ Szron jest sezonowy – wykorzystaj to:
 | Dług | Priorytet | Opis |
 |---|---|---|
 | Włączenie szyfrowania SQLCipher | ✅ Zrobione | SQLCipher aktywny w `FrostDatabase` (SupportOpenHelperFactory + klucz per urządzenie) |
+| Telemetria Firebase | ✅ Zrobione | Firebase Analytics + Crashlytics zintegrowane, inicjalizacja przez `local.properties` |
 | Migracja Room 8 → 9 | **P0** | Następna zmiana schematu DB wymaga `MIGRATION_8_9` |
-| Telemetria Firebase | **P0** | Brak danych = brak możliwości podejmowania decyzji |
 | Testy integracyjne widgetów | **P1** | Stale widget rate wymaga pokrycia testami |
 | Lint gates w CI | **P1** | Przywrócić stopniowo po fazie 5 |
 | Aktualizacja Robolectric do SDK 36 | **P2** | Aktualnie testy z `@Config(sdk = [33])` |
@@ -270,7 +270,7 @@ Q2 2026  │ Integracja Google Home / Home Assistant
 
 ## 📝 Priorytety dla Kolejnego Sprintu
 
-1. ☐ Wdrożyć Firebase Analytics + Crashlytics (Faza 6)
+1. ✅ Wdrożyć Firebase Analytics + Crashlytics (Faza 6)
 2. ✅ Aktywowane szyfrowanie SQLCipher (dług techniczny P0)
 3. ✅ Dodany In-App Review prompt po 3 trafnych alertach
 4. ☐ Rozbudować UI dla `UserPlant` (tryb ogrodowy 2.0 – retencja)

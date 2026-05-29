@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.security.RootDetector
 import pl.oki.frostalert.security.SecurityManager
+import pl.oki.frostalert.utils.AnalyticsHelper
 import pl.oki.frostalert.utils.AppTelemetry
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -177,6 +178,7 @@ class BillingClientWrapper @Inject constructor(
                     .setProductDetailsParamsList(productDetailsParamsList)
                     .build()
                 billingClient.launchBillingFlow(activity, billingFlowParams)
+                AnalyticsHelper.logPurchaseAttempt(productDetails.productId)
 
             } catch (e: Exception) {
                 Log.e(TAG, "Security check failed", e)
@@ -403,9 +405,11 @@ class BillingClientWrapper @Inject constructor(
                     // Refresh full purchase state so subscriptionState is also updated.
                     queryAllPurchases()
                     AppTelemetry.recordBillingPurchase(appContext)
+                    AnalyticsHelper.logPurchaseComplete(purchase.products.firstOrNull() ?: "unknown")
                 } else {
                     _purchaseError.value = billingResult.debugMessage
                     AppTelemetry.recordBillingError(appContext)
+                    AnalyticsHelper.logBillingError()
                 }
             }
         }

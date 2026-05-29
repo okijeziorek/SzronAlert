@@ -17,6 +17,7 @@ import pl.oki.frostalert.data.repository.LocationRepository
 import pl.oki.frostalert.data.repository.MorningWakeLearningRepository
 import pl.oki.frostalert.utils.AppResult
 import pl.oki.frostalert.utils.AppTelemetry
+import pl.oki.frostalert.utils.AnalyticsHelper
 import pl.oki.frostalert.utils.NetworkMonitor
 import pl.oki.frostalert.utils.NotificationHelper
 import pl.oki.frostalert.utils.WeatherCalculations
@@ -254,6 +255,7 @@ class FrostCheckWorker @AssistedInject constructor(
                             NotificationHelper.sendNotification(applicationContext, title, message,
                                 isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                             settingsDataStore.incrementFrostAlertSentCount()
+                            AnalyticsHelper.logFrostAlertSent(appMode, minTemp)
                         }
                     } else {
                         val calendar = Calendar.getInstance()
@@ -266,10 +268,12 @@ class FrostCheckWorker @AssistedInject constructor(
                                 NotificationHelper.sendNotification(applicationContext, title, applicationContext.getString(R.string.notification_frost_night_message),
                                     isMataOptionEnabled = userPreferences.isMataOptionEnabled)
                                 settingsDataStore.incrementFrostAlertSentCount()
+                                AnalyticsHelper.logFrostAlertSent(appMode, minTemp)
                             }
                         }
                     }
                     AppTelemetry.recordWorkerSuccess(applicationContext)
+                    AnalyticsHelper.logWorkerSuccess()
 
                     // FALLBACK: Schedule morning brief if the USER_PRESENT broadcast was missed
                     // (e.g., OEM battery optimizations) and conditions are met.

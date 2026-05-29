@@ -10,12 +10,16 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.android.gms.ads.MobileAds
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import pl.oki.frostalert.geofence.GeofenceRegistrarContract
+import pl.oki.frostalert.utils.AnalyticsHelper
 import pl.oki.frostalert.worker.FrostCheckWorker
 import pl.oki.frostalert.worker.IntegrityCheckWorker
 import java.util.concurrent.TimeUnit
@@ -44,6 +48,7 @@ class FrostApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        initFirebase()
         // Initialize AdMob off the main thread to reduce cold-start ANR risk.
         // The SDK routes its completion callback back to main via Handler internally.
         applicationScope.launch { MobileAds.initialize(this@FrostApplication) }
@@ -51,6 +56,34 @@ class FrostApplication : Application(), Configuration.Provider {
         // Start reactive geofence observer so geofences are kept in sync with
         // user settings and location changes from app startup onwards.
         geofenceRegistrar.start()
+    }
+
+    /**
+     * Initializes Firebase Analytics and Crashlytics using credentials from [BuildConfig].
+     * The credentials are read from `local.properties` at build time and are never committed
+     * to VCS. If credentials are absent (empty strings), Firebase is skipped gracefully.
+     */
+    private fun initFirebase() {
+        val appId = BuildConfig.FIREBASE_APP_ID
+        val projectId = BuildConfig.FIREBASE_PROJECT_ID
+        val apiKey = BuildConfig.FIREBASE_API_KEY
+        if (appId.isEmpty() || projectId.isEmpty() || apiKey.isEmpty()) {
+            Log.d("FrostApplication", "Firebase credentials not configured — Analytics/Crashlytics disabled")
+            return
+        }
+        runCatching {
+            val options = FirebaseOptions.Builder()
+                .setApplicationId(appId)
+                .setProjectId(projectId)
+                .setApiKey(apiKey)
+                .build()
+            FirebaseApp.initializeApp(this, options)
+            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
+            AnalyticsHelper.init(this)
+            Log.d("FrostApplication", "Firebase initialized (project: $projectId)")
+        }.onFailure {
+            Log.w("FrostApplication", "Firebase initialization failed: ${it.message}")
+        }
     }
 
     private fun setupRecurringWork() {
