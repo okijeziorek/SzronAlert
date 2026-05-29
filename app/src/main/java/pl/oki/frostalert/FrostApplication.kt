@@ -68,7 +68,7 @@ class FrostApplication : Application(), Configuration.Provider {
         val projectId = BuildConfig.FIREBASE_PROJECT_ID
         val apiKey = BuildConfig.FIREBASE_API_KEY
         if (appId.isEmpty() || projectId.isEmpty() || apiKey.isEmpty()) {
-            Log.d("FrostApplication", "Firebase credentials not configured — Analytics/Crashlytics disabled")
+            Log.d("FrostApplication", "Firebase credentials not configured - Analytics/Crashlytics disabled")
             return
         }
         runCatching {

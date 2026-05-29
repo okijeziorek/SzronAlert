@@ -40,6 +40,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Firebase credentials — set in local.properties (never commit real keys to VCS)
+        // Example local.properties entries:
+        //   FIREBASE_APP_ID=1:000000000000:android:0000000000000000000000
+        //   FIREBASE_PROJECT_ID=szronalert
+        //   FIREBASE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         buildConfigField("String", "FIREBASE_APP_ID", "\"${localProps.getProperty("FIREBASE_APP_ID", "")}\"")
         buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${localProps.getProperty("FIREBASE_PROJECT_ID", "")}\"")
         buildConfigField("String", "FIREBASE_API_KEY", "\"${localProps.getProperty("FIREBASE_API_KEY", "")}\"")
