@@ -8,6 +8,7 @@ plugins {
 }
 
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 // Workaround: in some CI or local environments lint analysis can crash due to classloader issues.
 // Disable lint tasks here by default; re-enable by passing -PlintEnabled=true on the command line
@@ -15,6 +16,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 val lintEnabled = findProperty("lintEnabled")?.toString()?.toBoolean() ?: false
 tasks.matching { it.name.startsWith("lint") }.configureEach {
     enabled = lintEnabled
+}
+
+// Read Firebase credentials from local.properties (not committed to VCS).
+// Copy the keys below into local.properties and fill in your values from the Firebase Console.
+val localProps = Properties()
+val localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localPropsFile.inputStream().use { localProps.load(it) }
 }
 
 android {
@@ -29,6 +38,15 @@ android {
         versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Firebase credentials — set in local.properties (never commit real keys to VCS)
+        // Example local.properties entries:
+        //   FIREBASE_APP_ID=1:000000000000:android:0000000000000000000000
+        //   FIREBASE_PROJECT_ID=szronalert
+        //   FIREBASE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        buildConfigField("String", "FIREBASE_APP_ID", "\"${localProps.getProperty("FIREBASE_APP_ID", "")}\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${localProps.getProperty("FIREBASE_PROJECT_ID", "")}\"")
+        buildConfigField("String", "FIREBASE_API_KEY", "\"${localProps.getProperty("FIREBASE_API_KEY", "")}\"")
     }
 
     buildFeatures {
@@ -170,6 +188,11 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("net.zetetic:sqlcipher-android:4.6.1@aar")
     implementation("com.google.android.play:integrity:1.3.0")
+
+    // Firebase (Analytics + Crashlytics — initialized manually, no google-services plugin needed)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

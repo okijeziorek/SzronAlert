@@ -24,6 +24,7 @@ work = "2.10.0"
 ycharts = "2.1.0"
 osmdroid = "6.1.18"
 kotlin = "2.1.10"
+firebaseBom = "33.7.0"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
@@ -62,6 +63,9 @@ play-services-ads = { group = "com.google.android.gms", name = "play-services-ad
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 ycharts = { group = "co.yml", name = "ycharts", version.ref = "ycharts" }
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
