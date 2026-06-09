@@ -52,7 +52,7 @@ class GeofenceManager(private val context: Context) {
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
             .setTransitionTypes(transitionTypes(loiteringDelayMs))
 
-        // If caller provided a non-negative loitering delay, include DWELL transition and set the delay
+        // Configure dwell timing only when DWELL mode is enabled by positive delay.
         if (loiteringDelayMs > 0) {
             builder.setLoiteringDelay(loiteringDelayMs)
         }

@@ -140,9 +140,8 @@ class GeofenceRegistrar(
         return latClose && lonClose && radiusClose
     }
 
-    internal fun makeId(lat: Double, lon: Double) =
-        "geofence:${"%.6f".format(Locale.US, lat)}:${"%.6f".format(Locale.US, lon)}"
+    internal fun makeId(lat: Double, lon: Double): String =
+        String.format(Locale.US, "geofence:%.6f:%.6f", lat, lon)
 
     private data class RegisteredGeofence(val lat: Double, val lon: Double, val radius: Float)
 }
-
