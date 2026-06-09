@@ -2,6 +2,9 @@ package pl.oki.frostalert.data.local
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -17,7 +20,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Verifies that:
  *  1. The database schema is consistent across all three tables.
- *  2. Explicit migration objects are defined (MIGRATION_1_2, MIGRATION_2_3).
+ *  2. Explicit migration objects are defined (MIGRATION_1_2, ..., MIGRATION_8_9).
  *  3. The database builds without [fallbackToDestructiveMigration].
  *  4. Data integrity is maintained across insert/read cycles.
  *  5. Edge-case data values are handled correctly.
@@ -33,7 +36,16 @@ class FrostDatabaseMigrationTest {
     fun setup() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         db = Room.inMemoryDatabaseBuilder(context, FrostDatabase::class.java)
-            .addMigrations(FrostDatabase.MIGRATION_1_2, FrostDatabase.MIGRATION_2_3)
+            .addMigrations(
+                FrostDatabase.MIGRATION_1_2,
+                FrostDatabase.MIGRATION_2_3,
+                FrostDatabase.MIGRATION_3_4,
+                FrostDatabase.MIGRATION_4_5,
+                FrostDatabase.MIGRATION_5_6,
+                FrostDatabase.MIGRATION_6_7,
+                FrostDatabase.MIGRATION_7_8,
+                FrostDatabase.MIGRATION_8_9
+            )
             .build()
     }
 
@@ -97,12 +109,69 @@ class FrostDatabaseMigrationTest {
 
     @Test
     fun migrationObjects_areNotNull() {
-        // Ensures MIGRATION_1_2 and MIGRATION_2_3 are properly declared as public
+        // Ensures migration objects are properly declared as public
         // companion val — if they were removed or made private this test won't compile.
         assertTrue(FrostDatabase.MIGRATION_1_2.startVersion == 1)
         assertTrue(FrostDatabase.MIGRATION_1_2.endVersion == 2)
         assertTrue(FrostDatabase.MIGRATION_2_3.startVersion == 2)
         assertTrue(FrostDatabase.MIGRATION_2_3.endVersion == 3)
+        assertTrue(FrostDatabase.MIGRATION_8_9.startVersion == 8)
+        assertTrue(FrostDatabase.MIGRATION_8_9.endVersion == 9)
+    }
+
+    @Test
+    fun migration8to9_addsTimestampIndexes() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val dbName = "migration8to9_${System.nanoTime()}"
+        val openHelper = FrameworkSQLiteOpenHelperFactory().create(
+            SupportSQLiteOpenHelper.Configuration.builder(context)
+                .name(dbName)
+                .callback(object : SupportSQLiteOpenHelper.Callback(1) {
+                    override fun onCreate(db: SupportSQLiteDatabase) = Unit
+                    override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+                })
+                .build()
+        )
+
+        val sqliteDb = openHelper.writableDatabase
+        try {
+            sqliteDb.execSQL(
+                "CREATE TABLE IF NOT EXISTS `temperature_records` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`timestamp` INTEGER NOT NULL, `minTemp` REAL NOT NULL, " +
+                    "`hasRisk` INTEGER NOT NULL, `frostProbability` INTEGER NOT NULL DEFAULT 0)"
+            )
+            sqliteDb.execSQL(
+                "CREATE TABLE IF NOT EXISTS `geofence_record` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`timestamp` INTEGER NOT NULL, `latitude` REAL NOT NULL, " +
+                    "`longitude` REAL NOT NULL, `direction` TEXT, `minTemp` REAL NOT NULL, " +
+                    "`hasRisk` INTEGER NOT NULL, `riskLevel` REAL NOT NULL, `locationName` TEXT)"
+            )
+
+            FrostDatabase.MIGRATION_8_9.migrate(sqliteDb)
+
+            val temperatureIndexes = indexNames(sqliteDb, "temperature_records")
+            val geofenceIndexes = indexNames(sqliteDb, "geofence_record")
+            assertTrue(temperatureIndexes.contains("index_temperature_records_timestamp"))
+            assertTrue(geofenceIndexes.contains("index_geofence_record_timestamp"))
+        } finally {
+            sqliteDb.close()
+            openHelper.close()
+            context.deleteDatabase(dbName)
+        }
+    }
+
+    private fun indexNames(db: SupportSQLiteDatabase, tableName: String): Set<String> {
+        val cursor = db.query("PRAGMA index_list(`$tableName`)")
+        return cursor.use {
+            val indexColumn = it.getColumnIndexOrThrow("name")
+            buildSet {
+                while (it.moveToNext()) {
+                    add(it.getString(indexColumn))
+                }
+            }
+        }
     }
 
     @Test

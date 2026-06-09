@@ -49,6 +49,16 @@ class FrostCheckWorker @AssistedInject constructor(
         private const val MAX_RETRIES = 3
     }
 
+    private fun retryOrFail(message: String): Result {
+        return if (runAttemptCount < MAX_RETRIES) {
+            AppTelemetry.recordWorkerRetry(applicationContext, message)
+            Result.retry()
+        } else {
+            AppTelemetry.recordWorkerFailure(applicationContext, "$message after $MAX_RETRIES attempts")
+            Result.failure()
+        }
+    }
+
     @SuppressLint("MissingPermission")
     override suspend fun doWork(): Result {
         val isTest = inputData.getBoolean("IS_TEST", false)
@@ -69,40 +79,27 @@ class FrostCheckWorker @AssistedInject constructor(
         if (!networkMonitor.isCurrentlyOnline()) {
             val msg = "Network unavailable at runtime"
             Log.w(TAG, "$msg (attempt ${runAttemptCount + 1}/$MAX_RETRIES) — retrying")
-            return if (runAttemptCount < MAX_RETRIES) {
-                AppTelemetry.recordWorkerRetry(applicationContext, msg)
-                Result.retry()
-            } else {
-                AppTelemetry.recordWorkerFailure(applicationContext, "$msg after $MAX_RETRIES attempts")
-                Result.failure()
-            }
+            return retryOrFail(msg)
         }
-
-        val userPreferences = settingsDataStore.userPreferencesFlow.first()
         val isCarMode = inputData.getBoolean("IS_CAR_MODE", false)
 
-        if (System.currentTimeMillis() < userPreferences.ignoreUntil) {
-            Log.d(TAG, "Pomijanie: Alerty są obecnie wyciszone (mata lub ignore)")
-            return Result.success()
-        }
-
-        val tempThreshold = if (userPreferences.isAutoModeEnabled) 1.0 else userPreferences.tempThreshold
-        val humidityThreshold = if (userPreferences.isAutoModeEnabled) 75.0 else userPreferences.humidityThreshold.toDouble()
-        val precipitationThreshold = if (userPreferences.isAutoModeEnabled) 0.2 else userPreferences.precipitationThreshold
-        val sensitivity = userPreferences.sensitivity
-        val appMode = userPreferences.appMode
-
         try {
+            val userPreferences = settingsDataStore.userPreferencesFlow.first()
+            if (System.currentTimeMillis() < userPreferences.ignoreUntil) {
+                Log.d(TAG, "Pomijanie: Alerty są obecnie wyciszone (mata lub ignore)")
+                return Result.success()
+            }
+
+            val tempThreshold = if (userPreferences.isAutoModeEnabled) 1.0 else userPreferences.tempThreshold
+            val humidityThreshold = if (userPreferences.isAutoModeEnabled) 75.0 else userPreferences.humidityThreshold.toDouble()
+            val precipitationThreshold = if (userPreferences.isAutoModeEnabled) 0.2 else userPreferences.precipitationThreshold
+            val sensitivity = userPreferences.sensitivity
+            val appMode = userPreferences.appMode
+
             val location = locationRepository.getEffectiveLocation()
             if (location == null) {
                 Log.w(TAG, "Location unavailable (attempt ${runAttemptCount + 1}/$MAX_RETRIES) — retrying")
-                return if (runAttemptCount < MAX_RETRIES) {
-                    AppTelemetry.recordWorkerRetry(applicationContext, "Location unavailable")
-                    Result.retry()
-                } else {
-                    AppTelemetry.recordWorkerFailure(applicationContext, "Location unavailable after $MAX_RETRIES attempts")
-                    Result.failure()
-                }
+                return retryOrFail("Location unavailable")
             }
 
             val weatherResult = OpenMeteoApi.getWeather(location.latitude, location.longitude)
@@ -113,13 +110,7 @@ class FrostCheckWorker @AssistedInject constructor(
                     val errorMessage = weatherResult.error.message
                     val errorCause = weatherResult.error.cause
                     Log.w(TAG, "Weather fetch error [$errorType] (attempt ${runAttemptCount + 1}/$MAX_RETRIES): $errorMessage", errorCause)
-                    return if (runAttemptCount < MAX_RETRIES) {
-                        AppTelemetry.recordWorkerRetry(applicationContext, "[$errorType] $errorMessage")
-                        Result.retry()
-                    } else {
-                        AppTelemetry.recordWorkerFailure(applicationContext, "[$errorType] $errorMessage after $MAX_RETRIES attempts")
-                        Result.failure()
-                    }
+                    return retryOrFail("[$errorType] $errorMessage")
                 }
                 is AppResult.Success -> {
                     val weather = weatherResult.data
@@ -307,13 +298,7 @@ class FrostCheckWorker @AssistedInject constructor(
         } catch (e: Exception) {
             val errorType = e::class.simpleName
             Log.e(TAG, "Unexpected error [$errorType] in doWork (attempt ${runAttemptCount + 1}/$MAX_RETRIES): ${e.message}", e)
-            return if (runAttemptCount < MAX_RETRIES) {
-                AppTelemetry.recordWorkerRetry(applicationContext, "[$errorType] ${e.message}")
-                Result.retry()
-            } else {
-                AppTelemetry.recordWorkerFailure(applicationContext, "[$errorType] ${e.message}")
-                Result.failure()
-            }
+            return retryOrFail("[$errorType] ${e.message}")
         }
     }
 }

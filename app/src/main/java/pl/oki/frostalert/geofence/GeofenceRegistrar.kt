@@ -17,6 +17,7 @@ import kotlinx.coroutines.sync.withLock
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.repository.LocationRepository
 import kotlin.math.abs
+import java.util.Locale
 
 /**
  * Reaktywna implementacja rejestratora geofence.
@@ -139,9 +140,8 @@ class GeofenceRegistrar(
         return latClose && lonClose && radiusClose
     }
 
-    private fun makeId(lat: Double, lon: Double) = "geofence:${"%.6f".format(lat)}:${"%.6f".format(lon)}"
+    internal fun makeId(lat: Double, lon: Double): String =
+        String.format(Locale.US, "geofence:%.6f:%.6f", lat, lon)
 
     private data class RegisteredGeofence(val lat: Double, val lon: Double, val radius: Float)
 }
-
-
