@@ -16,7 +16,7 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import pl.oki.frostalert.BuildConfig
 import java.util.Locale
 
-@Database(entities = [TemperatureRecord::class, CalibrationFeedback::class, pl.oki.frostalert.data.local.GeofenceRecord::class, Plant::class, UserPlant::class, SavedLocation::class, FrostPhoto::class, GardenZone::class, WateringLog::class], version = 8, exportSchema = false)
+@Database(entities = [TemperatureRecord::class, CalibrationFeedback::class, pl.oki.frostalert.data.local.GeofenceRecord::class, Plant::class, UserPlant::class, SavedLocation::class, FrostPhoto::class, GardenZone::class, WateringLog::class], version = 9, exportSchema = false)
 abstract class FrostDatabase : RoomDatabase() {
     abstract fun temperatureDao(): TemperatureDao
     abstract fun calibrationDao(): CalibrationDao
@@ -153,6 +153,13 @@ abstract class FrostDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_temperature_records_timestamp` ON `temperature_records` (`timestamp`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_geofence_record_timestamp` ON `geofence_record` (`timestamp`)")
+            }
+        }
+
         private const val TAG = "FrostDatabase"
         private const val KEY_PREFS_FILE = "frost_db_key_prefs"
         private const val KEY_PREFS_PASSPHRASE = "db_passphrase"
@@ -203,7 +210,7 @@ abstract class FrostDatabase : RoomDatabase() {
                     "frost_database"
                 )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                 // Do NOT add fallbackToDestructiveMigration — explicit migrations are defined
                 // for every version bump; a missing migration should surface as a hard error,
                 // not silently delete user data.
@@ -230,7 +237,7 @@ abstract class FrostDatabase : RoomDatabase() {
                         "frost_database"
                     )
                         .openHelperFactory(factory)
-                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                         .build()
                     recoveredInstance
                 } else {

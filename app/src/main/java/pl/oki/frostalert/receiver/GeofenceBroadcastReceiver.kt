@@ -77,6 +77,10 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         }
 
         val transition = geofencingEvent.geofenceTransition
+        if (transition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+            Log.d(TAG, "Geofence EXIT transition received; no frost evaluation needed")
+            return
+        }
         if (transition == Geofence.GEOFENCE_TRANSITION_ENTER || transition == Geofence.GEOFENCE_TRANSITION_DWELL) {
             val triggeringGeofences = geofencingEvent.triggeringGeofences
             val geofence = triggeringGeofences?.firstOrNull()

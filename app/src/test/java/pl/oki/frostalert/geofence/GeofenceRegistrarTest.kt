@@ -3,6 +3,7 @@ package pl.oki.frostalert.geofence
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -13,6 +14,7 @@ import org.robolectric.RobolectricTestRunner
 import pl.oki.frostalert.data.local.SettingsDataStore
 import pl.oki.frostalert.data.local.UserPreferences
 import pl.oki.frostalert.data.repository.LocationRepository
+import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -138,5 +140,31 @@ class GeofenceRegistrarTest {
         // Should not throw
         registrar.stop()
         assertFalse("isRunning() powinno pozostać false", registrar.isRunning())
+    }
+
+    @Test
+    fun `makeId uses locale independent decimal format`() {
+        val prefsFlow = MutableStateFlow(buildPrefs())
+        val settingsDataStore: SettingsDataStore = mock()
+        val locationRepository: LocationRepository = mock()
+        val geofenceManager: GeofenceManager = mock()
+        whenever(settingsDataStore.userPreferencesFlow).thenReturn(prefsFlow)
+
+        val registrar = GeofenceRegistrar(
+            context = mock(),
+            settingsDataStore = settingsDataStore,
+            locationRepository = locationRepository,
+            geofenceManager = geofenceManager,
+            debounceMs = 0L
+        )
+
+        val originalLocale = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.GERMANY)
+            val id = registrar.makeId(52.2297, 21.0122)
+            assertEquals("geofence:52.229700:21.012200", id)
+        } finally {
+            Locale.setDefault(originalLocale)
+        }
     }
 }

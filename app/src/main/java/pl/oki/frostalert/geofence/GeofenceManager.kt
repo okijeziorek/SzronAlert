@@ -20,6 +20,16 @@ class GeofenceManager(private val context: Context) {
     private val geofencingClient: GeofencingClient = LocationServices.getGeofencingClient(context)
     private val geofencePendingIntent: PendingIntent by lazy { createGeofencePendingIntent() }
 
+    companion object {
+        internal fun transitionTypes(loiteringDelayMs: Int): Int {
+            var transitions = Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT
+            if (loiteringDelayMs > 0) {
+                transitions = transitions or Geofence.GEOFENCE_TRANSITION_DWELL
+            }
+            return transitions
+        }
+    }
+
     private fun createGeofencePendingIntent(): PendingIntent {
         val intent = Intent(context, GeofenceBroadcastReceiver::class.java).apply {
             action = "pl.oki.frostalert.ACTION_GEOFENCE"
@@ -40,14 +50,11 @@ class GeofenceManager(private val context: Context) {
             .setRequestId(requestId)
             .setCircularRegion(lat, lon, radiusMeters)
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
+            .setTransitionTypes(transitionTypes(loiteringDelayMs))
 
         // If caller provided a non-negative loitering delay, include DWELL transition and set the delay
         if (loiteringDelayMs > 0) {
             builder.setLoiteringDelay(loiteringDelayMs)
-            builder.setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL)
-        } else {
-            // Otherwise only monitor ENTER
-            builder.setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
         }
 
         val geofence = try {
@@ -89,4 +96,3 @@ class GeofenceManager(private val context: Context) {
         }
     }
 }
-
